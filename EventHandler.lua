@@ -3,6 +3,7 @@ f:RegisterEvent("ENCOUNTER_START")
 f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 f:RegisterEvent("READY_CHECK")
 f:RegisterEvent("ADDON_LOADED")
+f:RegisterEvent("PLAYER_LOGIN")
 
 f:SetScript("OnEvent", function(self, e, ...)
         NSAPI:EventHandler(e, false, ...)
@@ -17,6 +18,37 @@ function NSAPI:EventHandler(e, internal, ...) -- internal checks whether the eve
             NSAPI:InitNickNames()
             NSAPI:SendNickName("GUILD")
         end
+    elseif e == "PLAYER_LOGIN" and not internal then
+        local pafound = false
+        local extfound = false
+        NSRT.PAMacro = nil
+        NSRT.ExternalMacro = nil
+        for i=1, 120 do
+            local macroname = C_Macro.GetMacroName(i)
+            if not macroname then break end
+            if macroname == "NS PA Macro" then
+                NSRT.PAMacro = i
+                local macrotext = NSRT.PASelfPing and "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);\n/ping [@player] Warning;" or "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
+                EditMacro(i, "NS PA Macro", 132288, macrotext, false)
+                pafound = true
+            elseif macroname == "NS Ext Macro" then
+                NSRT.ExternalMacro = i
+                local macrotext = NSRT.ExternalSelfPing and "/run NSExternals:Request();\n/ping [@player] Assist;" or "/run NSExternals:Request();"
+                EditMacro(i, "NS Ext Macro", 135966, macrotext, false)
+                extfound = true
+            end
+            if pafound and extfound then break end
+        end
+        if not NSRT.PAMacro then
+            local macrotext = NSRT.PASelfPing and "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);\n/ping [@player] Warning;" or "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
+            NSRT.PAMacro = CreateMacro("NS PA Macro", 132288, macrotext, false)
+            -- NSAPI:Broadcast("NS_PA_MACRO", "RAID", "nilcheck") -- add this to macro if I want to send macro press data to everyone
+        end
+        if not NSRT.ExternalMacro then
+            local macrotext = NSRT.ExternalSelfPing and "/run NSExternals:Request();\n/ping [@player] Assist;" or "/run NSExternals:Request();"
+            NSRT.ExternalMacro = CreateMacro("NS Ext Macro", 135966, macrotext, false)
+        end
+
     elseif e == "READY_CHECK" and not internal then
         if UnitInRaid("player") then
             NSAPI:SendNickName("RAID")

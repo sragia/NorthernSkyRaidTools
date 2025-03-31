@@ -1,6 +1,46 @@
 -- Todo
 -- Need custom option for TTS
 
+-- need to run this code on settings change
+local function PASelfPingChanged(enabled)
+    NSRT.PASelfPing = enabled
+    for i=1, 120 do
+        local macroname = C_Macro.GetMacroName(i)
+        if not macroname then break end
+        if macroname == "NS PA Macro" then
+            NSRT.PAMacro = i
+            local macrotext = enabled and "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);\n/ping [@player] Warning;" or "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
+            EditMacro(i, "NS PA Macro", 132288, macrotext, false)
+            pafound = true
+            break
+        end
+    end
+    if not NSRT.PAMacro then
+        local macrotext = NSRT.PASelfPing and "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);\n/ping [@player] Warning;" or "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
+        NSRT.PAMacro = CreateMacro("NS PA Macro", 132288, macrotext, false)
+    end
+end
+
+-- need to run this code on settings change
+local function ExternalSelfPingChanged(enabled)
+    NSRT.ExternalSelfPing = enabled
+    for i=1, 120 do
+        local macroname = C_Macro.GetMacroName(i)
+        if not macroname then break end
+        if macroname == "NS Ext Macro" then
+            NSRT.ExternalMacro = i
+            local macrotext = NSRT.ExternalSelfPing and "/run NSExternals:Request();\n/ping [@player] Assist;" or "/run NSExternals:Request();"
+            EditMacro(i, "NS Ext Macro", 135966, macrotext, false)
+            extfound = true
+            break
+        end
+    end
+    if not NSRT.ExternalMacro then
+        local macrotext = NSRT.ExternalSelfPing and "/run NSExternals:Request();\n/ping [@player] Assist;" or "/run NSExternals:Request();"
+        NSRT.ExternalMacro = CreateMacro("NS Ext Macro", 135966, macrotext, false)
+    end
+end
+
 
 -- Function from WeakAuras, thanks rivers
 function NSAPI:IterateGroupMembers(reversed, forceParty)
@@ -16,6 +56,13 @@ function NSAPI:IterateGroupMembers(reversed, forceParty)
         end
         i = i + (reversed and -1 or 1)
         return ret
+    end
+end
+
+function NSAPI:PrivateAuraMacro()
+    if (not NSAPI.LastPAMacro) or (GetTime() > NSAPI.LastPAMacro + 4) then -- not allow people to spam this. Some auras might need to manually reset this to 0. Example: Withering flames on bandit because you could get the debuff instantly after being dispelled
+        WeakAuras.ScanEvents("NS_PA_MACRO", true)
+        -- NSAPI:Broadcast("NS_PA_MACRO", "RAID", "nilcheck") -- enable this if I want to send macro press data to everyone
     end
 end
 
