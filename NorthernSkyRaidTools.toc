@@ -1,0 +1,21 @@
+## Interface: 110100
+
+## Title: Northern Sky Raid Tools
+## Version: 2.0.0
+## IconTexture: Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo.blp
+## Author: Reloe
+## DefaultState: Enable
+## Dependencies: WeakAuras MRT
+## SavedVariables: NSRT
+## Category: Northern Sky
+
+
+NorthernSkyRaidTools.lua
+Media.lua
+NSNickNamesElvUI.lua
+Functions.lua
+AuraResize.lua
+Comms.lua
+NickNames.lua
+EventHandler.lua
+Externals.lua
