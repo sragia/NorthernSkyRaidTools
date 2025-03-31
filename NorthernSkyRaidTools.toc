@@ -19,3 +19,4 @@ Comms.lua
 NickNames.lua
 EventHandler.lua
 Externals.lua
+NSUI.lua

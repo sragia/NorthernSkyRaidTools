@@ -1,17 +1,5 @@
 -- code for on nickname change
-local function NickNameUpdated(nickname)
-    local name, realm = UnitFullName("player")
-    if not realm then
-        realm = GetNormalizedRealmName()
-    end
-    local oldnick = NSRT.NickNames[name.."-"..realm]
-    if (not oldnick) or oldnick ~= nickname then
-        NSRT.MyNickName = nickname
-        NSAPI:SendNickName("GUILD")
-        NSAPI:SendNickName("RAID")
-        NSAPI:NewNickName("player", nickname, name, realm)
-    end
-end
+
 
 -- code for Grid2 Nickname option change
 local function Grid2NickNameUpdated(enabled)

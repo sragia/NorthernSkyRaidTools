@@ -14,9 +14,18 @@ function NSAPI:EventHandler(e, internal, ...) -- internal checks whether the eve
         local name = ...
         if name == "NorthernSkyRaidTools" then
             if not NSRT then NSRT = {} end
-            if not NSRT.Nicknames then NSRT.Nicknames = {} end
+            if not NSRT.NickNames then NSRT.NickNames = {} end
+            -- default settings
+            if not NSRT.TTSVoice then NSRT.TTSVoice = 2 end
+            if NSRT.TTS == nil then NSRT.TTS = true end
+            if NSRT.PASelfPing == nil then NSRT.PASelfPing = true end
+            if NSRT.ExternalSelfPing == nil then NSRT.ExternalSelfPing = true end
+            if NSRT.MyNickName == nil then NSRT.MyNickName = "" end
+            if NSRT.GlobalNickNames == nil then NSRT.GlobalNickNames = false end
+            -- end of default settings
             NSAPI:InitNickNames()
             NSAPI:SendNickName("GUILD")
+            NSAPI.NSUI:Init()
         end
     elseif e == "PLAYER_LOGIN" and not internal then
         local pafound = false
