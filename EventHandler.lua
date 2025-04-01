@@ -22,6 +22,7 @@ function NSAPI:EventHandler(e, internal, ...) -- internal checks whether the eve
             if NSRT.ExternalSelfPing == nil then NSRT.ExternalSelfPing = true end
             if NSRT.MyNickName == nil then NSRT.MyNickName = "" end
             if NSRT.GlobalNickNames == nil then NSRT.GlobalNickNames = false end
+            if NSRT.PAExtraAction == nil then NSRT.PAExtraAction = false end
             -- end of default settings
             NSAPI:InitNickNames()
             NSAPI:SendNickName("GUILD")
@@ -36,7 +37,13 @@ function NSAPI:EventHandler(e, internal, ...) -- internal checks whether the eve
             if not macroname then break end
             if macroname == "NS PA Macro" then
                 NSRT.PAMacro = i
-                local macrotext = NSRT.PASelfPing and "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);\n/ping [@player] Warning;" or "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
+                local macrotext = "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
+                if NSRT.PASelfPing then
+                    macrotext = macrotext.."\n/ping [@player] Warning;"
+                end
+                if NSRT.PAExtraAction then
+                    macrotext = macrotext.."\n/click ExtraActionButton1"
+                end
                 EditMacro(i, "NS PA Macro", 132288, macrotext, false)
                 pafound = true
             elseif macroname == "NS Ext Macro" then
