@@ -166,26 +166,82 @@ function NSUI:Init()
     -- when any setting is changed, call these respective callback function
     local general_callback = function()
         print("General callback")
+        DevTools_Dump(NSUI.OptionsChanged.general)
 
-        PASelfPingChanged()
+        if NSUI.OptionsChanged.general["TTS_ENABLED"] then
+            print("TTS enabled")
+        end
+
+        if NSUI.OptionsChanged.general["TTS_VOICE"] then
+            print("TTS voice")
+        end
+
+        if NSUI.OptionsChanged.general["PA_MACRO"] then
+            PASelfPingChanged()
+        end
 
         wipe(NSUI.OptionsChanged["general"])
+        DevTools_Dump(NSUI.OptionsChanged.general)
     end
     local nicknames_callback = function()
         print("Nicknames callback")
+        DevTools_Dump(NSUI.OptionsChanged.nicknames)
 
-        NickNameUpdated(NSRT.MyNickName)
-        Grid2NickNameUpdated(NSRT.Grid2NickNames)
-        CellNickNameUpdated(NSRT.CellNickNames)
-        MRTNickNameUpdated(NSRT.MRTNickNames)
-        WANickNameUpdated(NSRT.WANickNames)
-        GlobalNickNameUpdated(NSRT.GlobalNickNames)
+        if NSUI.OptionsChanged.nicknames["NICKNAME"] then
+            print("Nickname")
+            NickNameUpdated(NSRT.MyNickName)
+        end
+
+        if NSUI.OptionsChanged.nicknames["GLOBAL_NICKNAMES"] then
+            print("Global nicknames")
+            GlobalNickNameUpdated(NSRT.GlobalNickNames)
+        end
+
+        if NSUI.OptionsChanged.nicknames["CELL_NICKNAMES"] then
+            print("Cell nicknames")
+            CellNickNameUpdated(NSRT.CellNickNames)
+
+        end
+
+        if NSUI.OptionsChanged.nicknames["GRID2_NICKNAMES"] then
+            print("Grid2 nicknames")
+            Grid2NickNameUpdated(NSRT.Grid2NickNames)
+        end
+
+        if NSUI.OptionsChanged.nicknames["ELVUI_NICKNAMES"] then
+            print("ElvUI nicknames")
+        end
+
+        if NSUI.OptionsChanged.nicknames["SUF_NICKNAMES"] then
+            print("Suf nicknames")
+        end
+
+        if NSUI.OptionsChanged.nicknames["WA_NICKNAMES"] then
+            print("Wa nicknames")
+            WANickNameUpdated(NSRT.WANickNames)
+        end
+
+        if NSUI.OptionsChanged.nicknames["MRT_NICKNAMES"] then
+            print("Mrt nicknames")
+            MRTNickNameUpdated(NSRT.MRTNickNames)
+        end
+
+        if NSUI.OptionsChanged.nicknames["UNHALTED_NICKNAMES"] then
+            print("Unhalted nicknames")
+        end
+
         wipe(NSUI.OptionsChanged["nicknames"])
     end
 
     local externals_callback = function()
         print("Externals callback")
-        ExternalSelfPingChanged()
+        DevTools_Dump(NSUI.OptionsChanged.externals)
+
+        if NSUI.OptionsChanged.externals["EXTERNAL_MACRO"] then
+            print("External macro")
+            ExternalSelfPingChanged()
+        end
+
         wipe(NSUI.OptionsChanged["externals"])
     end
 
@@ -372,7 +428,10 @@ function NSUI:Init()
             name = "TTS Voice",
             desc = "Voice to use for TTS",
             get = function() return NSRT.TTSVoice end,
-            set = function(self, fixedparam, value) NSRT.TTSVoice = value end,
+            set = function(self, fixedparam, value) 
+                NSUI.OptionsChanged.general["TTS_VOICE"] = true
+                NSRT.TTSVoice = value 
+            end,
             min = 1,
             max = 5,
         },
@@ -383,6 +442,7 @@ function NSUI:Init()
             desc = "Enable TTS",
             get = function() return NSRT.TTS end,
             set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.general["TTS_ENABLED"] = true
                 NSRT.TTS = value
             end,
         },
@@ -400,7 +460,10 @@ function NSUI:Init()
             name = "Enable @player Ping",
             desc = "Enable a @player ping when the private aura macro is used.",
             get = function() return NSRT.PASelfPing end,
-            set = function(self, fixedparam, value) NSRT.PASelfPing = value end,
+            set = function(self, fixedparam, value) 
+                NSUI.OptionsChanged.general["PA_MACRO"] = true
+                NSRT.PASelfPing = value 
+            end,
         },
         {
             type = "toggle",
@@ -408,7 +471,10 @@ function NSUI:Init()
             name = "Combine Extra Action Button",
             desc = "Combine the extra action button with the private aura macro.",
             get = function() return NSRT.PAExtraAction end,
-            set = function(self, fixedparam, value) NSRT.PAExtraAction = value end,
+            set = function(self, fixedparam, value) 
+                NSUI.OptionsChanged.general["PA_MACRO"] = true
+                NSRT.PAExtraAction = value 
+            end,
         },
         {
             type = "label",
@@ -435,7 +501,10 @@ function NSUI:Init()
             name = "Nickname",
             desc = "Set your nickname to be seen by others and used in assignments",
             get = function() return NSRT.MyNickName end,
-            set = function(self, fixedparam, value) NSRT.MyNickName = value end,
+            set = function(self, fixedparam, value) 
+                NSUI.OptionsChanged.nicknames["NICKNAME"] = true
+                NSRT.MyNickName = value 
+            end,
         },
         {
             type = "toggle",
@@ -443,7 +512,10 @@ function NSUI:Init()
             name = "Enable Nicknames",
             desc = "Globaly enable nicknames.",
             get = function() return NSRT.GlobalNickNames end,
-            set = function(self, fixedparam, value) NSRT.GlobalNickNames = value end,
+            set = function(self, fixedparam, value) 
+                NSUI.OptionsChanged.nicknames["GLOBAL_NICKNAMES"] = true
+                NSRT.GlobalNickNames = value 
+            end,
         },
         {
             type = "blank"
@@ -458,6 +530,7 @@ function NSUI:Init()
             boxfirst = true,
             get = function() return NSRT.CellNickNames end,
             set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.nicknames["CELL_NICKNAMES"] = true
                 NSRT.CellNickNames = value
             end,
             name = "Enable Cell Nicknames",
@@ -468,6 +541,7 @@ function NSUI:Init()
             boxfirst = true,
             get = function() return NSRT.Grid2NickNames end,
             set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.nicknames["GRID2_NICKNAMES"] = true
                 NSRT.Grid2NickNames = value
             end,
             name = "Enable Grid2 Nicknames",
@@ -478,6 +552,7 @@ function NSUI:Init()
             boxfirst = true,
             get = function() return enableElvUINicknames end,
             set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.nicknames["ELVUI_NICKNAMES"] = true
                 enableElvUINicknames = value
             end,
             name = "Enable ElvUI Nicknames",
@@ -488,6 +563,7 @@ function NSUI:Init()
             boxfirst = true,
             get = function() return enableSUFNicknames end,
             set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.nicknames["SUF_NICKNAMES"] = true
                 enableSUFNicknames = value
             end,
             name = "Enable SUF Nicknames",
@@ -498,6 +574,7 @@ function NSUI:Init()
             boxfirst = true,
             get = function() return NSRT.WANickNames end,
             set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.nicknames["WA_NICKNAMES"] = true
                 NSRT.WANickNames = value
             end,
             name = "Enable WeakAuras Nicknames",
@@ -508,6 +585,7 @@ function NSUI:Init()
             boxfirst = true,
             get = function() return NSRT.MRTNickNames end,
             set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.nicknames["MRT_NICKNAMES"] = true
                 NSRT.MRTNickNames = value
             end,
             name = "Enable MRT Nicknames",
@@ -518,6 +596,7 @@ function NSUI:Init()
             boxfirst = true,
             get = function() return enableSUFNicknames end,
             set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.nicknames["UNHALTED_NICKNAMES"] = true
                 enableSUFNicknames = value
             end,
             name = "Enable Unhalted UI Nicknames",
@@ -533,7 +612,10 @@ function NSUI:Init()
             name = "Enable @player Ping",
             desc = "Enable a @player ping when the external macro is used.",
             get = function() return NSRT.ExternalSelfPing end,
-            set = function(self, fixedparam, value) NSRT.ExternalSelfPing = value end,
+            set = function(self, fixedparam, value) 
+                NSUI.OptionsChanged.externals["EXTERNAL_MACRO"] = true
+                NSRT.ExternalSelfPing = value 
+            end,
         },
         {
             type = "label",
