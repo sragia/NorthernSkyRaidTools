@@ -9,7 +9,10 @@
 ## SavedVariables: NSRT
 ## Category: Northern Sky
 
+# Libraries
+libs.xml
 
+# Main Files
 NorthernSkyRaidTools.lua
 Media.lua
 Functions.lua
