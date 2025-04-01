@@ -2,7 +2,6 @@ local Grid2Status
 local fullCharList = {}
 local sortedCharList = {}
 local nicknames = {}
-
 NSAPI.nicknames = nicknames
 
 function NSAPI:GetCharacters(str) -- Returns table of all Characters from Nickname or Character Name
@@ -16,7 +15,6 @@ end
 function NSAPI:GetAllCharacters()
     return CopyTable(fullCharList)
 end
-
 
 function NSAPI:GetName(str, MRT) -- Returns Nickname
     if MRT and not NSRT.MRTNickNames then
@@ -122,9 +120,9 @@ function NSAPI:GlobalNickNameUpdate()
         end
     end
     if ElvUF and ElvUF.Tags then
-        ElvUI.Tags:RefreshMethods("NSNickName")
+        ElvUF.Tags:RefreshMethods("NSNickName")
         for i=1, 12 do
-            ElvUI.Tags:RefreshMethods("NSNickName:"..i)
+            ElvUF.Tags:RefreshMethods("NSNickName:"..i)
         end
     end    
     if UUFG then
@@ -145,7 +143,6 @@ function NSAPI:WipeCellDB()
         end
     end
 end
-
 
 function NSAPI:InitNickNames()
     NSAPI.nicknames:WANickNamesDisplay(NSRT.WANickNames)
@@ -293,9 +290,9 @@ function NSAPI:NewNickName(unit, nickname, name, realm)
         end
     end    
     if ElvUF and ElvUF.Tags then
-        ElvUI.Tags:RefreshMethods("NSNickName")
+        ElvUF.Tags:RefreshMethods("NSNickName")
         for i=1, 12 do
-            ElvUI.Tags:RefreshMethods("NSNickName:"..i)
+            ElvUF.Tags:RefreshMethods("NSNickName:"..i)
         end
     end  
     if UUFG then
