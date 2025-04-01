@@ -12,10 +12,20 @@ local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLAT
 local NSUI_panel_options = {
     UseStatusBar = true
 }
-local NSUI = DF:CreateSimplePanel(UIParent, window_width, window_height, "Northern Sky Utilities", "NSUI",
+local NSUI = DF:CreateSimplePanel(UIParent, window_width, window_height, "|cFF00FFFFNorthern Sky|r Utilities", "NSUI",
     NSUI_panel_options)
 NSUI:SetPoint("CENTER")
 NSUI:SetFrameStrata("HIGH")
+local statusbar_text = DF:CreateLabel(NSUI.StatusBar, "Northern Sky x |cFF00FFFFbird|r")
+statusbar_text:SetPoint("left", NSUI.StatusBar, "left", 2, 0)
+-- DF:BuildStatusbarAuthorInfo(NSUI.StatusBar, _, "Reloe & Rav :)")
+
+NSUI.OptionsChanged = {
+    ["general"] = {},
+    ["nicknames"] = {},
+    ["externals"] = {},
+    ["versions"] = {},
+}
 
 -- need to run this code on settings change
 local function PASelfPingChanged(enabled)
@@ -82,22 +92,28 @@ function NSUI:Init()
     local general_callback = function()
         print("General callback")
 
-        PASelfPingChanged(NSRT.PASelfPing)
-    end
+        if NSUI.OptionsChanged["general"]["PASelfPing"] then
+            PASelfPingChanged(NSRT.PASelfPing)
+        end
 
+        wipe(NSUI.OptionsChanged["general"])
+    end
     local nicknames_callback = function()
         print("Nicknames callback")
 
         NickNameUpdated(NSRT.MyNickName)
+        wipe(NSUI.OptionsChanged["nicknames"])
     end
 
     local externals_callback = function()
         print("Externals callback")
         ExternalSelfPingChanged(NSRT.ExternalSelfPing)
+        wipe(NSUI.OptionsChanged["externals"])
     end
 
     local versions_callback = function()
         print("Versions callback")
+        wipe(NSUI.OptionsChanged["versions"])
     end
 
     -- Create the tab container
@@ -306,7 +322,7 @@ function NSUI:Init()
             name = "Enable @player Ping",
             desc = "Enable a @player ping when the private aura macro is used.",
             get = function() return NSRT.PASelfPing end,
-            set = function(self, fixedparam, value) NSRT.PASelfPing = value end,
+            set = function(self, fixedparam, value) NSRT.PASelfPing = value tinsert(NSUI.OptionsChanged["general"]["PASelfPing"], true) end,
         },
         {
             type = "label",
@@ -390,6 +406,36 @@ function NSUI:Init()
             end,
             name = "Enable SUF Nicknames",
             desc = "Enable Nicknames to be used with SUF unit frames.",
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            get = function() return enableSUFNicknames end,
+            set = function(self, fixedparam, value)
+                enableSUFNicknames = value
+            end,
+            name = "Enable WeakAuras Nicknames",
+            desc = "Enable Nicknames to be used with WeakAuras.",
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            get = function() return enableSUFNicknames end,
+            set = function(self, fixedparam, value)
+                enableSUFNicknames = value
+            end,
+            name = "Enable MRT Nicknames",
+            desc = "Enable Nicknames to be used with MRT.",
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            get = function() return enableSUFNicknames end,
+            set = function(self, fixedparam, value)
+                enableSUFNicknames = value
+            end,
+            name = "Enable Unhalted UI Nicknames",
+            desc = "Enable Nicknames to be used with Unhalted UI.",
         },
     }
 

@@ -25,7 +25,6 @@ function NSAPI:EventHandler(e, internal, ...) -- internal checks whether the eve
             -- end of default settings
             NSAPI:InitNickNames()
             NSAPI:SendNickName("GUILD")
-            NSAPI.NSUI:Init()
         end
     elseif e == "PLAYER_LOGIN" and not internal then
         local pafound = false
@@ -58,6 +57,7 @@ function NSAPI:EventHandler(e, internal, ...) -- internal checks whether the eve
             NSRT.ExternalMacro = CreateMacro("NS Ext Macro", 135966, macrotext, false)
         end
 
+        NSAPI.NSUI:Init()
     elseif e == "READY_CHECK" and not internal then
         if UnitInRaid("player") then
             NSAPI:SendNickName("RAID")

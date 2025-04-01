@@ -12,7 +12,6 @@
 
 NorthernSkyRaidTools.lua
 Media.lua
-NSNickNamesElvUI.lua
 Functions.lua
 AuraResize.lua
 Comms.lua
