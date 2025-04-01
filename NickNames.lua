@@ -1,91 +1,9 @@
--- code for on nickname change
-
-
--- code for Grid2 Nickname option change
-local function Grid2NickNameUpdated(enabled)
-    NSRT.Grid2NickNames = enabled
-    if enabled and Grid2 then
-            for u in NSAPI:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
-                Grid2Status:UpdateIndicators(u)
-                break
-            end
-    end
-end
--- code for Cell Nickname option change
-local function CellNickNameUpdated(enabled)
-    NSRT.CellNickNames = enabled
-    if CellDB then
-        if enabled then
-            CellDB.nicknames.custom = enabled
-            for name, nickname in pairs(NSRT.NickNames) do
-                if tInsertUnique(CellDB.nicknames.list, name..":"..nickname) then
-                    Cell.Fire("UpdateNicknames", "list-update", name, nickname)
-                end
-            end
-        else
-            for name, nickname in pairs(NSRT.NickNames) do -- wipe cell database
-                local i = tIndexOf(CellDB.nicknames.list, name.."-"..realm..":"..oldnick)
-                if i then
-                    table.remove(CellDB.nicknames.list, i)
-                end
-                local unit = strsplit("-", name)
-                if UnitExists(unit) then
-                    Cell.Fire("UpdateNicknames", "list-update", name, nickname)    -- idk if this actually removes on wiping the table
-                end
-            end
-        end
-    end
-end
-
--- code for MRT nickname option change
-local function MRTNickNameUpdated(enabled)
-    NSRT.MRTNickNames = enabled
-    if enabled then
-        GMRT.F:RegisterCallback(
-                "RaidCooldowns_Bar_TextName",
-                function(_, _, data)
-                    if data and data.name then
-                        data.name = NSAPI:GetName(data.name)
-                    end
-                end
-        )
-    else
-        GMRT.F:UnregisterCallBack("RaidCooldowns_Bar_textName")
-    end
-
-end
-
-
--- code for WA nickname option change
-local function WANickNameUpdated(enabled)
-    WANickNamesDisplay(enabled)
-    NSRT.WANickNames = enabled
-end
-
--- code for global nickname disable
-local function GlobalNickNameUpdated(enabled)
-    NSRT.GlobalNickNames = enabled
-    if enabled then
-        NSAPI:InitNickNames()
-    else
-        fullCharList = {}
-        sortedCharList = {}
-        if Grid2 then
-            for u in NSAPI:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
-                Grid2Status:UpdateIndicators(u)
-                break
-            end
-        end
-        if CellDB then
-            CellDB.nicknames.custom = false
-        end
-    end
-end
-
-
 local Grid2Status
 local fullCharList = {}
 local sortedCharList = {}
+local nicknames = {}
+
+NSAPI.nicknames = nicknames
 
 function NSAPI:GetCharacters(str) -- Returns table of all Characters from Nickname or Character Name
     if not str then
@@ -133,7 +51,7 @@ function NSAPI:GetChar(name, nick) -- Returns Char in Raid from Nickname or Char
     return name -- Return input if nothing was found
 end
 
-local function WANickNamesDisplay(enabled)
+function nicknames:WANickNamesDisplay(enabled)
     if NSRT.WANickNames then
         function WeakAuras.GetName(name)
             return NSAPI:GetName(name)
@@ -166,7 +84,7 @@ end
 
 
 function NSAPI:InitNickNames()
-    WANickNamesDisplay(NSRT.WANickNames)
+    NSAPI.nicknames:WANickNamesDisplay(NSRT.WANickNames)
     if NSRT.GlobalNickNames then
         for name, nickname in pairs(NSRT.NickNames) do
             fullCharList[name] = nickname

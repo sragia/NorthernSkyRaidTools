@@ -82,13 +82,86 @@ local function NickNameUpdated(nickname)
     end
     local oldnick = NSRT.NickNames[name .. "-" .. realm]
     if (not oldnick) or oldnick ~= nickname then
-        NSRT.MyNickName = nickname
         NSAPI:SendNickName("GUILD")
         NSAPI:SendNickName("RAID")
         NSAPI:NewNickName("player", nickname, name, realm)
     end
 end
 
+-- code for Grid2 Nickname option change
+local function Grid2NickNameUpdated(enabled)
+    if enabled and Grid2 then
+        for u in NSAPI:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
+            Grid2Status:UpdateIndicators(u)
+            break
+        end
+    end
+end
+-- code for Cell Nickname option change
+local function CellNickNameUpdated(enabled)
+    if CellDB then
+        if enabled then
+            CellDB.nicknames.custom = enabled
+            for name, nickname in pairs(NSRT.NickNames) do
+                if tInsertUnique(CellDB.nicknames.list, name .. ":" .. nickname) then
+                    Cell.Fire("UpdateNicknames", "list-update", name, nickname)
+                end
+            end
+        else
+            for name, nickname in pairs(NSRT.NickNames) do -- wipe cell database
+                local i = tIndexOf(CellDB.nicknames.list, name .. "-" .. realm .. ":" .. oldnick)
+                if i then
+                    table.remove(CellDB.nicknames.list, i)
+                end
+                local unit = strsplit("-", name)
+                if UnitExists(unit) then
+                    Cell.Fire("UpdateNicknames", "list-update", name, nickname) -- idk if this actually removes on wiping the table
+                end
+            end
+        end
+    end
+end
+
+-- code for MRT nickname option change
+local function MRTNickNameUpdated(enabled)
+    if enabled then
+        GMRT.F:RegisterCallback(
+            "RaidCooldowns_Bar_TextName",
+            function(_, _, data)
+                if data and data.name then
+                    data.name = NSAPI:GetName(data.name)
+                end
+            end
+        )
+    else
+        GMRT.F:UnregisterCallBack("RaidCooldowns_Bar_textName")
+    end
+end
+
+
+-- code for WA nickname option change
+local function WANickNameUpdated(enabled)
+    NSAPI.nicknames:WANickNamesDisplay(enabled)
+end
+
+-- code for global nickname disable
+local function GlobalNickNameUpdated(enabled)
+    if enabled then
+        NSAPI:InitNickNames()
+    else
+        fullCharList = {}
+        sortedCharList = {}
+        if Grid2 then
+            for u in NSAPI:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
+                Grid2Status:UpdateIndicators(u)
+                break
+            end
+        end
+        if CellDB then
+            CellDB.nicknames.custom = false
+        end
+    end
+end
 function NSUI:Init()
     -- when any setting is changed, call these respective callback function
     local general_callback = function()
@@ -102,6 +175,11 @@ function NSUI:Init()
         print("Nicknames callback")
 
         NickNameUpdated(NSRT.MyNickName)
+        Grid2NickNameUpdated(NSRT.Grid2NickNames)
+        CellNickNameUpdated(NSRT.CellNickNames)
+        MRTNickNameUpdated(NSRT.MRTNickNames)
+        WANickNameUpdated(NSRT.WANickNames)
+        GlobalNickNameUpdated(NSRT.GlobalNickNames)
         wipe(NSUI.OptionsChanged["nicknames"])
     end
 
@@ -378,9 +456,9 @@ function NSUI:Init()
         {
             type = "toggle",
             boxfirst = true,
-            get = function() return enableCellNicknames end,
+            get = function() return NSRT.CellNickNames end,
             set = function(self, fixedparam, value)
-                enableCellNicknames = value
+                NSRT.CellNickNames = value
             end,
             name = "Enable Cell Nicknames",
             desc = "Enable Nicknames to be used with Cell unit frames.",
@@ -388,9 +466,9 @@ function NSUI:Init()
         {
             type = "toggle",
             boxfirst = true,
-            get = function() return enableGrid2Nicknames end,
+            get = function() return NSRT.Grid2NickNames end,
             set = function(self, fixedparam, value)
-                enableGrid2Nicknames = value
+                NSRT.Grid2NickNames = value
             end,
             name = "Enable Grid2 Nicknames",
             desc = "Enable Nicknames to be used with Grid2 unit frames.",
@@ -418,9 +496,9 @@ function NSUI:Init()
         {
             type = "toggle",
             boxfirst = true,
-            get = function() return enableSUFNicknames end,
+            get = function() return NSRT.WANickNames end,
             set = function(self, fixedparam, value)
-                enableSUFNicknames = value
+                NSRT.WANickNames = value
             end,
             name = "Enable WeakAuras Nicknames",
             desc = "Enable Nicknames to be used with WeakAuras.",
@@ -428,9 +506,9 @@ function NSUI:Init()
         {
             type = "toggle",
             boxfirst = true,
-            get = function() return enableSUFNicknames end,
+            get = function() return NSRT.MRTNickNames end,
             set = function(self, fixedparam, value)
-                enableSUFNicknames = value
+                NSRT.MRTNickNames = value
             end,
             name = "Enable MRT Nicknames",
             desc = "Enable Nicknames to be used with MRT.",
