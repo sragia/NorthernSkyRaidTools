@@ -92,9 +92,7 @@ function NSUI:Init()
     local general_callback = function()
         print("General callback")
 
-        if NSUI.OptionsChanged["general"]["PASelfPing"] then
-            PASelfPingChanged(NSRT.PASelfPing)
-        end
+        PASelfPingChanged(NSRT.PASelfPing)
 
         wipe(NSUI.OptionsChanged["general"])
     end
@@ -322,7 +320,7 @@ function NSUI:Init()
             name = "Enable @player Ping",
             desc = "Enable a @player ping when the private aura macro is used.",
             get = function() return NSRT.PASelfPing end,
-            set = function(self, fixedparam, value) NSRT.PASelfPing = value tinsert(NSUI.OptionsChanged["general"]["PASelfPing"], true) end,
+            set = function(self, fixedparam, value) NSRT.PASelfPing = value end,
         },
         {
             type = "toggle",
