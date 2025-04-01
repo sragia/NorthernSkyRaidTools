@@ -28,17 +28,20 @@ NSUI.OptionsChanged = {
 }
 
 -- need to run this code on settings change
-local function PASelfPingChanged(enabled)
-    NSRT.PASelfPing = enabled
+local function PASelfPingChanged()
     for i = 1, 120 do
         local macroname = C_Macro.GetMacroName(i)
         if not macroname then break end
         if macroname == "NS PA Macro" then
             NSRT.PAMacro = i
-            local macrotext = enabled and "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);\n/ping [@player] Warning;" or
-                "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
-            EditMacro(i, "NS PA Macro", 132288, macrotext, false)
-            pafound = true
+            local macrotext = "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
+            if NSRT.PASelfPing then
+                 macrotext = macrotext.."\n/ping [@player] Warning;"
+             end
+            if NSRT.PAExtraAction then
+                macrotext = macrotext.."\n/click ExtraActionButton1"
+            end
+             EditMacro(i, "NS PA Macro", 132288, macrotext, false)
             break
         end
     end
@@ -51,8 +54,7 @@ local function PASelfPingChanged(enabled)
 end
 
 -- need to run this code on settings change
-local function ExternalSelfPingChanged(enabled)
-    NSRT.ExternalSelfPing = enabled
+local function ExternalSelfPingChanged()
     for i = 1, 120 do
         local macroname = C_Macro.GetMacroName(i)
         if not macroname then break end
@@ -92,7 +94,7 @@ function NSUI:Init()
     local general_callback = function()
         print("General callback")
 
-        PASelfPingChanged(NSRT.PASelfPing)
+        PASelfPingChanged()
 
         wipe(NSUI.OptionsChanged["general"])
     end
@@ -105,7 +107,7 @@ function NSUI:Init()
 
     local externals_callback = function()
         print("Externals callback")
-        ExternalSelfPingChanged(NSRT.ExternalSelfPing)
+        ExternalSelfPingChanged()
         wipe(NSUI.OptionsChanged["externals"])
     end
 
