@@ -88,80 +88,23 @@ local function NickNameUpdated(nickname)
     end
 end
 
--- code for Grid2 Nickname option change
-local function Grid2NickNameUpdated(enabled)
-    if enabled and Grid2 then
-        for u in NSAPI:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
-            Grid2Status:UpdateIndicators(u)
-            break
-        end
-    end
-end
 -- code for Cell Nickname option change
-local function CellNickNameUpdated(enabled)
+local function CellNickNameUpdated()
     if CellDB then
-        if enabled then
-            CellDB.nicknames.custom = enabled
+        if NSRT.CellNickNames and NSRT.GlobalNickNames then
+            CellDB.nicknames.custom = true
             for name, nickname in pairs(NSRT.NickNames) do
                 if tInsertUnique(CellDB.nicknames.list, name .. ":" .. nickname) then
                     Cell.Fire("UpdateNicknames", "list-update", name, nickname)
                 end
             end
         else
-            for name, nickname in pairs(NSRT.NickNames) do -- wipe cell database
-                local i = tIndexOf(CellDB.nicknames.list, name .. "-" .. realm .. ":" .. oldnick)
-                if i then
-                    table.remove(CellDB.nicknames.list, i)
-                end
-                local unit = strsplit("-", name)
-                if UnitExists(unit) then
-                    Cell.Fire("UpdateNicknames", "list-update", name, nickname) -- idk if this actually removes on wiping the table
-                end
-            end
+            NSAPI:WipeCellDB()
         end
     end
 end
 
--- code for MRT nickname option change
-local function MRTNickNameUpdated(enabled)
-    if enabled then
-        GMRT.F:RegisterCallback(
-            "RaidCooldowns_Bar_TextName",
-            function(_, _, data)
-                if data and data.name then
-                    data.name = NSAPI:GetName(data.name)
-                end
-            end
-        )
-    else
-        GMRT.F:UnregisterCallBack("RaidCooldowns_Bar_textName")
-    end
-end
 
-
--- code for WA nickname option change
-local function WANickNameUpdated(enabled)
-    NSAPI.nicknames:WANickNamesDisplay(enabled)
-end
-
--- code for global nickname disable
-local function GlobalNickNameUpdated(enabled)
-    if enabled then
-        NSAPI:InitNickNames()
-    else
-        fullCharList = {}
-        sortedCharList = {}
-        if Grid2 then
-            for u in NSAPI:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
-                Grid2Status:UpdateIndicators(u)
-                break
-            end
-        end
-        if CellDB then
-            CellDB.nicknames.custom = false
-        end
-    end
-end
 function NSUI:Init()
     -- when any setting is changed, call these respective callback function
     local general_callback = function()
@@ -194,7 +137,7 @@ function NSUI:Init()
 
         if NSUI.OptionsChanged.nicknames["GLOBAL_NICKNAMES"] then
             print("Global nicknames")
-            GlobalNickNameUpdated(NSRT.GlobalNickNames)
+            NSAPI:GlobalNickNameUpdate()
         end
 
         if NSUI.OptionsChanged.nicknames["CELL_NICKNAMES"] then
@@ -203,31 +146,13 @@ function NSUI:Init()
 
         end
 
-        if NSUI.OptionsChanged.nicknames["GRID2_NICKNAMES"] then
-            print("Grid2 nicknames")
-            Grid2NickNameUpdated(NSRT.Grid2NickNames)
-        end
-
         if NSUI.OptionsChanged.nicknames["ELVUI_NICKNAMES"] then
             print("ElvUI nicknames")
         end
 
-        if NSUI.OptionsChanged.nicknames["SUF_NICKNAMES"] then
-            print("Suf nicknames")
-        end
-
         if NSUI.OptionsChanged.nicknames["WA_NICKNAMES"] then
             print("Wa nicknames")
-            WANickNameUpdated(NSRT.WANickNames)
-        end
-
-        if NSUI.OptionsChanged.nicknames["MRT_NICKNAMES"] then
-            print("Mrt nicknames")
-            MRTNickNameUpdated(NSRT.MRTNickNames)
-        end
-
-        if NSUI.OptionsChanged.nicknames["UNHALTED_NICKNAMES"] then
-            print("Unhalted nicknames")
+            NSAPI.nicknames:WANickNamesDisplay(NSRT.WANickNames)
         end
 
         wipe(NSUI.OptionsChanged["nicknames"])

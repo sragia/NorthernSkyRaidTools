@@ -18,7 +18,10 @@ function NSAPI:GetAllCharacters()
 end
 
 
-function NSAPI:GetName(str) -- Returns Nickname
+function NSAPI:GetName(str, MRT) -- Returns Nickname
+    if MRT and not NSRT.MRTNickNames then
+        return str
+    end    
     if not str then
         error("NSAPI:GetName(str), str is nil")
         return
@@ -78,9 +81,70 @@ function nicknames:WANickNamesDisplay(enabled)
             local name, realm = UnitFullName(unit)
             return NSAPI:GetName(name), realm
         end
+    else
+        WeakAuras.GetName = GetName
+        WeakAuras.UnitName = UnitName
+        WeakAuras.GetUnitName = GetUnitName
+        WeakAuras.UnitFullName = UnitFullName
     end
 end
 
+function NSAPI:GlobalNickNameUpdate()
+    fullCharList = {}
+    sortedCharList = {}
+    if NSRT.GlobalNickNames then
+        for name, nickname in pairs(NSRT.NickNames) do
+            fullCharList[name] = nickname
+            if not sortedCharList[nickname] then
+                sortedCharList[nickname] = {}
+            end
+            sortedCharList[nickname][name] = true
+        end
+    end
+
+    
+    -- instant display update for all addons
+    if Grid2 then
+        for u in NSAPI:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
+            Grid2Status:UpdateIndicators(u)
+        end
+     end
+     if CellDB then
+         if NSRT.GlobalNickNames and NSRT.CellNickNames then
+            CellDB.nicknames.custom = true
+            for name, nickname in pairs(NSRT.NickNames) do
+                if tInsertUnique(CellDB.nicknames.list, name .. ":" .. nickname) then
+                    Cell.Fire("UpdateNicknames", "list-update", name, nickname)
+                end
+            end
+        else
+            NSAPI:WipeCellDB()
+        end
+    end
+    if ElvUF and ElvUF.Tags then
+        ElvUI.Tags:RefreshMethods("NSNickName")
+        for i=1, 12 do
+            ElvUI.Tags:RefreshMethods("NSNickName:"..i)
+        end
+    end    
+    if UUFG then
+        UUFG:UpdateAllTags() 
+    end    
+    -- Missing: SuF, MRT
+end
+
+function NSAPI:WipeCellDB()
+    if CellDB then
+        for name, nickname in pairs(NSRT.NickNames) do -- wipe cell database
+            local i = tIndexOf(CellDB.nicknames.list, name..":"..nickname)
+            if i then
+                local charname = strsplit("-", name)
+                Cell.Fire("UpdateNicknames", "list-update", name, charname)
+                table.remove(CellDB.nicknames.list, i)
+            end
+        end
+    end
+end
 
 
 function NSAPI:InitNickNames()
@@ -128,40 +192,28 @@ function NSAPI:InitNickNames()
 
     if ElvUF and ElvUF.Tags then
         ElvUF.Tags.Events['NSNickName'] = 'UNIT_NAME_UPDATE'
-        ElvUF.Tags.Events['NSNickName:Short'] = 'UNIT_NAME_UPDATE'
-        ElvUF.Tags.Events['NSNickName:Medium'] = 'UNIT_NAME_UPDATE'
         ElvUF.Tags.Methods['NSNickName'] = function(unit)
             local name = UnitName(unit)
             return name and NSAPI and NSAPI:GetName(name) or name
         end
-
-        ElvUF.Tags.Methods['NSNickName:veryshort'] = function(unit)
-            local name = UnitName(unit)
-            name = name and NSAPI and NSAPI:GetName(name) or name
-            return string.sub(name, 1, 5)
-        end
-
-        ElvUF.Tags.Methods['NSNickName:short'] = function(unit)
-            local name = UnitName(unit)
-            name = name and NSAPI and NSAPI:GetName(name) or name
-            return string.sub(name, 1, 8)
-        end
-
-        ElvUF.Tags.Methods['NSNickName:medium'] = function(unit)
-            local name = UnitName(unit)
-            name = name and NSAPI and NSAPI:GetName(name) or name
-            return string.sub(name, 1, 10)
+        for i=1, 12 do
+            ElvUF.Tags.Events['NSNickName:'..i] = 'UNIT_NAME_UPDATE'
+            ElvUF.Tags.Methods['NSNickName:'..i] = function(unit)
+                local name = UnitName(unit)
+                name = name and NSAPI and NSAPI:GetName(name) or name
+                return string.sub(name, 1, i)
+            end
         end
     end
 
-    if C_AddOns.IsAddOnLoaded("MRT") and GMRT and GMRT.F and NSRT.MRTNickNames then
+    if C_AddOns.IsAddOnLoaded("MRT") and GMRT and GMRT.F then
         GMRT.F:RegisterCallback(
-                "RaidCooldowns_Bar_TextName",
-                function(_, _, data)
-                    if data and data.name then
-                        data.name = NSAPI:GetName(data.name)
-                    end
+            "RaidCooldowns_Bar_TextName",
+            function(_, _, data)
+                if data and data.name then
+                    data.name = NSAPI:GetName(data.name, true)
                 end
+            end
         )
     end
 
@@ -235,6 +287,15 @@ function NSAPI:NewNickName(unit, nickname, name, realm)
                 break
             end
         end
-    end
+    end    
+    if ElvUF and ElvUF.Tags then
+        ElvUI.Tags:RefreshMethods("NSNickName")
+        for i=1, 12 do
+            ElvUI.Tags:RefreshMethods("NSNickName:"..i)
+        end
+    end  
+    if UUFG then
+        UUFG:UpdateAllTags() 
+    end    
 end
 
