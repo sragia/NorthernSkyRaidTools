@@ -241,6 +241,7 @@ function NSUI:Init()
     local externals_text = externals_anchor:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     externals_text:SetPoint("CENTER", externals_anchor, "CENTER", 0, 0)
     externals_text:SetText("NS_EXT")
+    NSUI.externals_anchor = externals_anchor
 
 
     -- dummy default variables until cvars are implemented
@@ -569,10 +570,10 @@ NSAPI.NSUI = NSUI
 SLASH_NSUITEST1 = "/ns"
 SlashCmdList["NSUITEST"] = function(msg)
     if msg == "anchor" then
-        if externals_anchor:IsShown() then
-            externals_anchor:Hide()
+        if NSUI.externals_anchor:IsShown() then
+            NSUI.externals_anchor:Hide()
         else
-            externals_anchor:Show()
+            NSUI.externals_anchor:Show()
         end
     else
         if NSUI:IsShown() then
