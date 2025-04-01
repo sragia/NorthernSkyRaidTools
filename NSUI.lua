@@ -135,7 +135,7 @@ function NSUI:Init()
     local general_tab = tabContainer:GetTabFrameByName("General")
     local nicknames_tab = tabContainer:GetTabFrameByName("Nicknames")
     local externals_tab = tabContainer:GetTabFrameByName("Externals")
-    local options_tab = tabContainer:GetTabFrameByName("Options")
+    local versions_tab = tabContainer:GetTabFrameByName("Versions")
 
     -- externals anchor frame
     local externals_anchor_panel_options = {
@@ -323,6 +323,14 @@ function NSUI:Init()
             desc = "Enable a @player ping when the private aura macro is used.",
             get = function() return NSRT.PASelfPing end,
             set = function(self, fixedparam, value) NSRT.PASelfPing = value tinsert(NSUI.OptionsChanged["general"]["PASelfPing"], true) end,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Combine Extra Action Button",
+            desc = "Combine the extra action button with the private aura macro.",
+            get = function() return NSRT.PAExtraAction end,
+            set = function(self, fixedparam, value) NSRT.PAExtraAction = value end,
         },
         {
             type = "label",
