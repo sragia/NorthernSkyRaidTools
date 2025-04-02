@@ -114,7 +114,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         NSI.specs = NSI.specs or {}
         NSI.specs[unit] = tonumber(spec)
     elseif (e == "NSAPI_SPEC_REQUEST" and internal) or (e == "ENCOUNTER_START" and not internal) then
-        NNSI.specs = {}
+        NSI.specs = {}
 
         for u in NSI:IterateGroupMembers() do
             if UnitIsVisible(u) then
@@ -131,7 +131,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             NSI.Externals.target = "raid1"
             NSI.Externals.pull = GetTime()
 
-            for u in NSAPI:IterateGroupMembers() do
+            for u in NSI:IterateGroupMembers() do
                 if UnitIsVisible(u) and (UnitIsGroupLeader(u) or UnitIsGroupAssistant(u)) then
                     NSI.Externals.target = u
                     break
