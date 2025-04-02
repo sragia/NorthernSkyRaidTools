@@ -488,10 +488,10 @@ function NSUI:Init()
         {
             type = "toggle",
             boxfirst = true,
-            get = function() return enableElvUINicknames end,
+            get = function() return NSRT.ElvUINickNames end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["ELVUI_NICKNAMES"] = true
-                enableElvUINicknames = value
+                NSRT.ElvUINickNames = value
             end,
             name = "Enable ElvUI Nicknames",
             desc = "Enable Nicknames to be used with ElvUI unit frames.",
