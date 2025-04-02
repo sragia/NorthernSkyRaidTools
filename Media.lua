@@ -1,6 +1,6 @@
+local _, NSI = ... -- Internal namespace
 local LSM = LibStub("LibSharedMedia-3.0")
 NSMedia = {}
-
 --Sounds
 LSM:Register("sound","|cFF4BAAC8Macro|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\macro.mp3]])
 LSM:Register("sound","|cFF4BAAC801|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\1.ogg]])

@@ -1,8 +1,7 @@
+local _, NSI = ... -- Internal namespace
 local Grid2Status
 local fullCharList = {}
 local sortedCharList = {}
-local nicknames = {}
-NSAPI.nicknames = nicknames
 
 function NSAPI:GetCharacters(str) -- Returns table of all Characters from Nickname or Character Name
     if not str then
@@ -16,10 +15,20 @@ function NSAPI:GetAllCharacters()
     return CopyTable(fullCharList)
 end
 
-function NSAPI:GetName(str, MRT) -- Returns Nickname
-    if MRT and not NSRT.MRTNickNames then
+function NSAPI:GetName(str, AddonName) -- Returns Nickname
+    if AddonName == "MRT" and not NSRT.MRTNickNames then
         return str
     end    
+    if AddonName == "WA" and not NSRT.WANickNames then
+        return str
+    end
+    if AddonName == "Grid2" and not NSRT.Grid2NickNames then
+        return str
+    end
+    if AddonName == "ElvUI" and not NSRT.ElvUINickNames then
+        return str
+    end
+
     if not str then
         error("NSAPI:GetName(str), str is nil")
         return
@@ -52,19 +61,65 @@ function NSAPI:GetChar(name, nick) -- Returns Char in Raid from Nickname or Char
     return name -- Return input if nothing was found
 end
 
-function nicknames:WANickNamesDisplay(enabled)
-    if NSRT.WANickNames then
+-- Own NickName Change
+function NSI:NickNameUpdated(nickname)
+    local name, realm = UnitFullName("player")
+    if not realm then
+        realm = GetNormalizedRealmName()
+    end
+    local oldnick = NSRT.NickNames[name .. "-" .. realm]
+    if (not oldnick) or oldnick ~= nickname then
+        NSI:SendNickName("GUILD")
+        NSI:SendNickName("RAID")
+        NSI:NewNickName("player", nickname, name, realm)
+    end
+end
+
+-- Grid2 Option Change
+function NSI:Grid2NickNameUpdated(unit)
+    if Grid2 then
+        for u in NSI:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
+            if unit then
+                if UnitExists(unit) and UnitIsUnit(u, unit) then
+                    Grid2Status:UpdateIndicators(u)
+                    break
+                end
+            else
+                Grid2Status:UpdateIndicators(u)
+            end
+        end
+     end
+end
+
+-- Cell Option Change
+function NSI:CellNickNameUpdated()
+    if CellDB then
+        if NSRT.CellNickNames and NSRT.GlobalNickNames then
+            for name, nickname in pairs(NSRT.NickNames) do
+                if tInsertUnique(CellDB.nicknames.list, name .. ":" .. nickname) then
+                    Cell.Fire("UpdateNicknames", "list-update", name, nickname)
+                end
+            end
+        else
+            NSI:WipeCellDB()
+        end
+    end
+end
+
+-- WA Option Change
+function NSI:WANickNameUpdated()
+    if NSRT.WANickNames and NSRT.GlobalNickNames then
         function WeakAuras.GetName(name)
-            return NSAPI:GetName(name)
+            return NSAPI:GetName(name, "WA")
         end
 
         function WeakAuras.UnitName(unit)
             local _, realm = UnitName(unit)
-            return NSAPI:GetName(unit), realm
+            return NSAPI:GetName(unit, "WA"), realm
         end
 
         function WeakAuras.GetUnitName(unit, server)
-            local name = NSAPI:GetName(unit)
+            local name = NSAPI:GetName(unit, "WA")
             if server then
                 local _, realm = UnitFullName(unit)
                 if not realm then
@@ -77,7 +132,7 @@ function nicknames:WANickNamesDisplay(enabled)
 
         function WeakAuras.UnitFullName(unit)
             local name, realm = UnitFullName(unit)
-            return NSAPI:GetName(name), realm
+            return NSAPI:GetName(name, "WA"), realm
         end
     else
         WeakAuras.GetName = GetName
@@ -87,7 +142,18 @@ function nicknames:WANickNamesDisplay(enabled)
     end
 end
 
-function NSAPI:GlobalNickNameUpdate()
+-- ElvUI Option Change
+function NSI:ElvUINickNameUpdated()
+    if ElvUF and ElvUF.Tags then
+        ElvUF.Tags:RefreshMethods("NSNickName")
+        for i=1, 12 do
+            ElvUF.Tags:RefreshMethods("NSNickName:"..i)
+        end
+    end    
+end
+
+-- Global NickName Option Change
+function NSI:GlobalNickNameUpdate()
     fullCharList = {}
     sortedCharList = {}
     if NSRT.GlobalNickNames then
@@ -102,36 +168,18 @@ function NSAPI:GlobalNickNameUpdate()
 
     
     -- instant display update for all addons
-    if Grid2 then
-        for u in NSAPI:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
-            Grid2Status:UpdateIndicators(u)
-        end
-     end
-     if CellDB then
-         if NSRT.GlobalNickNames and NSRT.CellNickNames then
-            CellDB.nicknames.custom = true
-            for name, nickname in pairs(NSRT.NickNames) do
-                if tInsertUnique(CellDB.nicknames.list, name .. ":" .. nickname) then
-                    Cell.Fire("UpdateNicknames", "list-update", name, nickname)
-                end
-            end
-        else
-            NSAPI:WipeCellDB()
-        end
-    end
-    if ElvUF and ElvUF.Tags then
-        ElvUF.Tags:RefreshMethods("NSNickName")
-        for i=1, 12 do
-            ElvUF.Tags:RefreshMethods("NSNickName:"..i)
-        end
-    end    
+    NSI:WANickNameUpdated()
+    NSI:Grid2NickNameUpdated()
+    NSI:CellNickNameUpdated()
+    NSI:ElvUINickNameUpdated()
+
     if UUFG then
         UUFG:UpdateAllTags() 
     end    
-    -- Missing: SuF, MRT
+    -- Missing: SuF, MRT, RaidFrames, Chat, Vuhdo
 end
 
-function NSAPI:WipeCellDB()
+function NSI:WipeCellDB()
     if CellDB then
         for name, nickname in pairs(NSRT.NickNames) do -- wipe cell database
             local i = tIndexOf(CellDB.nicknames.list, name..":"..nickname)
@@ -144,8 +192,9 @@ function NSAPI:WipeCellDB()
     end
 end
 
-function NSAPI:InitNickNames()
-    NSAPI.nicknames:WANickNamesDisplay(NSRT.WANickNames)
+function NSI:InitNickNames()
+
+    NSI:WANickNameUpdated()
     if NSRT.GlobalNickNames then
         for name, nickname in pairs(NSRT.NickNames) do
             fullCharList[name] = nickname
@@ -155,6 +204,7 @@ function NSAPI:InitNickNames()
             sortedCharList[nickname][name] = true
         end
     end
+
     if Grid2 then
         Grid2Status = Grid2.statusPrototype:new("NSNickName")
 
@@ -174,7 +224,7 @@ function NSAPI:InitNickNames()
 
         function Grid2Status:GetText(unit)
             local name = UnitName(unit)
-            return name and NSAPI and NSAPI:GetName(name) or name
+            return name and NSAPI and NSAPI:GetName(name, "Grid2") or name
         end
 
         local function Create(baseKey, dbx)
@@ -184,20 +234,20 @@ function NSAPI:InitNickNames()
 
         Grid2.setupFunc["NSNickName"] = Create
 
-        Grid2:DbSetStatusDefaultValue( "NSNickName", {type = "NSNickName"})
-    end
+        Grid2:DbSetStatusDefaultValue( "NSNickName", {type = "NSNickName"})        
+        end
 
     if ElvUF and ElvUF.Tags then
         ElvUF.Tags.Events['NSNickName'] = 'UNIT_NAME_UPDATE'
         ElvUF.Tags.Methods['NSNickName'] = function(unit)
             local name = UnitName(unit)
-            return name and NSAPI and NSAPI:GetName(name) or name
+            return name and NSAPI and NSAPI:GetName(name, "ElvUI") or name
         end
         for i=1, 12 do
             ElvUF.Tags.Events['NSNickName:'..i] = 'UNIT_NAME_UPDATE'
             ElvUF.Tags.Methods['NSNickName:'..i] = function(unit)
                 local name = UnitName(unit)
-                name = name and NSAPI and NSAPI:GetName(name) or name
+                name = name and NSAPI and NSAPI:GetName(name, "ElvUI") or name
                 return string.sub(name, 1, i)
             end
         end
@@ -208,7 +258,7 @@ function NSAPI:InitNickNames()
             "RaidCooldowns_Bar_TextName",
             function(_, _, data)
                 if data and data.name then
-                    data.name = NSAPI:GetName(data.name, true)
+                    data.name = NSAPI:GetName(data.name, "MRT")
                 end
             end
         )
@@ -223,7 +273,7 @@ function NSAPI:InitNickNames()
     end
 end
 
-function NSAPI:SendNickName(channel)
+function NSI:SendNickName(channel)
     local nickname = NSRT.MyNickName
     local name, realm = UnitFullName("player")
     if not realm then
@@ -235,7 +285,7 @@ function NSAPI:SendNickName(channel)
 end
 
 
-function NSAPI:NewNickName(unit, nickname, name, realm)
+function NSI:NewNickName(unit, nickname, name, realm)
     print("new nickanme:", unit, nickname, name, realm)
     if not nickname then return end           
     if string.len(nickname) > 12 then
@@ -245,7 +295,7 @@ function NSAPI:NewNickName(unit, nickname, name, realm)
     if oldnick and oldnick == nickname then return end -- stop early if we already have this exact nickname
     if CellDB and NSRT.CellNickNames and NSRT.GlobalNickNames then -- have to do cell before updating name in database as old nickname may have to be overwritten in cell's own database
         local ingroup = false
-        for u in NSAPI:IterateGroupMembers() do -- if unit is in group refresh cell display, could be a guild message instead
+        for u in NSI:IterateGroupMembers() do -- if unit is in group refresh cell display, could be a guild message instead
             if UnitExists(unit) and UnitIsUnit(u, unit) then
                 ingroup = true
                 break
@@ -282,19 +332,15 @@ function NSAPI:NewNickName(unit, nickname, name, realm)
             UUFG:UpdateAllTags()
         end
         if Grid2 then
-            for u in NSAPI:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
+            for u in NSI:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
                 if UnitExists(unit) and UnitIsUnit(u, unit) then
                     Grid2Status:UpdateIndicators(u)
                     break
                 end
             end
         end    
-        if ElvUF and ElvUF.Tags then
-            ElvUF.Tags:RefreshMethods("NSNickName")
-            for i=1, 12 do
-                ElvUF.Tags:RefreshMethods("NSNickName:"..i)
-            end
-        end  
+        NSI:Grid2NickNameUpdated(unit)
+        NSI:ElvUINickNameUpdated()
         if UUFG then
          UUFG:UpdateAllTags() 
         end    

@@ -1,3 +1,4 @@
+local _, NSI = ... -- Internal namespace
 local f = CreateFrame("Frame")
 f:RegisterEvent("ENCOUNTER_START")
 f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -6,10 +7,10 @@ f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_LOGIN")
 
 f:SetScript("OnEvent", function(self, e, ...)
-        NSAPI:EventHandler(e, false, ...)
+    NSI:EventHandler(e, false, ...)
 end)
 
-function NSAPI:EventHandler(e, internal, ...) -- internal checks whether the event comes from addon comms. We don't want to allow blizzard events to be fired manually
+function NSI:EventHandler(e, internal, ...) -- internal checks whether the event comes from addon comms. We don't want to allow blizzard events to be fired manually
     if e == "ADDON_LOADED" and not internal then
         local name = ...
         if name == "NorthernSkyRaidTools" then
@@ -28,8 +29,8 @@ function NSAPI:EventHandler(e, internal, ...) -- internal checks whether the eve
             if NSRT.Grid2NickNames == nil then NSRT.Grid2NickNames = false end
             if NSRT.PAExtraAction == nil then NSRT.PAExtraAction = false end
             -- end of default settings
-            NSAPI:InitNickNames()
-            NSAPI:SendNickName("GUILD")
+            NSI:InitNickNames()
+            NSI:SendNickName("GUILD")
         end
     elseif e == "PLAYER_LOGIN" and not internal then
         local pafound = false
@@ -52,7 +53,7 @@ function NSAPI:EventHandler(e, internal, ...) -- internal checks whether the eve
                 pafound = true
             elseif macroname == "NS Ext Macro" then
                 NSRT.ExternalMacro = i
-                local macrotext = NSRT.ExternalSelfPing and "/run NSExternals:Request();\n/ping [@player] Assist;" or "/run NSExternals:Request();"
+                local macrotext = NSRT.ExternalSelfPing and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI.ExternalRequest();"
                 EditMacro(i, "NS Ext Macro", 135966, macrotext, false)
                 extfound = true
             end
@@ -64,23 +65,23 @@ function NSAPI:EventHandler(e, internal, ...) -- internal checks whether the eve
             -- NSAPI:Broadcast("NS_PA_MACRO", "RAID", "nilcheck") -- add this to macro if I want to send macro press data to everyone
         end
         if not NSRT.ExternalMacro then
-            local macrotext = NSRT.ExternalSelfPing and "/run NSExternals:Request();\n/ping [@player] Assist;" or "/run NSExternals:Request();"
+            local macrotext = NSRT.ExternalSelfPing and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI.ExternalRequest();"
             NSRT.ExternalMacro = CreateMacro("NS Ext Macro", 135966, macrotext, false)
         end
 
-        NSAPI.NSUI:Init()
+        NSI.NSUI:Init()
     elseif e == "READY_CHECK" and not internal then
         if UnitInRaid("player") then
-            NSAPI:SendNickName("RAID")
+            NSI:SendNickName("RAID")
         end
     elseif e == "COMBAT_LOG_EVENT_UNFILTERED" and not internal then
         local _, subevent, _, _, _, _, _, _, destName, _, _, spellID = CombatLogGetCurrentEventInfo()
-        if subevent == "SPELL_AURA_APPLIED" and NSExternals and NSExternals.Automated[spellID] then
+        if subevent == "SPELL_AURA_APPLIED" and NSI.Externals and NSI.Externals.Automated[spellID] then
             local unit = destName
             if unit and UnitExists(unit) and UnitInRaid(unit) then
                 unit = "raid"..UnitInRaid(unit)
-                local key = NSExternals.Automated[spellID]
-                NSAPI:EventHandler("NS_EXTERNAL_REQ", unit, key, NSExternals.Amount[key..spellID], false, "skip")
+                local key = NSI.Externals.Automated[spellID]
+                NSI:EventHandler("NS_EXTERNAL_REQ", unit, key, NSI.Externals.Amount[key..spellID], false, "skip")
             end
         end
     elseif e == "NS_VERSION_CHECK" and internal then
@@ -107,17 +108,17 @@ function NSAPI:EventHandler(e, internal, ...) -- internal checks whether the eve
     elseif e == "NSAPI_NICKNAMES_COMMS" and internal then
         local unit, nickname, name, realm = ...
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't add new nickname if it's yourself because already adding it to the database when you edit it
-        NSAPI:NewNickName(unit, nickname, name, realm)
+        NSI:NewNickName(unit, nickname, name, realm)
     elseif e == "NSAPI_SPEC" and internal then
         local unit, spec = ...
-        NSAPI.specs = NSAPI.specs or {}
-        NSAPI.specs[unit] = tonumber(spec)
+        NSI.specs = NSI.specs or {}
+        NSI.specs[unit] = tonumber(spec)
     elseif (e == "NSAPI_SPEC_REQUEST" and internal) or (e == "ENCOUNTER_START" and not internal) then
-        NSAPI.specs = {}
+        NNSI.specs = {}
 
-        for u in NSAPI:IterateGroupMembers() do
+        for u in NSI:IterateGroupMembers() do
             if UnitIsVisible(u) then
-                NSAPI.specs[u] = WeakAuras.SpecForUnit(u)
+                NSI.specs[u] = WeakAuras.SpecForUnit(u)
             end
         end
         -- broadcast spec info
@@ -127,24 +128,24 @@ function NSAPI:EventHandler(e, internal, ...) -- internal checks whether the eve
             C_Timer.After(3, function()
                 WeakAuras.ScanEvents("NSAPI_ENCOUNTER_START", true)
             end)
-            NSExternals.target = "raid1"
-            NSExternals.pull = GetTime()
+            NSI.Externals.target = "raid1"
+            NSI.Externals.pull = GetTime()
 
             for u in NSAPI:IterateGroupMembers() do
                 if UnitIsVisible(u) and (UnitIsGroupLeader(u) or UnitIsGroupAssistant(u)) then
-                    NSExternals.target = u
+                    NSI.Externals.target = u
                     break
                 end
             end
-            if UnitIsUnit("player", NSExternals.target) then
-                NSExternals.UpdateExternals()
+            if UnitIsUnit("player", NSI.Externals.target) then
+                NSI.Externals.UpdateExternals()
                 local note = NSAPI:GetNote()
                 local list = false
                 local key = ""
                 local spell = 0
-                NSExternals.customprio = {}
-                NSExternals.Automated = {}
-                NSExternals.Amount = {}
+                NSI.Externals.customprio = {}
+                NSI.Externals.Automated = {}
+                NSI.Externals.Amount = {}
                 if note == "" then return end
                 for line in note:gmatch('[^\r\n]+') do
                     --check for start/end of the name list
@@ -153,41 +154,41 @@ function NSAPI:EventHandler(e, internal, ...) -- internal checks whether the eve
                         key = ""
                     elseif strlower(line) == "nsexternalend" then
                         list = false
-                        NSExternals.Amount[key] = NSExternals.Amount[key] or 1
+                        NSI.Externalss.Amount[key] = NSI.Externals.Amount[key] or 1
                         key = ""
                     end
                     if list then
                         for k in line:gmatch("key:(%S+)") do
                             if k ~= "default" then
-                                NSExternals.customprio[k] = NSExternals.customprio[k] or {}
+                                NSI.Externals.customprio[k] = NSI.Externals.customprio[k] or {}
                             end
                             key = k
                         end
                         if key ~= "" then
                             for spellID in line:gmatch("automated:(%d+)") do
-                                NSExternals.Automated[tonumber(spellID)] = key
+                                NSI.Externals.Automated[tonumber(spellID)] = key
                                 spell = tonumber(spellID)
                             end
                             if spell ~= 0 then
                                 for num in line:gmatch("amount:(%d+)") do
-                                    NSExternals.Amount[key..spell] = tonumber(num)
+                                    NSI.Externals.Amount[key..spell] = tonumber(num)
                                 end
                             end
                         end
                         for name, id in line:gmatch("(%S+):(%d+)") do --
                             if UnitInRaid(name) and key ~= "" then
                                 if key == "default" then-- only make a default custom prio if the user actually provides one, otherwise we keep the initial default prio
-                                    NSExternals.customprio[key] = NSExternals.customprio[key] or {}
+                                    NSI.Externals.customprio[key] = NSI.Externals.customprio[key] or {}
                                 end
                                 local u = "raid"..UnitInRaid(name)
-                                table.insert(NSExternals.customprio[key], {u, id})
+                                table.insert(NSI.Externals.customprio[key], {u, id})
                             end
                         end
                     end
                 end
             end
         end
-    elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(NSExternals.target, "player") and internal then -- only accept scanevent if you are the "server"
+    elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") and internal then -- only accept scanevent if you are the "server"
         -- unitID = player that requested
         -- unit = player that shall give the external
         local unitID, key, num, req, range = ...
@@ -198,40 +199,40 @@ function NSAPI:EventHandler(e, internal, ...) -- internal checks whether the eve
         local now = GetTime()
         local name, realm = UnitName(unitID)
         if key == "default" then
-            key = NSExternals:getprio(unitID)
+            key = NSI.Externals:getprio(unitID)
         end
-        NSExternals.assigned = {}
+        NSI.Externals.assigned = {}
         local sender = realm and name.."-"..realm or name
         local found = 0
-        if NSExternals.check[key] then -- see if an immunity or other assigned self cd's are available first
-            for i, spellID in ipairs(NSExternals.check[key]) do
+        if NSI.Externals.check[key] then -- see if an immunity or other assigned self cd's are available first
+            for i, spellID in ipairs(NSI.Externals.check[key]) do
                 if (spellID ~= 1022 and spellID ~= 204018 and spellID ~= 633 and spellID ~= 204018) or not C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(25771).name) then -- check forebearance
                     local check = unitID..spellID
-                    if NSExternals.ready[check] then
+                    if NSI.Externals.ready[check] then
                         return true
                     end
                 end
             end
         end
         local count = 0
-        if NSExternals.customprio[key] then
-            for i, v in ipairs(NSExternals.customprio[key]) do
-                local assigned = NSExternals:AssignExternal(unitID, key, num, req, range, v[1], v[2], sender)
+        if NSI.Externals.customprio[key] then
+            for i, v in ipairs(NSI.Externals.customprio[key]) do
+                local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, v[1], v[2], sender)
                 if assigned then
                     count = count+1
                 end
-                if count >= num or NSExternals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
+                if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
             end
         else
-            for i, spellID in ipairs(NSExternals.prio[key]) do -- go through spellid's in prio order
-                if NSExternals.known[spellID] then
-                    for unit, _ in pairs(NSExternals.known[spellID]) do -- check each person who knows that spell if it's available and not already requested
+            for i, spellID in ipairs(NSI.Externals.prio[key]) do -- go through spellid's in prio order
+                if NSI.Externals.known[spellID] then
+                    for unit, _ in pairs(NSI.Externals.known[spellID]) do -- check each person who knows that spell if it's available and not already requested
                         if num > count then
-                            local assigned = NSExternals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender)
+                            local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender)
                             if assigned then
                                 count = count+1
                             end
-                            if count >= num or NSExternals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
+                            if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
                         end
                     end
                 end

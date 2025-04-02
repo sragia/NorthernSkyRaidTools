@@ -1,8 +1,9 @@
+local _, NSI = ... -- Internal namespace
 -- Todo
 -- Need custom option for TTS
 
 -- Function from WeakAuras, thanks rivers
-function NSAPI:IterateGroupMembers(reversed, forceParty)
+function NSI:IterateGroupMembers(reversed, forceParty)
     local unit = (not forceParty and IsInRaid()) and 'raid' or 'party'
     local numGroupMembers = unit == 'party' and GetNumSubgroupMembers() or GetNumGroupMembers()
     local i = reversed and numGroupMembers or (unit == 'party' and 0 or 1)
@@ -18,8 +19,9 @@ function NSAPI:IterateGroupMembers(reversed, forceParty)
     end
 end
 
-function NSAPI:PrivateAuraMacro()
-    if (not NSAPI.LastPAMacro) or (GetTime() > NSAPI.LastPAMacro + 4) then -- not allow people to spam this. Some auras might need to manually reset this to 0. Example: Withering flames on bandit because you could get the debuff instantly after being dispelled
+function NSI:PrivateAuraMacro()
+    if (not NSI.LastPAMacro) or (GetTime() > NSI.LastPAMacro + 4) then -- not allow people to spam this. Some auras might need to manually reset this to 0. Example: Withering flames on bandit because you could get the debuff instantly after being dispelled
+        NSI.LastPAMacro = GetTime()
         WeakAuras.ScanEvents("NS_PA_MACRO", true)
         -- NSAPI:Broadcast("NS_PA_MACRO", "RAID", "nilcheck") -- enable this if I want to send macro press data to everyone
     end
@@ -51,9 +53,9 @@ end
 
 function NSAPI:GetSpecs(unit)
     if unit then
-        return NSAPI.specs[unit] or false -- return false if no information available for that unit so it goes to the next fallback
+        return NSI.specs[unit] or false -- return false if no information available for that unit so it goes to the next fallback
     else
-        return NSAPI.specs -- if no unit is given then entire table is requested
+        return NSI.specs -- if no unit is given then entire table is requested
     end
 end
 
@@ -69,8 +71,8 @@ function NSAPI:GetNote() -- Get rid of extra spaces and color coding. Also conve
     end
     local note = _G.VMRT.Note.Text1
     local now = GetTime()
-    if (not NSAPI.RawNote) or NSAPI.RawNote ~= note or NSAPI.disable then -- only do this if it's been at least 1 second since the last time this was done or the note has changed within that small time to prevent running it multiple times on the same encounter if there are multiple assignment auras
-        NSAPI.RawNote = note
+    if (not NSI.RawNote) or NSI.RawNote ~= note or NSI.disable then -- only do this if it's been at least 1 second since the last time this was done or the note has changed within that small time to prevent running it multiple times on the same encounter if there are multiple assignment auras
+        NSI.RawNote = note
 
         -- only return the relevant part of the note as the user might change stuff on their own end
 
@@ -107,10 +109,10 @@ function NSAPI:GetNote() -- Get rid of extra spaces and color coding. Also conve
             for nickname, charname in pairs(namelist) do
                 note = note:gsub("(%f[%w])"..nickname.."(%f[%W])", "%1"..charname.."%2")
             end
-        NSAPI.Note = note
+        NSI.Note = note
     end
-    NSAPI.Note = NSAPI.Note or ""
-    return NSAPI.Note
+    NSI.Note = NSI.Note or ""
+    return NSI.Note
 end
 
 

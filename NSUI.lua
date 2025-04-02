@@ -1,3 +1,4 @@
+local _, NSI = ... -- Internal namespace
 local DF = _G["DetailsFramework"]
 
 local window_width = 800
@@ -60,49 +61,20 @@ local function ExternalSelfPingChanged()
         if not macroname then break end
         if macroname == "NS Ext Macro" then
             NSRT.ExternalMacro = i
-            local macrotext = NSRT.ExternalSelfPing and "/run NSExternals:Request();\n/ping [@player] Assist;" or
-                "/run NSExternals:Request();"
+            local macrotext = NSRT.ExternalSelfPing and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or
+                "/run NSAPI.ExternalRequest();"
             EditMacro(i, "NS Ext Macro", 135966, macrotext, false)
             extfound = true
             break
         end
     end
     if not NSRT.ExternalMacro then
-        local macrotext = NSRT.ExternalSelfPing and "/run NSExternals:Request();\n/ping [@player] Assist;" or
-            "/run NSExternals:Request();"
+        local macrotext = NSRT.ExternalSelfPing and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or
+            "/run NSAPI.ExternalRequest();"
         NSRT.ExternalMacro = CreateMacro("NS Ext Macro", 135966, macrotext, false)
     end
 end
 
--- nickname change callbacks
-local function NickNameUpdated(nickname)
-    local name, realm = UnitFullName("player")
-    if not realm then
-        realm = GetNormalizedRealmName()
-    end
-    local oldnick = NSRT.NickNames[name .. "-" .. realm]
-    if (not oldnick) or oldnick ~= nickname then
-        NSAPI:SendNickName("GUILD")
-        NSAPI:SendNickName("RAID")
-        NSAPI:NewNickName("player", nickname, name, realm)
-    end
-end
-
--- code for Cell Nickname option change
-local function CellNickNameUpdated()
-    if CellDB then
-        if NSRT.CellNickNames and NSRT.GlobalNickNames then
-            CellDB.nicknames.custom = true
-            for name, nickname in pairs(NSRT.NickNames) do
-                if tInsertUnique(CellDB.nicknames.list, name .. ":" .. nickname) then
-                    Cell.Fire("UpdateNicknames", "list-update", name, nickname)
-                end
-            end
-        else
-            NSAPI:WipeCellDB()
-        end
-    end
-end
 
 
 function NSUI:Init()
@@ -132,27 +104,27 @@ function NSUI:Init()
 
         if NSUI.OptionsChanged.nicknames["NICKNAME"] then
             print("Nickname")
-            NickNameUpdated(NSRT.MyNickName)
+            NSI:NickNameUpdated(NSRT.MyNickName)
         end
 
         if NSUI.OptionsChanged.nicknames["GLOBAL_NICKNAMES"] then
             print("Global nicknames")
-            NSAPI:GlobalNickNameUpdate()
+            NSI:GlobalNickNameUpdate()
         end
 
         if NSUI.OptionsChanged.nicknames["CELL_NICKNAMES"] then
             print("Cell nicknames")
-            CellNickNameUpdated(NSRT.CellNickNames)
-
+            NSI:CellNickNameUpdated()
         end
 
-        if NSUI.OptionsChanged.nicknames["ELVUI_NICKNAMES"] then
-            print("ElvUI nicknames")
+        if NSUI.OptionsChanged.nicknames["GRID2_NICKNAMES"] then
+            print("Grid2 nicknames")
+            NSI:Grid2NickNameUpdated()
         end
 
         if NSUI.OptionsChanged.nicknames["WA_NICKNAMES"] then
             print("Wa nicknames")
-            NSAPI.nicknames:WANickNamesDisplay(NSRT.WANickNames)
+            NSI:WANickNameUpdated()
         end
 
         wipe(NSUI.OptionsChanged["nicknames"])
@@ -572,7 +544,7 @@ function NSUI:Init()
         externals_callback)
 end
 
-NSAPI.NSUI = NSUI
+NSI.NSUI = NSUI
 
 SLASH_NSUITEST1 = "/ns"
 SlashCmdList["NSUITEST"] = function(msg)

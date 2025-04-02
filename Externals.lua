@@ -1,14 +1,15 @@
+local _, NSI = ... -- Internal namespace
 -- Todo
 -- Add self cd's to allspells to possibly check those being available before externals are automatically assigned
 
 
 local lib = LibStub:GetLibrary("LibOpenRaid-1.0")
-_G["NSExternals"] = {}
-NSExternals.ready = {}
-NSExternals.known = {}
-NSExternals.requested = {}
-NSExternals.Automated = {}
-NSExternals.Amount = {}
+NSI.Externals = {}
+NSI.Externals.ready = {}
+NSI.Externals.known = {}
+NSI.Externals.requested = {}
+NSI.Externals.Automated = {}
+NSI.Externals.Amount = {}
 local Sac = 6940
 local Bop = 1022
 local Spellbop = 204018
@@ -26,14 +27,14 @@ local Netherwalk = 196555
 local Cloak = 31224
 local Icebound = 48792
 
-NSExternals.prio = {
+NSI.Externals.prio = {
     -- Life Cocoon, Time Dilation, Pain Suppression, Ironbark, Sac, Guardian  Spiritx2, Lay on Hands
     ["default"] = {Cocoon, TD, Painsup, Bark, Sac, GS1, GS2, LoH},
     ["DoubleWhammy"] = {Cocoon, TD, Painsup, Bark, GS1, GS2, Sac}, -- Life Cocoon first as it's a one-time dmg event
     ["MugzeeFrontal"] = {Sac, Bark, TD, Painsup, GS1, GS2, LoH, Cocoon}, -- sac first as there is likely a prot pally. Life Cocoon last to not waste it
 }
 
-NSExternals.AllSpells = { -- 1 = if a mechanic requests multiple externals this bypasses that and stops after finding just this one, has to be in priority list before every other external.
+NSI.Externals.AllSpells = { -- 1 = if a mechanic requests multiple externals this bypasses that and stops after finding just this one, has to be in priority list before every other external.
     [Sac] = true, -- Sac
     [Bop] = 1, -- Bop
     [Spellbop] = 1, -- Spellbop
@@ -53,10 +54,10 @@ NSExternals.AllSpells = { -- 1 = if a mechanic requests multiple externals this 
 }
 
 local callbacks = {
-    CooldownListUpdate = function(...) NSExternals:UpdateSpell(...) end,
-    CooldownListWipe = function(...) NSExternals:UpdateExternals() end,
-    CooldownUpdate = function(...) NSExternals:UpdateSpell(...) end,
-    CooldownAdded = function(...) NSExternals:UpdateSpell(...) end,
+    CooldownListUpdate = function(...) NSI.Externals:UpdateSpell(...) end,
+    CooldownListWipe = function(...) NSI.Externals:UpdateExternals() end,
+    CooldownUpdate = function(...) NSI.Externals:UpdateSpell(...) end,
+    CooldownAdded = function(...) NSI.Externals:UpdateSpell(...) end,
 }
 
 lib.RegisterCallback(callbacks, "CooldownListUpdate", "CooldownListUpdate")
@@ -64,19 +65,19 @@ lib.RegisterCallback(callbacks, "CooldownListWipe", "CooldownListWipe")
 lib.RegisterCallback(callbacks, "CooldownUpdate", "CooldownUpdate")
 lib.RegisterCallback(callbacks, "CooldownAdded", "CooldownAdded")
 
-NSExternals.target = ""
-NSExternals.customprio = {}
+NSI.Externals.target = ""
+NSI.Externals.customprio = {}
 
 
 
-NSExternals.ignorecd = { -- spells in this list ignore their cooldown. This was added on Mug'Zee because an ability happens every 59.5 seconds while sac has a 1minute cd. You still use sac every time but the aura would think it's on CD
+NSI.Externals.ignorecd = { -- spells in this list ignore their cooldown. This was added on Mug'Zee because an ability happens every 59.5 seconds while sac has a 1minute cd. You still use sac every time but the aura would think it's on CD
     ["MugzeeFrontal"] = {
         [Sac] = true,
     },
 }
 
 
-NSExternals.check = { -- check if ready before assigning external
+NSI.Externals.check = { -- check if ready before assigning external
     -- ["Condemnation"] = {31224, 196555, 186265, 45438, 642}, -- spell immunities
 
     -- example: ["NymueBeam"] = {45438, 642, 48792},
@@ -84,7 +85,7 @@ NSExternals.check = { -- check if ready before assigning external
 
 
 
-NSExternals.block = { -- block specific spells from specific players from being used
+NSI.Externals.block = { -- block specific spells from specific players from being used
     ["default"] = {
         -- [633] = {["Shirup"] = true,}
     },
@@ -95,7 +96,7 @@ NSExternals.block = { -- block specific spells from specific players from being 
     }
 }
 
-NSExternals.stacks = {
+NSI.Externals.stacks = {
     [Painsup] = true, -- Pain Suppression
     [Bark] = true, -- Ironbark
     [TD] = true, -- Time Dilation
@@ -105,7 +106,7 @@ NSExternals.stacks = {
 
 
 
-NSExternals.range = { -- slight variance on +5 yards as a little bit of movement can be expected
+NSI.Externals.range = { -- slight variance on +5 yards as a little bit of movement can be expected
     [Sac] = 45, -- Sac
     [Bop] = 45, -- Bop
     [Spellbop] = 45, -- Spellbop
@@ -119,7 +120,7 @@ NSExternals.range = { -- slight variance on +5 yards as a little bit of movement
 }
 
 
-function NSExternals:getprio(unit) -- encounter/phase based priority list
+function NSI.Externals:getprio(unit) -- encounter/phase based priority list
     local enc = WeakAuras.CurrentEncounter and WeakAuras.CurrentEncounter.id
     if enc == 2920 then
         return "Kyveza"
@@ -128,7 +129,7 @@ function NSExternals:getprio(unit) -- encounter/phase based priority list
     end
 end
 
-function NSExternals:extracheck(unit, unitID, key, spellID) -- additional check if the person can actually give the external, like checking if they are in range / on the same side / stunned
+function NSI.Externals:extracheck(unit, unitID, key, spellID) -- additional check if the person can actually give the external, like checking if they are in range / on the same side / stunned
     -- unit = giver, unitID = receiver, key = prioname
     local enc = WeakAuras.CurrentEncounter and WeakAuras.CurrentEncounter.id
     if key == "Kyveza" and spellID == Bop and C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(437343).name) then -- do not assign BoP if the person already has queensbane because at that point it was requested too late
@@ -148,42 +149,42 @@ end
 
 
 
-function NSExternals:UpdateSpell(unit, spellID, cooldownInfo)
-    if UnitIsUnit("player", NSExternals.target) then
-        if unit and UnitExists(unit) and spellID and cooldownInfo and NSExternals.AllSpells[spellID] then
+function NSI.Externals:UpdateSpell(unit, spellID, cooldownInfo)
+    if UnitIsUnit("player", NSI.Externals.target) then
+        if unit and UnitExists(unit) and spellID and cooldownInfo and NSI.Externals.AllSpells[spellID] then
             if UnitInRaid(unit) then
                 unit = "raid"..UnitInRaid(unit)
             end
             if type(spellID) == "table" then
                 for id, info in pairs(spellID) do
-                    NSExternals.known[spellID] = NSExternals.known[spellID] or {}
-                    NSExternals.known[spellID][unit] = true
+                    NSI.Externals.known[spellID] = NSI.Externals.known[spellID] or {}
+                    NSI.Externals.known[spellID][unit] = true
                     local k = unit..id
                     local ready, _, _, charges = lib.GetCooldownStatusFromCooldownInfo(info)
-                    NSExternals.ready[k] = ready or charges >= 1
+                    NSI.Externals.ready[k] = ready or charges >= 1
                 end
             else
-                NSExternals.known[spellID] = NSExternals.known[spellID] or {}
-                NSExternals.known[spellID][unit] = true
+                NSI.Externals.known[spellID] = NSI.Externals.known[spellID] or {}
+                NSI.Externals.known[spellID][unit] = true
                 local k = unit..spellID
                 local ready, _, _, charges = lib.GetCooldownStatusFromCooldownInfo(cooldownInfo)
-                NSExternals.ready[k] = ready or charges >= 1
+                NSI.Externals.ready[k] = ready or charges >= 1
                 return true
             end
         end
     end
 end
 
-function NSExternals:UpdateExternals()
+function NSI.Externals:UpdateExternals()
     local allUnitsCooldown = lib.GetAllUnitsCooldown()
-    NSExternals.known = {}
-    NSExternals.ready = {}
-    NSExternals.requested = {}
+    NSI.Externals.known = {}
+    NSI.Externals.ready = {}
+    NSI.Externals.requested = {}
     if allUnitsCooldown then
         for unit, unitCooldowns in pairs(allUnitsCooldown) do
             for spellID, cooldownInfo in pairs(unitCooldowns) do
-                if NSExternals.AllSpells[spellID] then
-                    NSExternals:UpdateSpell(unit, spellID, cooldownInfo)
+                if NSI.Externals.AllSpells[spellID] then
+                    NSI.Externals:UpdateSpell(unit, spellID, cooldownInfo)
                 end
             end
         end
@@ -191,54 +192,54 @@ function NSExternals:UpdateExternals()
 end
 
 
-function NSExternals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender) -- unitID = requester, unit = unit that shall give the external
+function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender) -- unitID = requester, unit = unit that shall give the external
     local now = GetTime()
     local k = unit..spellID
-    local rangecheck = range == "skip" or (range and range[UnitInRaid(unit)] and NSExternals.range[spellID] >= range[UnitInRaid(unit)])
+    local rangecheck = range == "skip" or (range and range[UnitInRaid(unit)] and NSI.Externals.range[spellID] >= range[UnitInRaid(unit)])
     local giver, realm = UnitName(unit)
-    local blocked = NSExternals.block[key] and NSExternals.block[key][spellID] and NSExternals.block[key][spellID][giver]
+    local blocked = NSI.Externals.block[key] and NSI.Externals.block[key][spellID] and NSI.Externals.block[key][spellID][giver]
     local self = UnitIsUnit(unit, unitID)
     if
     UnitIsVisible(unit) -- in same instance
-            and (NSExternals.ready[k] or (NSExternals.ignorecd[key] and NSExternals.ignorecd[key][spellID])) -- spell is ready or we are ignoring its cd
-            and NSExternals:extracheck(unit, unitID, key, spellID) -- special case checks
+            and (NSI.Externals.ready[k] or (NSI.Externals.ignorecd[key] and NSI.Externals.ignorecd[key][spellID])) -- spell is ready or we are ignoring its cd
+            and NSI.Externals:extracheck(unit, unitID, key, spellID) -- special case checks
             and rangecheck
-            and ((not NSExternals.requested[k]) or now > NSExternals.requested[k]+10) -- spell isn't already requested and the request hasn't timed out
+            and ((not NSI.Externals.requested[k]) or now > NSI.Externals.requested[k]+10) -- spell isn't already requested and the request hasn't timed out
             and not (spellID == sac and self) -- no self sac
             and not (UnitIsDead(unit))
             and not (self and req) -- don't assign own external if it was specifically requested, only on automation
             and not (C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(25771).name) and (spellID == Bop or spellID == Spellbop or spellID == LoH)) --Forebearance check
             and not blocked -- spell isn't specifically blocked in this case
-            and not NSExternals.assigned[spellID]
+            and not NSI.Externals.assigned[spellID]
     then
-        NSExternals.requested[k] = now -- set spell to requested
+        NSI.Externals.requested[k] = now -- set spell to requested
         NSAPI:Broadcast("NS_EXTERNAL_LIST", "RAID", unit, sender, spellID) -- send List Data
         NSAPI:Broadcast("NS_EXTERNAL_GIVE", "WHISPER", unit, sender, spellID) -- send External Alert
         NSAPI:Broadcast("NS_EXTERNAL_YES", "WHISPER", unitID, giver, spellID) -- send Confirmation
-        if not NSExternals.stacks[spellID] then
-            NSExternals.assigned[spellID] = true
+        if not NSI.Externals.stacks[spellID] then
+            NSI.Externals.assigned[spellID] = true
         end
         return spellID
     else
         return false
     end
 end
--- /run NSExternals:Request()
-function NSExternals:Request(key, num) -- optional arguments
+-- /run NSAPI.External:Request()
+function NSAPI.ExternalRequest(key, num) -- optional arguments
     local now = GetTime()
     if UnitIsDead("player") or C_UnitAuras.GetAuraDataBySpellName("player", C_Spell.GetSpellInfo(27827).name) then  -- block incoming requests from dead people
         return
     end
-    if ((not NSExternals.lastrequest) or (NSExternals.lastrequest < now - 4)) then
-        NSExternals.lastrequest = now
+    if ((not NSI.Externals.lastrequest) or (NSI.Externals.lastrequest < now - 4)) then
+        NSI.Externals.lastrequest = now
         key = key or "default"
         num = num or 1
         local range = {}
 
-        for u in NSAPI:IterateGroupMembers() do
+        for u in NSI:IterateGroupMembers() do
             local _, r = WeakAuras.GetRange(u)
             table.insert(range, r)
         end
-        NSAPI:Broadcast("NS_EXTERNAL_REQ", "WHISPER", NSExternals.target, key, num, true, range)    -- request external
+        NSAPI:Broadcast("NS_EXTERNAL_REQ", "WHISPER", NNSI.Externals.target, key, num, true, range)    -- request external
     end
 end

@@ -1,3 +1,4 @@
+local _, NSI = ... -- Internal namespace
 local AceComm = LibStub("AceComm-3.0")
 local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub("LibDeflate")
@@ -84,7 +85,7 @@ local function ReceiveComm(text, chan, sender, whisper)
                 tonext = tonext..functionArg..del -- if argtype wasn't given then this is part of a table that was falsely split by the delimeter so we're stitching it back together
             end
         end
-        NSAPI:EventHandler(event, true, unpack(formattedArgTable))
+        NSI:EventHandler(event, true, unpack(formattedArgTable))
         WeakAuras.ScanEvents(event, unpack(formattedArgTable))
     end
 end

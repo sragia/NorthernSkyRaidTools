@@ -1,7 +1,8 @@
-NSAPI.groupData = {}
-NSAPI.auraData = {}
+local _, NSI = ... -- Internal namespace
+NSI.groupData = {}
+NSI.auraData = {}
 local SharedMedia = LibStub("LibSharedMedia-3.0")
-NSAPI.auranames = {
+NSI.auranames = {
     ["Icons"] = "NS Icon Anchor",  
     ["Bars"] = "NS Bar Anchor",  
     ["Overview"] = "NS Overview Anchor",  
@@ -15,18 +16,18 @@ NSAPI.auranames = {
 }
 
 function NSAPI:AnchorSettings(type) -- call this when someone edits anchors to fix options preview    
-    local auraname = NSAPI.auranames[type]
+    local auraname = NSI.auranames[type]
     local groupname = auraname.." Group"
     local groupData = WeakAuras.GetData(groupname)
     local auraData = WeakAuras.GetData(auraname)
-    NSAPI.groupData[groupname] = groupData
-    NSAPI.auraData[auraname] = auraData
+    NSI.groupData[groupname] = groupData
+    NSI.auraData[auraname] = auraData
 end
 
 
 function NSAPI:AuraPosition(type, pos, reg) 
-    local auraname = NSAPI.auranames[type].." Group"
-    local anchorData = NSAPI.groupData[auraname] or WeakAuras.GetData(auraname)
+    local auraname = NSI.auranames[type].." Group"
+    local anchorData = NSI.groupData[auraname] or WeakAuras.GetData(auraname)
     if anchorData then
         if type ~= "Circle" then
             local directionX = (anchorData.grow == "RIGHT" and 1) or (anchorData.grow == "LEFT" and -1) or 0
@@ -60,12 +61,12 @@ end
 
 
 function NSAPI:AuraResize(type, positions, regions)
-    local auraname = NSAPI.auranames[type]
+    local auraname = NSI.auranames[type]
     local groupname = auraname.." Group"
-    local groupData = NSAPI.groupData[groupname] or WeakAuras.GetData(groupname)
-    local auraData = NSAPI.auraData[auraname] or WeakAuras.GetData(auraname)
-    NSAPI.groupData[groupname] = groupData
-    NSAPI.auraData[auraname] = auraData
+    local groupData = NSI.groupData[groupname] or WeakAuras.GetData(groupname)
+    local auraData = NSI.auraData[auraname] or WeakAuras.GetData(auraname)
+    NSI.groupData[groupname] = groupData
+    NSI.auraData[auraname] = auraData
     for _, regionData in ipairs(regions) do   
         local region = regionData.region
         if region.regionType == "icon"  then     
