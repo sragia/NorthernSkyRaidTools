@@ -4,7 +4,7 @@ NSI.specs = {}
 local NSAPI2 = NSAPI
 
 -- storing NSAPI in NSAPI2 so I can overwrite it again if user still has the old database WA installed
--- this is needed because the database WA will overwrite the global variable NSAPI and then it will be nil in the addon
+-- this is needed because the database WA will overwrite the global NSAPI which would cause newer functions to be nil
 hooksecurefunc("setglobal", function(name, _)
     if name == "NSAPI" then
         print("Please uninstall the old database WA to prevent conflicts with the Northern Sky Raid Tools Addon.")
