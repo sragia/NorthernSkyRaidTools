@@ -15,6 +15,10 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         local name = ...
         if name == "NorthernSkyRaidTools" then
             if not NSRT then NSRT = {} end
+            if not NSRT.NSUI then NSRT.NSUI = {} end
+            if not NSRT.NSUI.externals_anchor then NSRT.NSUI.externals_anchor = {} end
+            -- if not NSRT.NSUI.main_frame then NSRT.NSUI.main_frame = {} end
+            -- if not NSRT.NSUI.external_frame then NSRT.NSUI.external_frame = {} end
             if not NSRT.NickNames then NSRT.NickNames = {} end
             -- default settings
             if not NSRT.TTSVoice then NSRT.TTSVoice = 2 end
@@ -114,7 +118,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         NSI.specs = NSI.specs or {}
         NSI.specs[unit] = tonumber(spec)
     elseif (e == "NSAPI_SPEC_REQUEST" and internal) or (e == "ENCOUNTER_START" and not internal) then
-        NNSI.specs = {}
+        NSI.specs = {}
 
         for u in NSI:IterateGroupMembers() do
             if UnitIsVisible(u) then

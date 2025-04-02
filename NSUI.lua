@@ -174,9 +174,10 @@ function NSUI:Init()
         NoTitleBar = true,
         DontRightClickClose = true
     }
-    local externals_anchor = DF:CreateSimplePanel(UIParent, 64, 64, "", "ExternalsAnchor", externals_anchor_panel_options)
-    externals_anchor:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
+    local externals_anchor = CreateFrame("Frame", "ExternalsAnchor", UIParent, "BackdropTemplate")
+    NSUI.externals_anchor = externals_anchor
     externals_anchor:SetClampedToScreen(true)
+    externals_anchor:SetMovable(true)
     externals_anchor:SetBackdrop({
         bgFile = "interface/editmode/editmodeuihighlightbackground",
         edgeFile = "interface/buttons/white8x8",
@@ -191,11 +192,42 @@ function NSUI:Init()
         }
     })
     externals_anchor:SetBackdropBorderColor(1, 0, 0, 1)
-    local externals_text = externals_anchor:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    externals_text:SetPoint("CENTER", externals_anchor, "CENTER", 0, 0)
-    externals_text:SetText("NS_EXT")
-    NSUI.externals_anchor = externals_anchor
+    NSUI:LoadExternalsAnchorPosition()
 
+    local externals_anchor_text = externals_anchor:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    externals_anchor_text:SetPoint("CENTER", externals_anchor, "CENTER", 0, 0)
+    externals_anchor_text:SetText("NS_EXT")
+    externals_anchor.text = externals_anchor_text
+
+    externals_anchor:SetScript("OnMouseDown", function(self, button)
+        if button == "LeftButton" then
+            self:StartMoving()
+        elseif button == "RightButton" then
+            NSUI:ResetExternalsAnchorPosition()
+        end
+    end)
+    externals_anchor:SetScript("OnMouseUp", function(self)
+        self:StopMovingOrSizing()
+        NSUI:SaveExternalsAnchorPosition()
+    end)
+    externals_anchor:Hide()
+
+    local external_frame = CreateFrame("Frame", "ExternalsFrame", UIParent)
+    external_frame:SetPoint("BOTTOMLEFT", NSUI.externals_anchor, "BOTTOMLEFT", 0, 0)
+    external_frame:SetPoint("TOPRIGHT", NSUI.externals_anchor, "TOPRIGHT", 0, 0)
+    local external_frame_text = external_frame:CreateFontString(nil, "OVERLAY")
+    external_frame_text:SetFont([[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]], 20, "OUTLINE")
+    external_frame_text:SetTextColor(1, 1, 1, 1)
+    external_frame_text:SetPoint("CENTER", external_frame, "TOP", 0, 10)
+    external_frame_text:SetText("NS_EXT")
+    external_frame.text = external_frame_text
+    local external_frame_texture = external_frame:CreateTexture("ExternalsFrameTexture", "OVERLAY")
+    external_frame_texture:SetPoint("TOPLEFT", external_frame, "TOPLEFT", 0, 0)
+    external_frame_texture:SetPoint("BOTTOMRIGHT", external_frame, "BOTTOMRIGHT", 0, 0)
+    external_frame_texture:SetColorTexture(1, 0, 1, 0.5)
+    external_frame.texture = external_frame_texture
+    external_frame:Hide()
+    NSUI.external_frame = external_frame
 
     -- dummy default variables until cvars are implemented
     local enableTTS = false
@@ -401,8 +433,15 @@ function NSUI:Init()
             get = function() return NSRT.MyNickName end,
             set = function(self, fixedparam, value) 
                 NSUI.OptionsChanged.nicknames["NICKNAME"] = true
-                NSRT.MyNickName = value 
+                NSRT.MyNickName = string.sub(value, 1, 12)
             end,
+            hooks = {
+                OnEditFocusLost = function(self)
+                    self:SetText(NSRT.MyNickName)
+                end,
+                OnEnterPressed = function(self) return end
+            },
+            nocombat = true
         },
         {
             type = "toggle",
@@ -416,7 +455,8 @@ function NSUI:Init()
             end,
         },
         {
-            type = "blank"
+            type = "blank",
+            nocombat = true
         },
         {
             type = "label",
@@ -503,6 +543,34 @@ function NSUI:Init()
     }
 
     local externals_options1_table = {
+        {
+            type = "button",
+            name = "Test External",
+            desc = "Simulate recieving an external.",
+            func = function(self)
+                NSI:DisplayExternal(6940, GetUnitName("player"))
+            end,
+            nocombat = true
+        },
+        {
+            type = "blank",
+        },
+        {
+            type = "button",
+            name = "Toggle External Anchor",
+            desc = "Toggle the external anchor frame.",
+            func = function(self)
+                if NSUI.externals_anchor:IsShown() then
+                    NSUI.externals_anchor:Hide()
+                else
+                    NSUI.externals_anchor:Show()
+                end
+            end,
+            nocombat = true
+        },
+        {
+            type = "blank",
+        },
         { type = "label", get = function() return "Externals Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
         {
             type = "toggle",
@@ -544,16 +612,74 @@ function NSUI:Init()
         externals_callback)
 end
 
+function NSI:DisplayExternal(spellId, unit)
+    local text = ""
+    if spellId then
+        local spellIcon = C_Spell.GetSpellInfo(spellId).iconID
+        NSUI.external_frame.texture:SetTexture(spellIcon)
+        local giver = NSAPI:Shorten(unit, 8)
+        text = "From: " .. giver
+    else
+        NSUI.external_frame.texture:SetTexture(237555)
+        text = "|cffff0000NO EXTERNAL|r"
+    end
+
+    NSUI.external_frame.text:SetText(text)
+    NSUI.external_frame:Show()
+
+    C_Timer.After(4, function()
+        NSUI.external_frame:Hide()
+    end)
+end
+
+function NSUI:LoadExternalsAnchorPosition()
+    NSRT.NSUI.externals_anchor.settings = NSRT.NSUI.externals_anchor.settings or {
+        anchorPoint = {
+            "CENTER", UIParent, "CENTER", 0, 150
+        },
+        width = 70,
+        height = 70
+    }
+    if not NSRT.NSUI.externals_anchor.settings.anchorPoint or not NSRT.NSUI.externals_anchor.settings.width or not NSRT.NSUI.externals_anchor.settings.height then
+        print("No externals anchor settings found.... THIS SHOULD NOT HAPPEN")
+        return
+    end
+    NSUI.externals_anchor:SetPoint(unpack(NSRT.NSUI.externals_anchor.settings.anchorPoint))
+    NSUI.externals_anchor:SetSize(NSRT.NSUI.externals_anchor.settings.width, NSRT.NSUI.externals_anchor.settings.height)
+end
+
+function NSUI:SaveExternalsAnchorPosition()
+    local anchorPoint = { NSUI.externals_anchor:GetPoint() }
+    -- anchorPoint[2] = "UIParent" -- idk why this isnt needed lol
+
+    local width, height = NSUI.externals_anchor:GetSize()
+    NSRT.NSUI.externals_anchor.settings = {
+        anchorPoint = anchorPoint,
+        width = width,
+        height = height
+    }
+    print("Saving externals anchor position")
+    DevTools_Dump(NSRT.NSUI.externals_anchor.settings)
+end
+
+function NSUI:ResetExternalsAnchorPosition()
+    NSUI.externals_anchor:ClearAllPoints()
+    NSUI.externals_anchor:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
+    NSUI.externals_anchor:SetSize(70, 70)
+    NSRT.NSUI.externals_anchor.settings.anchorPoint = { "CENTER", UIParent, "CENTER", 0, 150 }
+end
 NSI.NSUI = NSUI
 
-SLASH_NSUITEST1 = "/ns"
-SlashCmdList["NSUITEST"] = function(msg)
+SLASH_NSUI1 = "/ns"
+SlashCmdList["NSUI"] = function(msg)
     if msg == "anchor" then
         if NSUI.externals_anchor:IsShown() then
             NSUI.externals_anchor:Hide()
         else
             NSUI.externals_anchor:Show()
         end
+    elseif msg == "test" then
+        NSI:DisplayExternal(nil, GetUnitName("player"))
     else
         if NSUI:IsShown() then
             NSUI:Hide()
