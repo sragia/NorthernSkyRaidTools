@@ -236,13 +236,14 @@ end
 
 
 function NSAPI:NewNickName(unit, nickname, name, realm)
+    print("new nickanme:", unit, nickname, name, realm)
     if not nickname then return end           
     if string.len(nickname) > 12 then
         nickname = string.sub(nickname, 1, 12)
     end
     local oldnick = NSRT.NickNames[name.."-"..realm]
     if oldnick and oldnick == nickname then return end -- stop early if we already have this exact nickname
-    if CellDB --[[and NSRT.Cell]] then -- have to do cell before updating name in database as old nickname may have to be overwritten in cell's own database
+    if CellDB and NSRT.CellNickNames and NSRT.GlobalNickNames then -- have to do cell before updating name in database as old nickname may have to be overwritten in cell's own database
         local ingroup = false
         for u in NSAPI:IterateGroupMembers() do -- if unit is in group refresh cell display, could be a guild message instead
             if UnitExists(unit) and UnitIsUnit(u, unit) then
@@ -271,7 +272,7 @@ function NSAPI:NewNickName(unit, nickname, name, realm)
 
 
     NSRT.NickNames[name.."-"..realm] = nickname
-    if NSRT.GlobalNickName then
+    if NSRT.GlobalNickNames then
         fullCharList[name.."-"..realm] = nickname
         if not sortedCharList[nickname] then
             sortedCharList[nickname] = {}
@@ -290,6 +291,7 @@ function NSAPI:NewNickName(unit, nickname, name, realm)
         end
     end    
     if ElvUF and ElvUF.Tags then
+        print("updating elvui tags")
         ElvUF.Tags:RefreshMethods("NSNickName")
         for i=1, 12 do
             ElvUF.Tags:RefreshMethods("NSNickName:"..i)
