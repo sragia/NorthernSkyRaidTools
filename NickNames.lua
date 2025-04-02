@@ -169,6 +169,7 @@ function NSI:GlobalNickNameUpdate()
     fullCharList = {}
     sortedCharList = {}
     if NSRT.GlobalNickNames then
+
         for name, nickname in pairs(NSRT.NickNames) do
             fullCharList[name] = nickname
             if not sortedCharList[nickname] then
@@ -208,6 +209,13 @@ function NSI:InitNickNames()
 
     NSI:WANickNameUpdated()
     if NSRT.GlobalNickNames then
+        local name, realm = UnitFullName("player")
+        if not realm then
+            realm = GetNormalizedRealmName()
+        end
+        if NSRT.MyNickName ~= "" and not NSRT.NickNames[name.."-"..realm] then
+            NSRT.NickNames[name.."-"..realm] = NSRT.MyNickName
+        end
         for name, nickname in pairs(NSRT.NickNames) do
             fullCharList[name] = nickname
             if not sortedCharList[nickname] then
@@ -358,4 +366,3 @@ function NSI:NewNickName(unit, nickname, name, realm)
         end    
     end
 end
-
