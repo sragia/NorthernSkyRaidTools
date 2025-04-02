@@ -278,28 +278,26 @@ function NSAPI:NewNickName(unit, nickname, name, realm)
             sortedCharList[nickname] = {}
         end
         sortedCharList[nickname][name.."-"..realm] = true
-    end
-    if UUFG then -- update display of Unhalted Unit Frames
-        UUFG:UpdateAllTags()
-    end
-    if Grid2 then
-        for u in NSAPI:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
-            if UnitExists(unit) and UnitIsUnit(u, unit) then
-                Grid2Status:UpdateIndicators(u)
-                break
+        if UUFG then -- update display of Unhalted Unit Frames
+            UUFG:UpdateAllTags()
+        end
+        if Grid2 then
+            for u in NSAPI:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
+                if UnitExists(unit) and UnitIsUnit(u, unit) then
+                    Grid2Status:UpdateIndicators(u)
+                    break
+                end
             end
-        end
-    end    
-    if ElvUF and ElvUF.Tags then
-        print("updating elvui tags")
-        ElvUF.Tags:RefreshMethods("NSNickName")
-        for i=1, 12 do
-            ElvUF.Tags:RefreshMethods("NSNickName:"..i)
-        end
-    end  
-    if UUFG then
-        UUFG:UpdateAllTags() 
-    end    
-
+        end    
+        if ElvUF and ElvUF.Tags then
+            ElvUF.Tags:RefreshMethods("NSNickName")
+            for i=1, 12 do
+                ElvUF.Tags:RefreshMethods("NSNickName:"..i)
+            end
+        end  
+        if UUFG then
+         UUFG:UpdateAllTags() 
+        end    
+    end
 end
 
