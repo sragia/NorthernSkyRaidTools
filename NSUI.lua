@@ -650,7 +650,7 @@ end
 
 function NSUI:SaveExternalsAnchorPosition()
     local anchorPoint = { NSUI.externals_anchor:GetPoint() }
-    -- anchorPoint[2] = "UIParent" -- idk why this isnt needed lol
+    anchorPoint[2] = "UIParent"
 
     local width, height = NSUI.externals_anchor:GetSize()
     NSRT.NSUI.externals_anchor.settings = {
