@@ -116,6 +116,11 @@ function NSUI:Init()
             print("Cell nicknames")
             NSI:CellNickNameUpdated()
         end
+        
+        if NSUI.OptionsChanged.nicknames["ELVUI_NICKNAMES"] then
+            print("Elvui nicknames")
+            NSI:ElvUINickNameUpdated()
+        end
 
         if NSUI.OptionsChanged.nicknames["GRID2_NICKNAMES"] then
             print("Grid2 nicknames")
