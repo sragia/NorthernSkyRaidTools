@@ -152,11 +152,24 @@ function NSI:ElvUINickNameUpdated()
     end    
 end
 
+-- Wipe NickName Database
+function NSI:WipeNickNames()
+    NSI:WipeCellDB()
+    NSRT.NickNames = {}
+    fullCharList = {}
+    sortedCharList = {}
+    -- all addons that need a display update, which is basically all but WA
+    NSI:Grid2NickNameUpdated()
+    NSI:CellNickNameUpdated()
+    NSI:ElvUINickNameUpdated()
+end
+
 -- Global NickName Option Change
 function NSI:GlobalNickNameUpdate()
     fullCharList = {}
     sortedCharList = {}
     if NSRT.GlobalNickNames then
+
         for name, nickname in pairs(NSRT.NickNames) do
             fullCharList[name] = nickname
             if not sortedCharList[nickname] then
@@ -346,4 +359,3 @@ function NSI:NewNickName(unit, nickname, name, realm)
         end    
     end
 end
-

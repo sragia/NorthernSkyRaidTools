@@ -34,7 +34,6 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             if NSRT.PAExtraAction == nil then NSRT.PAExtraAction = false end
             -- end of default settings
             NSI:InitNickNames()
-            NSI:SendNickName("GUILD")
         end
     elseif e == "PLAYER_LOGIN" and not internal then
         local pafound = false
@@ -72,7 +71,16 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             local macrotext = NSRT.ExternalSelfPing and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI.ExternalRequest();"
             NSRT.ExternalMacro = CreateMacro("NS Ext Macro", 135966, macrotext, false)
         end
-
+        NSI:SendNickName("GUILD")
+        if NSRT.GlobalNickNames and NSRT.MyNickName ~= "" then -- add own nickname if not already in database (for new characters)
+            local name, realm = UnitName("player")
+            if not realm then
+                realm = GetNormalizedRealmName()
+            end
+            if not NSRT[name.."-"..realm] then
+                NSI:NewNickName("player", NSRT.MyNickName, name, realm)
+            end
+        end
         NSI.NSUI:Init()
     elseif e == "READY_CHECK" and not internal then
         if UnitInRaid("player") then
@@ -135,7 +143,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             NSI.Externals.target = "raid1"
             NSI.Externals.pull = GetTime()
 
-            for u in NSAPI:IterateGroupMembers() do
+            for u in NSI:IterateGroupMembers() do
                 if UnitIsVisible(u) and (UnitIsGroupLeader(u) or UnitIsGroupAssistant(u)) then
                     NSI.Externals.target = u
                     break
