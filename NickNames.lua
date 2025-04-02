@@ -152,6 +152,18 @@ function NSI:ElvUINickNameUpdated()
     end    
 end
 
+-- Wipe NickName Database
+function NSI:WipeNickNames()
+    NSI:WipeCellDB()
+    NSRT.NickNames = {}
+    fullCharList = {}
+    sortedCharList = {}
+    -- all addons that need a display update, which is basically all but WA
+    NSI:Grid2NickNameUpdated()
+    NSI:CellNickNameUpdated()
+    NSI:ElvUINickNameUpdated()
+end
+
 -- Global NickName Option Change
 function NSI:GlobalNickNameUpdate()
     fullCharList = {}
