@@ -78,81 +78,6 @@ end
 
 
 function NSUI:Init()
-    -- when any setting is changed, call these respective callback function
-    local general_callback = function()
-        print("General callback")
-        DevTools_Dump(NSUI.OptionsChanged.general)
-
-        if NSUI.OptionsChanged.general["TTS_ENABLED"] then
-            print("TTS enabled")
-        end
-
-        if NSUI.OptionsChanged.general["TTS_VOICE"] then
-            print("TTS voice")
-        end
-
-        if NSUI.OptionsChanged.general["PA_MACRO"] then
-            PASelfPingChanged()
-        end
-
-        wipe(NSUI.OptionsChanged["general"])
-        DevTools_Dump(NSUI.OptionsChanged.general)
-    end
-    local nicknames_callback = function()
-        print("Nicknames callback")
-        DevTools_Dump(NSUI.OptionsChanged.nicknames)
-
-        if NSUI.OptionsChanged.nicknames["NICKNAME"] then
-            print("Nickname")
-            NSI:NickNameUpdated(NSRT.MyNickName)
-        end
-
-        if NSUI.OptionsChanged.nicknames["GLOBAL_NICKNAMES"] then
-            print("Global nicknames")
-            NSI:GlobalNickNameUpdate()
-        end
-
-        if NSUI.OptionsChanged.nicknames["CELL_NICKNAMES"] then
-            print("Cell nicknames")
-            NSI:CellNickNameUpdated(true)
-        end
-        
-        if NSUI.OptionsChanged.nicknames["ELVUI_NICKNAMES"] then
-            print("Elvui nicknames")
-            NSI:ElvUINickNameUpdated()
-        end
-
-        if NSUI.OptionsChanged.nicknames["GRID2_NICKNAMES"] then
-            print("Grid2 nicknames")
-            NSI:Grid2NickNameUpdated()
-        end
-        -- no need for WA function
-
-        if NSUI.OptionsChanged.nicknames["UNHALTED_NICKNAMES"] then
-            print("Unhalted nicknames")
-            NSI:UnhaltedNickNameUpdated()
-        end
-
-        wipe(NSUI.OptionsChanged["nicknames"])
-    end
-
-    local externals_callback = function()
-        print("Externals callback")
-        DevTools_Dump(NSUI.OptionsChanged.externals)
-
-        if NSUI.OptionsChanged.externals["EXTERNAL_MACRO"] then
-            print("External macro")
-            ExternalSelfPingChanged()
-        end
-
-        wipe(NSUI.OptionsChanged["externals"])
-    end
-
-    local versions_callback = function()
-        print("Versions callback")
-        wipe(NSUI.OptionsChanged["versions"])
-    end
-
     -- Create the tab container
     local tabContainer = DF:CreateTabContainer(NSUI, "Northern Sky", "NSUI_TabsTemplate", {
         { name = "General",   text = "General" },
@@ -357,6 +282,106 @@ function NSUI:Init()
     end
     -- end of keybinding logic
 
+    -- dropdown logic
+    local nickname_share_options = { "Raid", "Guild", "Both", "None" }
+    local build_nickname_share_options = function()
+        local t = {}
+        for i = 1, #nickname_share_options do
+            tinsert(t, {
+                label = nickname_share_options[i],
+                value = i,
+                onclick = function(_, _, value)
+                    NSUI.OptionsChanged.nicknames["NICKNAME_SHARE"] = true
+                    NSRT.NickNamesShareSetting = value
+                end
+
+            })
+        end
+        return t
+    end
+    -- end of dropdown logic
+
+    -- when any setting is changed, call these respective callback function
+    local general_callback = function()
+        print("General callback")
+        DevTools_Dump(NSUI.OptionsChanged.general)
+
+        if NSUI.OptionsChanged.general["TTS_ENABLED"] then
+            print("TTS enabled")
+        end
+
+        if NSUI.OptionsChanged.general["TTS_VOICE"] then
+            print("TTS voice")
+        end
+
+        if NSUI.OptionsChanged.general["PA_MACRO"] then
+            PASelfPingChanged()
+        end
+
+        wipe(NSUI.OptionsChanged["general"])
+        DevTools_Dump(NSUI.OptionsChanged.general)
+    end
+    local nicknames_callback = function()
+        print("Nicknames callback")
+        DevTools_Dump(NSUI.OptionsChanged.nicknames)
+
+        if NSUI.OptionsChanged.nicknames["NICKNAME"] then
+            print("Nickname")
+            NSI:NickNameUpdated(NSRT.MyNickName)
+        end
+
+        if NSUI.OptionsChanged.nicknames["GLOBAL_NICKNAMES"] then
+            print("Global nicknames")
+            NSI:GlobalNickNameUpdate()
+        end
+
+        if NSUI.OptionsChanged.nicknames["BLIZZARD_NICKNAMES"] then
+            print("Blizzard nicknames")
+            NSI:BlizzardNickNameUpdated()
+        end
+
+        if NSUI.OptionsChanged.nicknames["CELL_NICKNAMES"] then
+            print("Cell nicknames")
+            NSI:CellNickNameUpdated(true)
+        end
+
+        if NSUI.OptionsChanged.nicknames["ELVUI_NICKNAMES"] then
+            print("Elvui nicknames")
+            NSI:ElvUINickNameUpdated()
+        end
+
+        if NSUI.OptionsChanged.nicknames["GRID2_NICKNAMES"] then
+            print("Grid2 nicknames")
+            NSI:Grid2NickNameUpdated()
+        end
+        -- no need for WA function
+
+        if NSUI.OptionsChanged.nicknames["UNHALTED_NICKNAMES"] then
+            print("Unhalted nicknames")
+            NSI:UnhaltedNickNameUpdated()
+        end
+
+        wipe(NSUI.OptionsChanged["nicknames"])
+    end
+
+    local externals_callback = function()
+        print("Externals callback")
+        DevTools_Dump(NSUI.OptionsChanged.externals)
+
+        if NSUI.OptionsChanged.externals["EXTERNAL_MACRO"] then
+            print("External macro")
+            ExternalSelfPingChanged()
+        end
+
+        wipe(NSUI.OptionsChanged["externals"])
+    end
+
+    local versions_callback = function()
+        print("Versions callback")
+        wipe(NSUI.OptionsChanged["versions"])
+    end
+
+    -- options
     local general_options1_table = {
         { type = "label", get = function() return "General Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
         {
@@ -400,6 +425,7 @@ function NSUI:Init()
                 NSUI.OptionsChanged.general["PA_MACRO"] = true
                 NSRT.PASelfPing = value 
             end,
+            nocombat = true
         },
         {
             type = "toggle",
@@ -411,6 +437,7 @@ function NSUI:Init()
                 NSUI.OptionsChanged.general["PA_MACRO"] = true
                 NSRT.PAExtraAction = value 
             end,
+            nocombat = true
         },
         {
             type = "label",
@@ -433,7 +460,7 @@ function NSUI:Init()
     local nicknames_options1_table = {
         {
             type = "button",
-            name = "Wipe NickNames",
+            name = "Wipe Nicknames",
             desc = "Wipe all nicknames from the database.",
             func = function(self)
                 NSI:WipeNickNames()
@@ -471,15 +498,35 @@ function NSUI:Init()
                 NSUI.OptionsChanged.nicknames["GLOBAL_NICKNAMES"] = true
                 NSRT.GlobalNickNames = value 
             end,
+            nocombat = true
+        },
+        {
+            type = "select",
+            get = function() return NSRT.NickNamesShareSetting end,
+            values = function() return build_nickname_share_options() end,
+            name = "Nickname Share",
+            desc = "Choose who you share your nickname with.",
+            nocombat = true
         },
         {
             type = "blank",
-            nocombat = true
         },
         {
             type = "label",
             get = function() return "Unit Frame compatibility" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            get = function() return NSRT.BlizzardNickNames end,
+            set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.nicknames["BLIZZARD_NICKNAMES"] = true
+                NSRT.BlizzardNickNames = value
+            end,
+            name = "Enable Blizzard Nicknames",
+            desc = "Enable Nicknames to be used with Blizzard unit frames.",
+            nocombat = true
         },
         {
             type = "toggle",
@@ -491,6 +538,7 @@ function NSUI:Init()
             end,
             name = "Enable Cell Nicknames",
             desc = "Enable Nicknames to be used with Cell unit frames.",
+            nocombat = true
         },
         {
             type = "toggle",
@@ -502,6 +550,7 @@ function NSUI:Init()
             end,
             name = "Enable Grid2 Nicknames",
             desc = "Enable Nicknames to be used with Grid2 unit frames.",
+            nocombat = true
         },
         {
             type = "toggle",
@@ -513,6 +562,7 @@ function NSUI:Init()
             end,
             name = "Enable ElvUI Nicknames",
             desc = "Enable Nicknames to be used with ElvUI unit frames.",
+            nocombat = true
         },
         {
             type = "toggle",
@@ -524,6 +574,7 @@ function NSUI:Init()
             end,
             name = "Enable SUF Nicknames",
             desc = "Enable Nicknames to be used with SUF unit frames.",
+            nocombat = true
         },
         {
             type = "toggle",
@@ -535,6 +586,7 @@ function NSUI:Init()
             end,
             name = "Enable WeakAuras Nicknames",
             desc = "Enable Nicknames to be used with WeakAuras.",
+            nocombat = true
         },
         {
             type = "toggle",
@@ -546,6 +598,7 @@ function NSUI:Init()
             end,
             name = "Enable MRT Nicknames",
             desc = "Enable Nicknames to be used with MRT.",
+            nocombat = true
         },
         {
             type = "toggle",
@@ -557,6 +610,7 @@ function NSUI:Init()
             end,
             name = "Enable Unhalted UI Nicknames",
             desc = "Enable Nicknames to be used with Unhalted UI.",
+            nocombat = true
         },
     }
 
@@ -566,7 +620,7 @@ function NSUI:Init()
             name = "Test External",
             desc = "Simulate recieving an external.",
             func = function(self)
-                NSI:DisplayExternal(6940, GetUnitName("player"))
+                NSI:DisplayExternal(237554, GetUnitName("player"))
             end,
             nocombat = true
         },
@@ -600,6 +654,7 @@ function NSUI:Init()
                 NSUI.OptionsChanged.externals["EXTERNAL_MACRO"] = true
                 NSRT.ExternalSelfPing = value 
             end,
+            nocombat = true
         },
         {
             type = "label",
