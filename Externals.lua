@@ -240,6 +240,6 @@ function NSAPI.ExternalRequest(key, num) -- optional arguments
             local _, r = WeakAuras.GetRange(u)
             table.insert(range, r)
         end
-        NSAPI:Broadcast("NS_EXTERNAL_REQ", "WHISPER", NNSI.Externals.target, key, num, true, range)    -- request external
+        NSAPI:Broadcast("NS_EXTERNAL_REQ", "WHISPER", NSI.Externals.target, key, num, true, range)    -- request external
     end
 end
