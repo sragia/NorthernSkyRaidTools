@@ -32,8 +32,11 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             if NSRT.MRTNickNames == nil then NSRT.MRTNickNames = false end
             if NSRT.CellNickNames == nil then NSRT.CellNickNames = false end
             if NSRT.Grid2NickNames == nil then NSRT.Grid2NickNames = false end
+            if NSRT.BlizzardNickNames == nil then NSRT.BlizzardNickNames = false end
             if NSRT.PAExtraAction == nil then NSRT.PAExtraAction = false end
             if NSRT.NickNamesShareSetting == nil then NSRT.NickNamesShareSetting = 4 end
+            NSRT.BlizzardNickNamesHook = false
+            NSRT.MRTNickNamesHook = false
             -- end of default settings
             NSI:InitNickNames()
         end
@@ -73,7 +76,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             local macrotext = NSRT.ExternalSelfPing and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI.ExternalRequest();"
             NSRT.ExternalMacro = CreateMacro("NS Ext Macro", 135966, macrotext, false)
         end
-        NSI:SendNickName("GUILD")
+        NSI:SendNickName()
         if NSRT.GlobalNickNames then -- add own nickname if not already in database (for new characters)
             local name, realm = UnitName("player")
             if not realm then
@@ -85,9 +88,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         end
         NSI.NSUI:Init()
     elseif e == "READY_CHECK" and not internal then
-        if UnitInRaid("player") then
-            NSI:SendNickName("RAID")
-        end
+        NSI:SendNickName()
     elseif e == "COMBAT_LOG_EVENT_UNFILTERED" and not internal then
         local _, subevent, _, _, _, _, _, _, destName, _, _, spellID = CombatLogGetCurrentEventInfo()
         if subevent == "SPELL_AURA_APPLIED" and NSI.Externals and NSI.Externals.Automated[spellID] then
