@@ -34,6 +34,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             if NSRT.Grid2NickNames == nil then NSRT.Grid2NickNames = false end
             if NSRT.BlizzardNickNames == nil then NSRT.BlizzardNickNames = false end
             if NSRT.PAExtraAction == nil then NSRT.PAExtraAction = false end
+            if NSRT.MRTNoteComparison == nil then NSRT.MRTNoteComparison = false end
             if NSRT.NickNamesShareSetting == nil then NSRT.NickNamesShareSetting = 4 end
             NSRT.BlizzardNickNamesHook = false
             NSRT.MRTNickNamesHook = false

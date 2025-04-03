@@ -343,6 +343,9 @@ function NSUI:Init()
             PASelfPingChanged()
         end
 
+        if NSUI.OptionsChanged.general["MRT_NOTE_COMPARISON"] then
+            print("MRT note comparison")
+        end
         wipe(NSUI.OptionsChanged["general"])
         DevTools_Dump(NSUI.OptionsChanged.general)
     end
@@ -495,7 +498,26 @@ Press 'Enter' to hear the TTS]],
             end,
             id = "MACRO NS PA Macro",
         },
-
+        {
+            type = "blank"
+        },
+        {
+            type = "label",
+            get = function() return "MRT Options" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enable MRT Note Comparison",
+            desc = "Enables MRT note comparison on ready check.",
+            get = function() return NSRT.MRTNoteComparison end,
+            set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.general["MRT_NOTE_COMPARISON"] = true
+                NSRT.MRTNoteComparison = value
+            end,
+            nocombat = true
+        },
     }
 
     local nicknames_options1_table = {
