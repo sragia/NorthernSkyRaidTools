@@ -373,7 +373,7 @@ function NSI:SendNickName(channel)
 end
 
 function NSI:NewNickName(unit, nickname, name, realm)
-    if WeakAuras.CurrentEncounter  then return end
+    if WeakAuras.CurrentEncounter then return end
     print("new nickanme:", unit, nickname, name, realm)
     if not nickname or not name or not realm then return end   
     local oldnick = NSRT.NickNames[name.."-"..realm]      

@@ -230,6 +230,7 @@ function NSAPI.ExternalRequest(key, num) -- optional arguments
     if UnitIsDead("player") or C_UnitAuras.GetAuraDataBySpellName("player", C_Spell.GetSpellInfo(27827).name) then  -- block incoming requests from dead people
         return
     end
+    if not WeakAuras.CurrentEncounter then return end
     if ((not NSI.Externals.lastrequest) or (NSI.Externals.lastrequest < now - 4)) then
         NSI.Externals.lastrequest = now
         key = key or "default"

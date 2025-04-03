@@ -125,7 +125,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         local unit, spec = ...
         NSI.specs = NSI.specs or {}
         NSI.specs[unit] = tonumber(spec)
-    elseif (e == "NSAPI_SPEC_REQUEST" and internal) or (e == "ENCOUNTER_START" --[[and not internal]]) then
+    elseif (e == "NSAPI_SPEC_REQUEST" and internal) or (e == "ENCOUNTER_START" and not internal) then
         NSI.specs = {}
 
         for u in NSI:IterateGroupMembers() do
