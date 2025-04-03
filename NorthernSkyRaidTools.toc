@@ -21,4 +21,6 @@ Comms.lua
 NickNames.lua
 EventHandler.lua
 Externals.lua
+WeakAuras/Imports.lua
+
 NSUI.lua

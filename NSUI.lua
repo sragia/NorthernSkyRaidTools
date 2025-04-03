@@ -2,6 +2,7 @@ local _, NSI = ... -- Internal namespace
 local DF = _G["DetailsFramework"]
 local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
+local WA = _G["WeakAuras"]
 
 local window_width = 800
 local window_height = 515
@@ -76,8 +77,6 @@ local function ExternalSelfPingChanged()
         NSRT.ExternalMacro = CreateMacro("NS Ext Macro", 135966, macrotext, false)
     end
 end
-
-
 
 function NSUI:Init()
     -- Create the tab container
@@ -319,6 +318,14 @@ function NSUI:Init()
     end
     -- end of nickname logic
 
+    -- WeakAuras imports
+    local function ImportWeakAura(name)
+        if WA and WA.Import then
+            WA.Import(NSI:GetWeakAura(name))
+        else
+            print("Error:WeakAuras not found")
+        end
+    end
     -- when any setting is changed, call these respective callback function
     local general_callback = function()
         print("General callback")
@@ -527,6 +534,33 @@ Press 'Enter' to hear the TTS]],
             end,
             nocombat = true
         },
+        {
+            type = "breakline"
+        },
+        {
+            type = "label",
+            get = function() return "WeakAuras Imports" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "button",
+            name = "Import Anchors",
+            desc = "Import WeakAura Anchors required for all Northern Sky WeakAuras.",
+            func = function(self)
+                ImportWeakAura("anchor_weakaura")
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        {
+            type = "button",
+            name = "Import External Alert",
+            desc = "Import WeakAura External Alert required for the external macro.",
+            func = function(self)
+                ImportWeakAura("external_weakaura")
+            end,
+            nocombat = true
+        }
     }
 
     local nicknames_options1_table = {
