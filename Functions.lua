@@ -132,7 +132,6 @@ end
 function NSAPI:TTS(sound, voice)
   if NSRT.TTS then
       local num = voice or NSRT.TTSVoice
-      local num = 2
         C_VoiceChat.SpeakText(
                 num,
                 sound,

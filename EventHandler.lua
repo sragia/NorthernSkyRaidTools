@@ -92,6 +92,16 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         NSI:InitLDB()
     elseif e == "READY_CHECK" and not internal then
         NSI:SendNickName()
+        local hashed = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""        
+        NSAPI:Broadcast("MRT_NOTE", "RAID", hashed)
+    elseif e == "MRT_NOTE" and NSRT.MRTNoteComparison and internal then
+        local hashed = ...
+        if hashed ~= "" then
+            local note = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""    
+            if note ~= "hased" then
+                -- Display text that tells the user the MRT note is different
+            end
+        end
     elseif e == "COMBAT_LOG_EVENT_UNFILTERED" and not internal then
         local _, subevent, _, _, _, _, _, _, destName, _, _, spellID = CombatLogGetCurrentEventInfo()
         if subevent == "SPELL_AURA_APPLIED" and NSI.Externals and NSI.Externals.Automated[spellID] then
@@ -292,22 +302,6 @@ elseif e == "MRT_NOTE_UPDATE" then
             end)
         end
     end]]
-    --[[
-        elseif e == "NS_IMPORT_RECEIVE" and not aura_env.config.blocknicknames then
-            local unit, table, guildname, wipe = ...
-            local guild, _, rank = GetGuildInfo(unit)
-            local myguild = GetGuildInfo("player")
-            if guild == myguild and rank <= 2 then -- only do this if player is in same guild as the sender and the sender is guildmaster or officer (this assumes there are 2 officer ranks after guildmaster - worst case it would allow members to do it as well which isn't too bad
-                if table or guildname or wipe then
-                    NSAPI:ImportNicknames(table, guildname, wipe, unit)
-                end
-            else
-                if guild ~= myguild then
-                    print("requested import from "..NSAPI:Shorten(unit, 8).." failed because you aren't in the same guild.")
-                elseif rank > 2 then
-                    print("requested import from "..NSAPI:Shorten(unit, 8).." failed because their guildrank isn't high enough.")
-                end
-            end]]
     --[[
         elseif e == "NSAPI_MRT_NOTE_CHECK" and ... then
             local text = _G.VMRT.Note.Text1
