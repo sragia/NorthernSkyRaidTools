@@ -16,26 +16,29 @@ function NSAPI:GetAllCharacters()
 end
 
 function NSAPI:GetName(str, AddonName) -- Returns Nickname
+    if not NSRT.GlobalNickNames then
+        return UnitExists(str) and UnitName(str) or str
+    end
     if AddonName == "MRT" and not NSRT.MRTNickNames then
-        return str
+        return UnitExists(str) and UnitName(str) or str
     end    
     if AddonName == "WA" and not NSRT.WANickNames then
-        return str
+        return UnitExists(str) and UnitName(str) or str
     end
     if AddonName == "Grid2" and not NSRT.Grid2NickNames then
-        return str
+        return UnitExists(str) and UnitName(str) or str
     end
     if AddonName == "ElvUI" and not NSRT.ElvUINickNames then
-        return str
+        return UnitExists(str) and UnitName(str) or str
     end    
     if AddonName == "SuF" and not NSRT.SuFNickNames then
-        return str
+        return UnitExists(str) and UnitName(str) or str
     end    
     if AddonName == "Unhalted" and not NSRT.UnhaltedNickNames then
-        return str
+        return UnitExists(str) and UnitName(str) or str
     end
     if AddonName == "Blizzard" and not NSRT.BlizzardNickNames then
-        return str
+        return UnitExists(str) and UnitName(str) or str
     end
 
     if not str then
@@ -43,7 +46,6 @@ function NSAPI:GetName(str, AddonName) -- Returns Nickname
         return
     end
     if UnitExists(str) then
-
         local name, realm = UnitFullName(str)
         if not realm then
             realm = GetNormalizedRealmName()
