@@ -34,6 +34,9 @@ function NSAPI:GetName(str, AddonName) -- Returns Nickname
     if AddonName == "Unhalted" and not NSRT.UnhaltedNickNames then
         return str
     end
+    if AddonName == "Blizzard" and not NSRT.BlizzardNickNames then
+        return str
+    end
 
     if not str then
         error("NSAPI:GetName(str), str is nil")
@@ -75,8 +78,7 @@ function NSI:NickNameUpdated(nickname)
     end
     local oldnick = NSRT.NickNames[name .. "-" .. realm]
     if (not oldnick) or oldnick ~= nickname then
-        NSI:SendNickName("GUILD")
-        NSI:SendNickName("RAID")
+        NSI:SendNickName()
         NSI:NewNickName("player", nickname, name, realm)
     end
 end
@@ -119,6 +121,32 @@ function NSI:WipeCellDB()
                 table.remove(CellDB.nicknames.list, i)
             end
         end
+    end
+end
+
+function NSI:BlizzardNickNameUpdated()
+    if C_AddOns.IsAddOnLoaded("Blizzard_CompactRaidFrames") and NSRT.BlizzardNickNames and not NSRT.BlizzardNickNamesHook then
+        NSRT.BlizzardNickNamesHook = true
+        hooksecurefunc("CompactUnitFrame_UpdateName", function(frame)
+            if frame:IsForbidden() or not frame.unit then
+                return
+            end
+            frame.name:SetText(NSAPI:GetName(frame.unit, "Blizzard"))
+        end)
+    end
+end
+
+function NSI:MRTNickNameUpdated()
+    if NSRT.MRTNickNames and C_AddOns.IsAddOnLoaded("MRT") and GMRT and GMRT.F and not NSRT.MRTNickNamesHook then
+        NSRT.MRTNickNamesHook = true
+        GMRT.F:RegisterCallback(
+            "RaidCooldowns_Bar_TextName",
+            function(event, bar, data)
+                if data and data.name then
+                    data.name = NSAPI:GetName(data.name, "MRT")
+                end
+            end
+        )
     end
 end
 
@@ -226,7 +254,7 @@ end
 
 
 function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)    
-    NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname) -- always have to do cell before clearing the nickname table because we might have to clear data from the CellDB
+    NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname) -- always have to do cell before doing any changes to the nickname database
     if nickname == ""  and NSRT.NickNames[name.."-"..realm] then
         NSRT.NickNames[name.."-"..realm] = nil
         fullCharList[name.."-"..realm] = nil
@@ -235,36 +263,43 @@ function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)
     NSI:Grid2NickNameUpdated(unit)
     NSI:ElvUINickNameUpdated()
     NSI:UnhaltedNickNameUpdated()
-    -- Missing: SuF, MRT, RaidFrames, Chat, Vuhdo
+    NSI:BlizzardNickNameUpdated()
+    NSI:MRTNickNameUpdated()
+    -- Missing: SuF, Chat, Vuhdo
 end
 
 function NSI:InitNickNames()
-
-    function WeakAuras.GetName(name)
-        return NSAPI:GetName(name, "WA")
-    end
-
-    function WeakAuras.UnitName(unit)
-        local _, realm = UnitName(unit)
-        return NSAPI:GetName(unit, "WA"), realm
-    end
-
-    function WeakAuras.GetUnitName(unit, server)
-        local name = NSAPI:GetName(unit, "WA")
-        if server then
-            local _, realm = UnitFullName(unit)
-            if not realm then
-                realm = GetNormalizedRealmName()
-            end
-            name = name.."-"..realm
+    if not C_AddOns.IsAddOnLoaded("CustomNames") then
+        function WeakAuras.GetName(name)
+            return NSAPI:GetName(name, "WA")
         end
-        return name
+
+        function WeakAuras.UnitName(unit)
+            local _, realm = UnitName(unit)
+            return NSAPI:GetName(unit, "WA"), realm
+        end
+
+        function WeakAuras.GetUnitName(unit, server)
+            local name = NSAPI:GetName(unit, "WA")
+            if server then
+                local _, realm = UnitFullName(unit)
+                if not realm then
+                    realm = GetNormalizedRealmName()
+                end
+                name = name.."-"..realm
+            end
+            return name
+        end
+
+        function WeakAuras.UnitFullName(unit)
+            local name, realm = UnitFullName(unit)
+            return NSAPI:GetName(name, "WA"), realm
+        end
     end
 
-    function WeakAuras.UnitFullName(unit)
-        local name, realm = UnitFullName(unit)
-        return NSAPI:GetName(name, "WA"), realm
-    end
+    NSI:BlizzardNickNameUpdated()
+    NSI:MRTNickNameUpdated()
+
 
     if NSRT.GlobalNickNames then
         for name, nickname in pairs(NSRT.NickNames) do
@@ -340,16 +375,6 @@ function NSI:InitNickNames()
         end
     end
 
-    if C_AddOns.IsAddOnLoaded("MRT") and GMRT and GMRT.F then
-        GMRT.F:RegisterCallback(
-            "RaidCooldowns_Bar_TextName",
-            function(_, _, data)
-                if data and data.name then
-                    data.name = NSAPI:GetName(data.name, "MRT")
-                end
-            end
-        )
-    end
 
     if CellDB and NSRT.CellNickNames then
         for name, nickname in pairs(NSRT.NickNames) do
@@ -362,13 +387,18 @@ end
 
 function NSI:SendNickName(channel)
     local nickname = NSRT.MyNickName
-    if not nickname or nickname == "" then return end
+    if (not nickname) or WeakAuras.CurrentEncounter then return end
     local name, realm = UnitFullName("player")
     if not realm then
         realm = GetNormalizedRealmName()
     end
     if nickname then
-        NSAPI:Broadcast("NSAPI_NICKNAMES_COMMS", channel, nickname, name, realm) -- channel is either GUILD or RAID
+        if UnitInRaid("player") and (NSRT.NickNamesShareSetting == 1 or NSRT.NickNamesShareSetting == 3) then
+            NSAPI:Broadcast("NSAPI_NICKNAMES_COMMS", "RAID", nickname, name, realm)
+        end
+        if NSRT.NickNamesShareSetting == 2 or NSRT.NickNamesShareSetting == 3 then
+            NSAPI:Broadcast("NSAPI_NICKNAMES_COMMS", "GUILD", nickname, name, realm) -- channel is either GUILD or RAID
+        end
     end
 end
 
