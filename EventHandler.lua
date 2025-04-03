@@ -72,7 +72,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             NSRT.ExternalMacro = CreateMacro("NS Ext Macro", 135966, macrotext, false)
         end
         NSI:SendNickName("GUILD")
-        if NSRT.GlobalNickNames and NSRT.MyNickName ~= "" then -- add own nickname if not already in database (for new characters)
+        if NSRT.GlobalNickNames then -- add own nickname if not already in database (for new characters)
             local name, realm = UnitName("player")
             if not realm then
                 realm = GetNormalizedRealmName()

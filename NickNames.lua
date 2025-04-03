@@ -27,6 +27,12 @@ function NSAPI:GetName(str, AddonName) -- Returns Nickname
     end
     if AddonName == "ElvUI" and not NSRT.ElvUINickNames then
         return str
+    end    
+    if AddonName == "SuF" and not NSRT.SuFNickNames then
+        return str
+    end    
+    if AddonName == "Unhalted" and not NSRT.UnhaltedNickNames then
+        return str
     end
 
     if not str then
@@ -91,13 +97,81 @@ function NSI:Grid2NickNameUpdated(unit)
      end
 end
 
+-- Wipe NickName Database
+function NSI:WipeNickNames()
+    NSI:WipeCellDB()
+    NSRT.NickNames = {}
+    fullCharList = {}
+    sortedCharList = {}
+    -- all addons that need a display update, which is basically all but WA
+    NSI:UpdateNickNameDisplay(true)
+end
+
+function NSI:WipeCellDB()
+    if CellDB then
+        for name, nickname in pairs(NSRT.NickNames) do -- wipe cell database
+            print(name, nickname)
+            local i = tIndexOf(CellDB.nicknames.list, name..":"..nickname)
+            if i then
+                print("removing", name, nickname)
+                local charname = strsplit("-", name)
+                Cell.Fire("UpdateNicknames", "list-update", name, charname)
+                table.remove(CellDB.nicknames.list, i)
+            end
+        end
+    end
+end
+
 -- Cell Option Change
-function NSI:CellNickNameUpdated()
+function NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname)
     if CellDB then
         if NSRT.CellNickNames and NSRT.GlobalNickNames then
-            for name, nickname in pairs(NSRT.NickNames) do
-                if tInsertUnique(CellDB.nicknames.list, name .. ":" .. nickname) then
-                    Cell.Fire("UpdateNicknames", "list-update", name, nickname)
+            if all then -- update all units
+                for u in NSI:IterateGroupMembers() do
+                    local name, realm = UnitFullName(u)
+                    if not realm then
+                        realm = GetNormalizedRealmName()
+                    end
+                    if NSRT.NickNames[name.."-"..realm] then
+                        local nick = NSRT.NickNames[name.."-"..realm]
+                        local i = tIndexOf(CellDB.nicknames.list, name.."-"..realm..":"..nick)
+                        if i then -- update nickame if it already exists
+                            CellDB.nicknames.list[i] = name.."-"..realm..":"..nick
+                            Cell.Fire("UpdateNicknames", "list-update", name.."-"..realm, nick)
+                        else -- insert if it doesn't exist yet
+                            NSI:CellInsertName(name, realm, nick, true)
+                        end
+                    end
+                end
+                return
+            elseif nickname == "" then -- newnick is an empty string so remove any old nick we still have
+                if oldnick then -- if there is an oldnick, remove it 
+                    local i = tIndexOf(CellDB.nicknames.list, name.."-"..realm..":"..oldnick)
+                    if i then
+                        table.remove(CellDB.nicknames.list, i)
+                        Cell.Fire("UpdateNicknames", "list-update", name.."-"..realm, name)
+                    end
+                end
+            elseif unit then -- if the function was called for a sepcific unit
+                local ingroup = false
+                for u in NSI:IterateGroupMembers() do -- if unit is in group refresh cell display, could be a guild message instead
+                    if UnitExists(unit) and UnitIsUnit(u, unit) then
+                        ingroup = true
+                        break
+                    end
+                end
+                if oldnick then -- check if oldnick exists in database already and overwrite it if it does, otherwise insert
+                    local i = tIndexOf(CellDB.nicknames.list, name.."-"..realm..":"..oldnick)
+                    if i then
+                        CellDB.nicknames.list[i] = name.."-"..realm..":"..nickname
+                        if ingroup then
+                            Cell.Fire("UpdateNicknames", "list-update", name.."-"..realm, nickname)
+                        end
+                    else
+                        NSI:CellInsertName(name, realm, nickname, ingroup)
+                    end
+                else -- if no old nickname, just insert the new one
+                    NSI:CellInsertName(name, realm, nickname, ingroup)
                 end
             end
         else
@@ -106,41 +180,13 @@ function NSI:CellNickNameUpdated()
     end
 end
 
--- WA Option Change
-function NSI:WANickNameUpdated()
-    if NSRT.WANickNames and NSRT.GlobalNickNames then
-        function WeakAuras.GetName(name)
-            return NSAPI:GetName(name, "WA")
-        end
-
-        function WeakAuras.UnitName(unit)
-            local _, realm = UnitName(unit)
-            return NSAPI:GetName(unit, "WA"), realm
-        end
-
-        function WeakAuras.GetUnitName(unit, server)
-            local name = NSAPI:GetName(unit, "WA")
-            if server then
-                local _, realm = UnitFullName(unit)
-                if not realm then
-                    realm = GetNormalizedRealmName()
-                end
-                name = name.."-"..realm
-            end
-            return name
-        end
-
-        function WeakAuras.UnitFullName(unit)
-            local name, realm = UnitFullName(unit)
-            return NSAPI:GetName(name, "WA"), realm
-        end
-    else
-        WeakAuras.GetName = GetName
-        WeakAuras.UnitName = UnitName
-        WeakAuras.GetUnitName = GetUnitName
-        WeakAuras.UnitFullName = UnitFullName
+function NSI:CellInsertName(name, realm, nickname, ingroup)
+    if tInsertUnique(CellDB.nicknames.list, name.."-"..realm..":"..nickname) and ingroup then
+        Cell.Fire("UpdateNicknames", "list-update", name.."-"..realm, nickname)
     end
 end
+
+
 
 -- ElvUI Option Change
 function NSI:ElvUINickNameUpdated()
@@ -152,16 +198,11 @@ function NSI:ElvUINickNameUpdated()
     end    
 end
 
--- Wipe NickName Database
-function NSI:WipeNickNames()
-    NSI:WipeCellDB()
-    NSRT.NickNames = {}
-    fullCharList = {}
-    sortedCharList = {}
-    -- all addons that need a display update, which is basically all but WA
-    NSI:Grid2NickNameUpdated()
-    NSI:CellNickNameUpdated()
-    NSI:ElvUINickNameUpdated()
+-- UUFG Option Change
+function NSI:UnhaltedNickNameUpdated()
+    if UUFG then
+        UUFG:UpdateAllTags() 
+    end    
 end
 
 -- Global NickName Option Change
@@ -169,7 +210,6 @@ function NSI:GlobalNickNameUpdate()
     fullCharList = {}
     sortedCharList = {}
     if NSRT.GlobalNickNames then
-
         for name, nickname in pairs(NSRT.NickNames) do
             fullCharList[name] = nickname
             if not sortedCharList[nickname] then
@@ -178,36 +218,54 @@ function NSI:GlobalNickNameUpdate()
             sortedCharList[nickname][name] = true
         end
     end
-
     
     -- instant display update for all addons
-    NSI:WANickNameUpdated()
-    NSI:Grid2NickNameUpdated()
-    NSI:CellNickNameUpdated()
-    NSI:ElvUINickNameUpdated()
-
-    if UUFG then
-        UUFG:UpdateAllTags() 
-    end    
-    -- Missing: SuF, MRT, RaidFrames, Chat, Vuhdo
+    NSI:UpdateNickNameDisplay(true)
 end
 
-function NSI:WipeCellDB()
-    if CellDB then
-        for name, nickname in pairs(NSRT.NickNames) do -- wipe cell database
-            local i = tIndexOf(CellDB.nicknames.list, name..":"..nickname)
-            if i then
-                local charname = strsplit("-", name)
-                Cell.Fire("UpdateNicknames", "list-update", name, charname)
-                table.remove(CellDB.nicknames.list, i)
-            end
-        end
-    end
+
+
+function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)    
+    NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname) -- always have to do cell before clearing the nickname table because we might have to clear data from the CellDB
+    if nickname == ""  and NSRT.NickNames[name.."-"..realm] then
+        NSRT.NickNames[name.."-"..realm] = nil
+        fullCharList[name.."-"..realm] = nil
+        sortedCharList[nickname] = nil
+    end        
+    NSI:Grid2NickNameUpdated(unit)
+    NSI:ElvUINickNameUpdated()
+    NSI:UnhaltedNickNameUpdated()
+    -- Missing: SuF, MRT, RaidFrames, Chat, Vuhdo
 end
 
 function NSI:InitNickNames()
 
-    NSI:WANickNameUpdated()
+    function WeakAuras.GetName(name)
+        return NSAPI:GetName(name, "WA")
+    end
+
+    function WeakAuras.UnitName(unit)
+        local _, realm = UnitName(unit)
+        return NSAPI:GetName(unit, "WA"), realm
+    end
+
+    function WeakAuras.GetUnitName(unit, server)
+        local name = NSAPI:GetName(unit, "WA")
+        if server then
+            local _, realm = UnitFullName(unit)
+            if not realm then
+                realm = GetNormalizedRealmName()
+            end
+            name = name.."-"..realm
+        end
+        return name
+    end
+
+    function WeakAuras.UnitFullName(unit)
+        local name, realm = UnitFullName(unit)
+        return NSAPI:GetName(name, "WA"), realm
+    end
+
     if NSRT.GlobalNickNames then
         for name, nickname in pairs(NSRT.NickNames) do
             fullCharList[name] = nickname
@@ -266,6 +324,22 @@ function NSI:InitNickNames()
         end
     end
 
+    if UUFG and UUFG.Tags then
+        UUFG.Tags.Events['NSNickName'] = 'UNIT_NAME_UPDATE'
+        UUFG.Tags.Methods['NSNickName'] = function(unit)
+            local name = UnitName(unit)
+            return name and NSAPI and NSAPI:GetName(name, "Unhalted") or name
+        end
+        for i=1, 12 do
+            UUFG.Tags.Events['NSNickName:'..i] = 'UNIT_NAME_UPDATE'
+            UUFG.Tags.Methods['NSNickName:'..i] = function(unit)
+                local name = UnitName(unit)
+                name = name and NSAPI and NSAPI:GetName(name, "Unhalted") or name
+                return string.sub(name, 1, i)
+            end
+        end
+    end
+
     if C_AddOns.IsAddOnLoaded("MRT") and GMRT and GMRT.F then
         GMRT.F:RegisterCallback(
             "RaidCooldowns_Bar_TextName",
@@ -288,6 +362,7 @@ end
 
 function NSI:SendNickName(channel)
     local nickname = NSRT.MyNickName
+    if not nickname or nickname == "" then return end
     local name, realm = UnitFullName("player")
     if not realm then
         realm = GetNormalizedRealmName()
@@ -297,43 +372,19 @@ function NSI:SendNickName(channel)
     end
 end
 
-
 function NSI:NewNickName(unit, nickname, name, realm)
+    if WeakAuras.CurrentEncounter  then return end
     print("new nickanme:", unit, nickname, name, realm)
-    if not nickname then return end           
+    if not nickname or not name or not realm then return end   
+    local oldnick = NSRT.NickNames[name.."-"..realm]      
+    if oldnick and oldnick == nickname then return end -- stop early if we already have this exact nickname  
+    if nickname == "" then
+        NSI:UpdateNickNameDisplay(false, unit, name, realm, oldnick, nickname)
+        return
+    end
     if string.len(nickname) > 12 then
         nickname = string.sub(nickname, 1, 12)
     end
-    local oldnick = NSRT.NickNames[name.."-"..realm]
-    if oldnick and oldnick == nickname then return end -- stop early if we already have this exact nickname
-    if CellDB and NSRT.CellNickNames and NSRT.GlobalNickNames then -- have to do cell before updating name in database as old nickname may have to be overwritten in cell's own database
-        local ingroup = false
-        for u in NSI:IterateGroupMembers() do -- if unit is in group refresh cell display, could be a guild message instead
-            if UnitExists(unit) and UnitIsUnit(u, unit) then
-                ingroup = true
-                break
-            end
-        end
-        if oldnick then
-            local i = tIndexOf(CellDB.nicknames.list, name.."-"..realm..":"..oldnick)
-            if i then
-                CellDB.nicknames.list[i] = name..":"..nickname
-                if ingroup then
-                    Cell.Fire("UpdateNicknames", "list-update", name.."-"..realm, nickname)
-                end
-            else
-                if tInsertUnique(CellDB.nicknames.list, name.."-"..realm..":"..nickname) and ingroup then
-                    Cell.Fire("UpdateNicknames", "list-update", name.."-"..realm, nickname)
-                end
-            end
-        else
-            if tInsertUnique(CellDB.nicknames.list, name.."-"..realm..":"..nickname) and ingroup then
-                Cell.Fire("UpdateNicknames", "list-update", name.."-"..realm, nickname)
-            end
-        end
-    end
-
-
     NSRT.NickNames[name.."-"..realm] = nickname
     if NSRT.GlobalNickNames then
         fullCharList[name.."-"..realm] = nickname
@@ -341,21 +392,6 @@ function NSI:NewNickName(unit, nickname, name, realm)
             sortedCharList[nickname] = {}
         end
         sortedCharList[nickname][name.."-"..realm] = true
-        if UUFG then -- update display of Unhalted Unit Frames
-            UUFG:UpdateAllTags()
-        end
-        if Grid2 then
-            for u in NSI:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
-                if UnitExists(unit) and UnitIsUnit(u, unit) then
-                    Grid2Status:UpdateIndicators(u)
-                    break
-                end
-            end
-        end    
-        NSI:Grid2NickNameUpdated(unit)
-        NSI:ElvUINickNameUpdated()
-        if UUFG then
-         UUFG:UpdateAllTags() 
-        end    
+        NSI:UpdateNickNameDisplay(false, unit, name, realm, oldnick, nickname)
     end
 end
