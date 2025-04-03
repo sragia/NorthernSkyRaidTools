@@ -114,7 +114,7 @@ function NSUI:Init()
 
         if NSUI.OptionsChanged.nicknames["CELL_NICKNAMES"] then
             print("Cell nicknames")
-            NSI:CellNickNameUpdated()
+            NSI:CellNickNameUpdated(true)
         end
         
         if NSUI.OptionsChanged.nicknames["ELVUI_NICKNAMES"] then
@@ -126,10 +126,11 @@ function NSUI:Init()
             print("Grid2 nicknames")
             NSI:Grid2NickNameUpdated()
         end
+        -- no need for WA function
 
-        if NSUI.OptionsChanged.nicknames["WA_NICKNAMES"] then
-            print("Wa nicknames")
-            NSI:WANickNameUpdated()
+        if NSUI.OptionsChanged.nicknames["UNHALTED_NICKNAMES"] then
+            print("Unhalted nicknames")
+            NSI:UnhaltedNickNameUpdated()
         end
 
         wipe(NSUI.OptionsChanged["nicknames"])
@@ -519,7 +520,7 @@ function NSUI:Init()
             get = function() return enableSUFNicknames end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["SUF_NICKNAMES"] = true
-                enableSUFNicknames = value
+                NSRT.SuFNickNames = value
             end,
             name = "Enable SUF Nicknames",
             desc = "Enable Nicknames to be used with SUF unit frames.",
@@ -552,7 +553,7 @@ function NSUI:Init()
             get = function() return enableSUFNicknames end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["UNHALTED_NICKNAMES"] = true
-                enableSUFNicknames = value
+                NSRT.UnhaltedNickNames = value
             end,
             name = "Enable Unhalted UI Nicknames",
             desc = "Enable Nicknames to be used with Unhalted UI.",
