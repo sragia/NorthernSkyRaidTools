@@ -171,7 +171,8 @@ function NSUI:Init()
     local enableSUFNicknames = false
     local enablePlayerPingForPAMacro = false
     local enablePlayerPingForExternalMacro = false
-    -- end of dummy variables
+    -- TTS voice preview
+    local tts_text_preview = ""
 
     -- keybinding logic
     local function getMacroKeybind(macroName)
@@ -282,7 +283,7 @@ function NSUI:Init()
     end
     -- end of keybinding logic
 
-    -- dropdown logic
+    -- nickname logic
     local nickname_share_options = { "Raid", "Guild", "Both", "None" }
     local build_nickname_share_options = function()
         local t = {}
@@ -299,7 +300,31 @@ function NSUI:Init()
         end
         return t
     end
-    -- end of dropdown logic
+    local function WipeNickNames()
+        local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Wipe Nicknames", "NSRTWipeNicknamesPopup")
+        popup:SetFrameStrata("DIALOG")
+        popup:SetPoint("CENTER", UIParent, "CENTER")
+
+        local text = DF:CreateLabel(popup,
+            "Are you sure you want to wipe all nicknames?", 12, "orange")
+        text:SetPoint("TOP", popup, "TOP", 0, -30)
+        text:SetJustifyH("CENTER")
+
+        local confirmButton = DF:CreateButton(popup, function()
+            NSI:WipeNickNames()
+            popup:Hide()
+        end, 100, 30, "Confirm")
+        confirmButton:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 5, 10)
+        confirmButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
+
+        local cancelButton = DF:CreateButton(popup, function()
+            popup:Hide()
+        end, 100, 30, "Cancel")
+        cancelButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -5, 10)
+        cancelButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
+        popup:Show()
+    end
+    -- end of nickname logic
 
     -- when any setting is changed, call these respective callback function
     local general_callback = function()
@@ -397,6 +422,22 @@ function NSUI:Init()
             max = 5,
         },
         {
+            type = "textentry",
+            name = "TTS Preview",
+            desc = [[Enter any text to preview TTS
+
+Press 'Enter' to hear the TTS]],
+            get = function() return tts_text_preview end,
+            set = function(self, fixedparam, value)
+                tts_text_preview = value
+            end,
+            hooks = {
+                OnEnterPressed = function(self)
+                    NSAPI:TTS(tts_text_preview, NSRT.TTSVoice)
+                end
+            }
+        },
+        {
             type = "toggle",
             boxfirst = true,
             name = "Enable TTS",
@@ -463,7 +504,7 @@ function NSUI:Init()
             name = "Wipe Nicknames",
             desc = "Wipe all nicknames from the database.",
             func = function(self)
-                NSI:WipeNickNames()
+                WipeNickNames()
             end,
             nocombat = true
         },
