@@ -125,7 +125,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         local unit, spec = ...
         NSI.specs = NSI.specs or {}
         NSI.specs[unit] = tonumber(spec)
-    elseif (e == "NSAPI_SPEC_REQUEST" and internal) or (e == "ENCOUNTER_START" and not internal) then
+    elseif (e == "NSAPI_SPEC_REQUEST" and internal) or (e == "ENCOUNTER_START" --[[and not internal]]) then
         NSI.specs = {}
 
         for u in NSI:IterateGroupMembers() do
@@ -252,7 +252,18 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         end
         -- No External Left
         NSAPI:Broadcast("NS_EXTERNAL_NO", "WHISPER", unitID, "nilcheck")
-    end
+    elseif e == "NS_EXTERNAL_YES" and internal then
+        NSI.Externals.lastrequest = GetTime()
+        local _, unit, spellID = ...
+        NSI:DisplayExternal(spellID, unit)
+    elseif e == "NS_EXTERNAL_NO" and internal then
+        NSI.Externals.lastrequest = GetTime()
+        NSI:DisplayExternal(nil, ...)
+    elseif e == "NS_EXTERNAL_GIVE" and ... and internal then
+        local _, unit, spellID = ...
+        local hyperlink = C_Spell.GetSpellLink(spellID)
+        WeakAuras.ScanEvents("CHAT_MSG_WHISPER", hyperlink, unit)
+    end  
 end
 
 
