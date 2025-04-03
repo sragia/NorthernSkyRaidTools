@@ -40,6 +40,9 @@ function NSAPI:GetName(str, AddonName) -- Returns Nickname
     if AddonName == "Blizzard" and not NSRT.BlizzardNickNames then
         return UnitExists(str) and UnitName(str) or str
     end
+    if AddonName == "OmniCD" and not NSRT.OmniCDNickNames then
+        return UnitExists(str) and UnitName(str) or str
+    end
 
     if not str then
         error("NSAPI:GetName(str), str is nil")
