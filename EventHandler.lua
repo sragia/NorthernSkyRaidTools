@@ -38,6 +38,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             if NSRT.NickNamesShareSetting == nil then NSRT.NickNamesShareSetting = 4 end
             NSRT.BlizzardNickNamesHook = false
             NSRT.MRTNickNamesHook = false
+            if NSRT.minimap == nil then NSRT.minimap = { hide = false } end
             -- end of default settings
             NSI:InitNickNames()
         end
@@ -88,6 +89,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             end
         end
         NSI.NSUI:Init()
+        NSI:InitLDB()
     elseif e == "READY_CHECK" and not internal then
         NSI:SendNickName()
     elseif e == "COMBAT_LOG_EVENT_UNFILTERED" and not internal then

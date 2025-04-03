@@ -1,5 +1,7 @@
 local _, NSI = ... -- Internal namespace
 local DF = _G["DetailsFramework"]
+local LDB = LibStub("LibDataBroker-1.1")
+local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
 
 local window_width = 800
 local window_height = 515
@@ -13,7 +15,7 @@ local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLAT
 local NSUI_panel_options = {
     UseStatusBar = true
 }
-local NSUI = DF:CreateSimplePanel(UIParent, window_width, window_height, "|cFF00FFFFNorthern Sky|r Utilities", "NSUI",
+local NSUI = DF:CreateSimplePanel(UIParent, window_width, window_height, "|cFF00FFFFNorthern Sky|r Raid Tools", "NSUI",
     NSUI_panel_options)
 NSUI:SetPoint("CENTER")
 NSUI:SetFrameStrata("HIGH")
@@ -161,16 +163,7 @@ function NSUI:Init()
     NSUI.external_frame = external_frame
 
     -- dummy default variables until cvars are implemented
-    local enableTTS = false
-    local ttsVoice = 2
-    local nickname = ""
-    local enableNicknames = false
-    local enableCellNicknames = false
-    local enableGrid2Nicknames = false
-    local enableElvUINicknames = false
     local enableSUFNicknames = false
-    local enablePlayerPingForPAMacro = false
-    local enablePlayerPingForExternalMacro = false
     -- TTS voice preview
     local tts_text_preview = ""
 
@@ -412,6 +405,22 @@ function NSUI:Init()
     -- options
     local general_options1_table = {
         { type = "label", get = function() return "General Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Disable Minimap Button",
+            desc = "Hide the minimap button.",
+            get = function() return NSRT.minimap.hide end,
+            set = function(self, fixedparam, value)
+                NSRT.minimap.hide = value
+
+                LDBIcon:Refresh("NSRT", NSRT.minimap)
+            end,
+        },
+        {
+            type = "blank",
+        },
+        { type = "label", get = function() return "TTS Options" end,     text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
         {
             type = "range",
             name = "TTS Voice",
@@ -804,6 +813,13 @@ function NSUI:ResetExternalsAnchorPosition()
     NSUI.externals_anchor:SetSize(70, 70)
     NSRT.NSUI.externals_anchor.settings.anchorPoint = { "CENTER", UIParent, "CENTER", 0, 150 }
 end
+function NSUI:ToggleOptions()
+    if NSUI:IsShown() then
+        NSUI:Hide()
+    else
+        NSUI:Show()
+    end
+end
 NSI.NSUI = NSUI
 
 SLASH_NSUI1 = "/ns"
@@ -817,10 +833,6 @@ SlashCmdList["NSUI"] = function(msg)
     elseif msg == "test" then
         NSI:DisplayExternal(nil, GetUnitName("player"))
     else
-        if NSUI:IsShown() then
-            NSUI:Hide()
-        else
-            NSUI:Show()
-        end
+        NSUI:ToggleOptions()
     end
 end
