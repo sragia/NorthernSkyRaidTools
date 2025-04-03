@@ -430,6 +430,18 @@ function NSUI:Init()
     }
 
     local nicknames_options1_table = {
+        {
+            type = "button",
+            name = "Wipe NickNames",
+            desc = "Wipe all nicknames from the database.",
+            func = function(self)
+                NSI:WipeNickNames()
+            end,
+            nocombat = true
+        },
+        {
+            type = "blank"
+        },
         { type = "label", get = function() return "Nicknames Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
         {
             type = "textentry",
