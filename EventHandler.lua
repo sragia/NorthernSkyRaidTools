@@ -47,9 +47,11 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         local extfound = false
         NSRT.PAMacro = nil
         NSRT.ExternalMacro = nil
+        local macrocount = 0    
         for i=1, 120 do
             local macroname = C_Macro.GetMacroName(i)
             if not macroname then break end
+            macrocount = i
             if macroname == "NS PA Macro" then
                 NSRT.PAMacro = i
                 local macrotext = "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
@@ -69,12 +71,17 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             end
             if pafound and extfound then break end
         end
-        if not NSRT.PAMacro then
+        if macrocount >= 120 then
+            print("You reached the global Macro cap so the Private Aura Macro could not be created")
+        elseif not NSRT.PAMacro then
+            macrocount = macrocount+1
             local macrotext = NSRT.PASelfPing and "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);\n/ping [@player] Warning;" or "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
             NSRT.PAMacro = CreateMacro("NS PA Macro", 132288, macrotext, false)
-            -- NSAPI:Broadcast("NS_PA_MACRO", "RAID", "nilcheck") -- add this to macro if I want to send macro press data to everyone
         end
-        if not NSRT.ExternalMacro then
+        if macrocount >= 120 then 
+            print("You reached the global Macro cap so the External Macro could not be created")
+        elseif not NSRT.ExternalMacro then
+            macrocount = macrocount+1
             local macrotext = NSRT.ExternalSelfPing and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI.ExternalRequest();"
             NSRT.ExternalMacro = CreateMacro("NS Ext Macro", 135966, macrotext, false)
         end

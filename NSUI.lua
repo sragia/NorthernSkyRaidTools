@@ -33,9 +33,11 @@ NSUI.OptionsChanged = {
 
 -- need to run this code on settings change
 local function PASelfPingChanged()
+    local macrocount = 0
     for i = 1, 120 do
         local macroname = C_Macro.GetMacroName(i)
         if not macroname then break end
+        macrocount = i
         if macroname == "NS PA Macro" then
             NSRT.PAMacro = i
             local macrotext = "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
@@ -49,19 +51,22 @@ local function PASelfPingChanged()
             break
         end
     end
-    if not NSRT.PAMacro then
-        local macrotext = NSRT.PASelfPing and
-            "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);\n/ping [@player] Warning;" or
-            "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
+    if macrocount >= 120 then
+        print("You reached the global Macro cap so the Private Aura Macro could not be created")
+    elseif not NSRT.PAMacro then
+        macrocount = macrocount+1
+        local macrotext = NSRT.PASelfPing and "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);\n/ping [@player] Warning;" or "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
         NSRT.PAMacro = CreateMacro("NS PA Macro", 132288, macrotext, false)
     end
 end
 
 -- need to run this code on settings change
 local function ExternalSelfPingChanged()
+    local macrocount = 0
     for i = 1, 120 do
         local macroname = C_Macro.GetMacroName(i)
         if not macroname then break end
+        macrocount = i
         if macroname == "NS Ext Macro" then
             NSRT.ExternalMacro = i
             local macrotext = NSRT.ExternalSelfPing and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or
@@ -71,9 +76,11 @@ local function ExternalSelfPingChanged()
             break
         end
     end
-    if not NSRT.ExternalMacro then
-        local macrotext = NSRT.ExternalSelfPing and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or
-            "/run NSAPI.ExternalRequest();"
+    if macrocount >= 120 then 
+        print("You reached the global Macro cap so the External Macro could not be created")
+    elseif not NSRT.ExternalMacro then
+        macrocount = macrocount+1
+        local macrotext = NSRT.ExternalSelfPing and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI.ExternalRequest();"
         NSRT.ExternalMacro = CreateMacro("NS Ext Macro", 135966, macrotext, false)
     end
 end
