@@ -27,11 +27,13 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             if NSRT.ExternalSelfPing == nil then NSRT.ExternalSelfPing = true end
             if NSRT.MyNickName == nil then NSRT.MyNickName = "" end
             if NSRT.GlobalNickNames == nil then NSRT.GlobalNickNames = false end
+            if NSRT.BlizzardNickNames == nil then NSRT.BlizzardNickNames = false end
             if NSRT.WANickNames == nil then NSRT.WANickNames = false end
             if NSRT.MRTNickNames == nil then NSRT.MRTNickNames = false end
             if NSRT.CellNickNames == nil then NSRT.CellNickNames = false end
             if NSRT.Grid2NickNames == nil then NSRT.Grid2NickNames = false end
             if NSRT.PAExtraAction == nil then NSRT.PAExtraAction = false end
+            if NSRT.NickNamesShareSetting == nil then NSRT.NickNamesShareSetting = 4 end
             -- end of default settings
             NSI:InitNickNames()
         end
