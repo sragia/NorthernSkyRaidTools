@@ -20,56 +20,54 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             -- if not NSRT.NSUI.main_frame then NSRT.NSUI.main_frame = {} end
             -- if not NSRT.NSUI.external_frame then NSRT.NSUI.external_frame = {} end
             if not NSRT.NickNames then NSRT.NickNames = {} end
-            -- default settings
-            if not NSRT.TTSVoice then NSRT.TTSVoice = 2 end
-            if not NSRT.TTSVolume then NSRT.TTSVolume = 50 end
-            if NSRT.TTS == nil then NSRT.TTS = true end
-            if NSRT.PASelfPing == nil then NSRT.PASelfPing = true end
-            if NSRT.ExternalSelfPing == nil then NSRT.ExternalSelfPing = true end
-            if NSRT.MyNickName == nil then NSRT.MyNickName = "" end
-            if NSRT.GlobalNickNames == nil then NSRT.GlobalNickNames = false end
-            if NSRT.BlizzardNickNames == nil then NSRT.BlizzardNickNames = false end
-            if NSRT.WANickNames == nil then NSRT.WANickNames = false end
-            if NSRT.MRTNickNames == nil then NSRT.MRTNickNames = false end
-            if NSRT.CellNickNames == nil then NSRT.CellNickNames = false end
-            if NSRT.Grid2NickNames == nil then NSRT.Grid2NickNames = false end
-            if NSRT.BlizzardNickNames == nil then NSRT.BlizzardNickNames = false end
-            if NSRT.OmniCDNickNames == nil then NSRT.OmniCDNickNames = false end
-            if NSRT.PAExtraAction == nil then NSRT.PAExtraAction = false end
-            if NSRT.MRTNoteComparison == nil then NSRT.MRTNoteComparison = false end
-            if NSRT.NickNamesShareSetting == nil then NSRT.NickNamesShareSetting = 4 end
-            if NSRT.TTSVolume == nil then NSRT.TTSVolume = 50 end
+            if not NSRT.Settings then
+                NSRT.Settings = {}
+            end
+            NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or ""
+            NSRT.Settings["GlobalNickNames"] = NSRT.Settings["GlobalNickNames"] or false
+            NSRT.Settings["Blizzard"] = NSRT.Settings["Blizzard"] or false
+            NSRT.Settings["WA"] = NSRT.Settings["WA"] or false
+            NSRT.Settings["MRT"] = NSRT.Settings["MRT"] or false
+            NSRT.Settings["Cell"] = NSRT.Settings["Cell"] or false
+            NSRT.Settings["Grid2"] = NSRT.Settings["Grid2"] or false
+            NSRT.Settings["OmniCD"] = NSRT.Settings["OmniCD"] or false
+            NSRT.Settings["ElvUI"] = NSRT.Settings["ElvUI"] or false
+            NSRT.Settings["SuF"] = NSRT.Settings["SuF"] or false
+            NSRT.Settings["Unhalted"] = NSRT.Settings["Unhalted"] or false
+            NSRT.Settings["Share"] = NSRT.Settings["Share"] or 4
+            NSRT.Settings["PAExtraAction"] = NSRT.Settings["PAExtraAction"] or false
+            NSRT.Settings["PASelfPing"] = NSRT.Settings["PASelfPing"] or false
+            NSRT.Settings["ExternalSelfPing"] = NSRT.Settings["ExternalSelfPing"] or false
+            NSRT.Settings["MRTNoteComparison"] = NSRT.Settings["MRTNoteComparison"] or false
+            NSRT.Settings["TTS"] = NSRT.Settings["TTS"] or true
+            NSRT.Settings["TTSVolume"] = NSRT.Settings["TTSVolume"] or 50
+            NSRT.Settings["TTSVoice"] = NSRT.Settings["TTSVoice"] or 2
+            NSRT.Settings["Minimap"] = NSRT.Settings["Minimap"] or {hide = false}
             NSRT.BlizzardNickNamesHook = false
             NSRT.MRTNickNamesHook = false
             NSRT.OmniCDNickNamesHook = false
-            if NSRT.minimap == nil then NSRT.minimap = { hide = false } end
-            -- end of default settings
             NSI:InitNickNames()
         end
     elseif e == "PLAYER_LOGIN" and not internal then
         local pafound = false
         local extfound = false
-        NSRT.PAMacro = nil
-        NSRT.ExternalMacro = nil
         local macrocount = 0    
         for i=1, 120 do
             local macroname = C_Macro.GetMacroName(i)
             if not macroname then break end
             macrocount = i
             if macroname == "NS PA Macro" then
-                NSRT.PAMacro = i
                 local macrotext = "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
-                if NSRT.PASelfPing then
+                if NSRT.Settings["PASelfPing"] then
                     macrotext = macrotext.."\n/ping [@player] Warning;"
                 end
-                if NSRT.PAExtraAction then
+                if NSRT.Settings["PAExtraAction"] then
                     macrotext = macrotext.."\n/click ExtraActionButton1"
                 end
                 EditMacro(i, "NS PA Macro", 132288, macrotext, false)
                 pafound = true
             elseif macroname == "NS Ext Macro" then
-                NSRT.ExternalMacro = i
-                local macrotext = NSRT.ExternalSelfPing and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI.ExternalRequest();"
+                local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI.ExternalRequest();"
                 EditMacro(i, "NS Ext Macro", 135966, macrotext, false)
                 extfound = true
             end
@@ -77,26 +75,32 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         end
         if macrocount >= 120 then
             print("You reached the global Macro cap so the Private Aura Macro could not be created")
-        elseif not NSRT.PAMacro then
-            macrocount = macrocount+1
-            local macrotext = NSRT.PASelfPing and "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);\n/ping [@player] Warning;" or "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
-            NSRT.PAMacro = CreateMacro("NS PA Macro", 132288, macrotext, false)
+        elseif not pafound then
+            macrocount = macrocount+1            
+            local macrotext = "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
+            if NSRT.Settings["PASelfPing"] then
+                macrotext = macrotext.."\n/ping [@player] Warning;"
+            end
+            if NSRT.Settings["PAExtraAction"] then
+                macrotext = macrotext.."\n/click ExtraActionButton1"
+            end
+            CreateMacro("NS PA Macro", 132288, macrotext, false)
         end
         if macrocount >= 120 then 
             print("You reached the global Macro cap so the External Macro could not be created")
-        elseif not NSRT.ExternalMacro then
+        elseif not extfound then
             macrocount = macrocount+1
-            local macrotext = NSRT.ExternalSelfPing and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI.ExternalRequest();"
-            NSRT.ExternalMacro = CreateMacro("NS Ext Macro", 135966, macrotext, false)
+            local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI.ExternalRequest();"
+            CreateMacro("NS Ext Macro", 135966, macrotext, false)
         end
         NSI:SendNickName()
-        if NSRT.GlobalNickNames then -- add own nickname if not already in database (for new characters)
+        if NSRT.Settings["GlobalNickNames"] then -- add own nickname if not already in database (for new characters)
             local name, realm = UnitName("player")
             if not realm then
                 realm = GetNormalizedRealmName()
             end
-            if not NSRT[name.."-"..realm] then
-                NSI:NewNickName("player", NSRT.MyNickName, name, realm)
+            if not NSRT.NickNames[name.."-"..realm] then
+                NSI:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
             end
         end
         NSI.NSUI:Init()
@@ -105,7 +109,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         NSI:SendNickName()
         local hashed = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""        
         NSAPI:Broadcast("MRT_NOTE", "RAID", hashed)
-    elseif e == "MRT_NOTE" and NSRT.MRTNoteComparison and internal then
+    elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and internal then
         local hashed = ...
         if hashed ~= "" then
             local note = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""    

@@ -16,31 +16,31 @@ function NSAPI:GetAllCharacters()
 end
 
 function NSAPI:GetName(str, AddonName) -- Returns Nickname
-    if not NSRT.GlobalNickNames then
+    if not NSRT.Settings["GlobalNickNames"] then
         return UnitExists(str) and UnitName(str) or str
     end
-    if AddonName == "MRT" and not NSRT.MRTNickNames then
+    if AddonName == "MRT" and not NSRT.Settings["MRT"] then
         return UnitExists(str) and UnitName(str) or str
     end    
-    if AddonName == "WA" and not NSRT.WANickNames then
+    if AddonName == "WA" and not NSRT.Settings["WA"] then
         return UnitExists(str) and UnitName(str) or str
     end
-    if AddonName == "Grid2" and not NSRT.Grid2NickNames then
+    if AddonName == "Grid2" and not NSRT.Settings["Grid2"] then
         return UnitExists(str) and UnitName(str) or str
     end
-    if AddonName == "ElvUI" and not NSRT.ElvUINickNames then
+    if AddonName == "ElvUI" and not NSRT.Settings["ElvUI"] then
         return UnitExists(str) and UnitName(str) or str
     end    
-    if AddonName == "SuF" and not NSRT.SuFNickNames then
+    if AddonName == "SuF" and not NSRT.Settings["SuF"] then
         return UnitExists(str) and UnitName(str) or str
     end    
-    if AddonName == "Unhalted" and not NSRT.UnhaltedNickNames then
+    if AddonName == "Unhalted" and not NSRT.Settings["Unhalted"] then
         return UnitExists(str) and UnitName(str) or str
     end
-    if AddonName == "Blizzard" and not NSRT.BlizzardNickNames then
+    if AddonName == "Blizzard" and not NSRT.Settings["Blizzard"] then
         return UnitExists(str) and UnitName(str) or str
     end
-    if AddonName == "OmniCD" and not NSRT.OmniCDNickNames then
+    if AddonName == "OmniCD" and not NSRT.Settings["OmniCD"] then
         return UnitExists(str) and UnitName(str) or str
     end
 
@@ -130,7 +130,7 @@ function NSI:WipeCellDB()
 end
 
 function NSI:BlizzardNickNameUpdated()
-    if C_AddOns.IsAddOnLoaded("Blizzard_CompactRaidFrames") and NSRT.BlizzardNickNames and not NSRT.BlizzardNickNamesHook then
+    if C_AddOns.IsAddOnLoaded("Blizzard_CompactRaidFrames") and NSRT.Settings["Blizzard"] and not NSRT.BlizzardNickNamesHook then
         NSRT.BlizzardNickNamesHook = true
         hooksecurefunc("CompactUnitFrame_UpdateName", function(frame)
             if frame:IsForbidden() or not frame.unit then
@@ -142,7 +142,7 @@ function NSI:BlizzardNickNameUpdated()
 end
 
 function NSI:MRTNickNameUpdated()
-    if NSRT.MRTNickNames and C_AddOns.IsAddOnLoaded("MRT") and GMRT and GMRT.F and not NSRT.MRTNickNamesHook then
+    if NSRT.Settings["MRT"] and C_AddOns.IsAddOnLoaded("MRT") and GMRT and GMRT.F and not NSRT.MRTNickNamesHook then
         NSRT.MRTNickNamesHook = true
         GMRT.F:RegisterCallback(
             "RaidCooldowns_Bar_TextName",
@@ -156,7 +156,7 @@ function NSI:MRTNickNameUpdated()
 end
 
 function NSI:OmniCDNickNameUpdated()
-    if NSRT.OmniCDNickNames and C_AddOns.IsAddOnLoaded("OmniCD") and not NSRT.OmniCDNickNamesHook then
+    if NSRT.Settings["OmniCD"] and C_AddOns.IsAddOnLoaded("OmniCD") and not NSRT.OmniCDNickNamesHook then
         NSRT.OmniCDNickNamesHook = true
         -- Add OmniCD Hook
     end
@@ -165,7 +165,7 @@ end
 -- Cell Option Change
 function NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname)
     if CellDB then
-        if NSRT.CellNickNames and NSRT.GlobalNickNames then
+        if NSRT.Settings["Cell"] and NSRT.Settings["GlobalNickNames"] then
             if all then -- update all units
                 for u in NSI:IterateGroupMembers() do
                     local name, realm = UnitFullName(u)
@@ -249,7 +249,7 @@ end
 function NSI:GlobalNickNameUpdate()
     fullCharList = {}
     sortedCharList = {}
-    if NSRT.GlobalNickNames then
+    if NSRT.Settings["GlobalNickNames"] then
         for name, nickname in pairs(NSRT.NickNames) do
             fullCharList[name] = nickname
             if not sortedCharList[nickname] then
@@ -313,7 +313,7 @@ function NSI:InitNickNames()
     NSI:MRTNickNameUpdated()
     NSI:OmniCDNickNameUpdated()
 
-    if NSRT.GlobalNickNames then
+    if NSRT.Settings["GlobalNickNames"] then
         for name, nickname in pairs(NSRT.NickNames) do
             fullCharList[name] = nickname
             if not sortedCharList[nickname] then
@@ -388,7 +388,7 @@ function NSI:InitNickNames()
     end
 
 
-    if CellDB and NSRT.CellNickNames then
+    if CellDB and NSRT.Settings["Cell"] then
         for name, nickname in pairs(NSRT.NickNames) do
             if tInsertUnique(CellDB.nicknames.list, name..":"..nickname) then
                 Cell.Fire("UpdateNicknames", "list-update", name, nickname)
@@ -398,17 +398,17 @@ function NSI:InitNickNames()
 end
 
 function NSI:SendNickName(channel)
-    local nickname = NSRT.MyNickName
+    local nickname = NSRT.Settings["MyNickName"]
     if (not nickname) or WeakAuras.CurrentEncounter then return end
     local name, realm = UnitFullName("player")
     if not realm then
         realm = GetNormalizedRealmName()
     end
     if nickname then
-        if UnitInRaid("player") and (NSRT.NickNamesShareSetting == 1 or NSRT.NickNamesShareSetting == 3) then
+        if UnitInRaid("player") and (NSRT.Settings["Share"] == 1 or NSRT.Settings["Share"] == 3) then
             NSAPI:Broadcast("NSAPI_NICKNAMES_COMMS", "RAID", nickname, name, realm)
         end
-        if NSRT.NickNamesShareSetting == 2 or NSRT.NickNamesShareSetting == 3 then
+        if NSRT.Settings["Share"] == 2 or NSRT.Settings["Share"] == 3 then
             NSAPI:Broadcast("NSAPI_NICKNAMES_COMMS", "GUILD", nickname, name, realm) -- channel is either GUILD or RAID
         end
     end
@@ -428,7 +428,7 @@ function NSI:NewNickName(unit, nickname, name, realm)
         nickname = string.sub(nickname, 1, 12)
     end
     NSRT.NickNames[name.."-"..realm] = nickname
-    if NSRT.GlobalNickNames then
+    if NSRT.Settings["GlobalNickNames"] then
         fullCharList[name.."-"..realm] = nickname
         if not sortedCharList[nickname] then
             sortedCharList[nickname] = {}

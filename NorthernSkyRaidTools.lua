@@ -32,7 +32,7 @@ function NSI:InitLDB()
         })
 
         if (databroker and not LDBIcon:IsRegistered("NSRT")) then
-            LDBIcon:Register("NSRT", databroker, NSRT.minimap)
+            LDBIcon:Register("NSRT", databroker, NSRT.Settings["minimap"])
             LDBIcon:AddButtonToCompartment("NSRT")
         end
 

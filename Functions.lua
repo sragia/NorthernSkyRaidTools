@@ -130,14 +130,14 @@ end
 
 
 function NSAPI:TTS(sound, voice)
-  if NSRT.TTS then
-      local num = voice or NSRT.TTSVoice
+  if NSRT.Settings["TTS"] then
+      local num = voice or NSRT.Settings["TTSVoice"]
         C_VoiceChat.SpeakText(
                 num,
                 sound,
                 Enum.VoiceTtsDestination.LocalPlayback,
                 C_TTSSettings and C_TTSSettings.GetSpeechRate() or 0,
-                NSRT.TTSVolume
+                NSRT.Settings["TTSVolume"]
         )
      end
 end

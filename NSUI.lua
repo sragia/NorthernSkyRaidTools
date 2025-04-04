@@ -34,17 +34,18 @@ NSUI.OptionsChanged = {
 -- need to run this code on settings change
 local function PASelfPingChanged()
     local macrocount = 0
+    local pafound = false
     for i = 1, 120 do
         local macroname = C_Macro.GetMacroName(i)
         if not macroname then break end
         macrocount = i
         if macroname == "NS PA Macro" then
-            NSRT.PAMacro = i
+            pafound = true
             local macrotext = "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
-            if NSRT.PASelfPing then
+            if NSRT.Settings["PASelfPing"] then
                  macrotext = macrotext.."\n/ping [@player] Warning;"
              end
-            if NSRT.PAExtraAction then
+            if NSRT.Settings["PAExtraAction"] then
                 macrotext = macrotext.."\n/click ExtraActionButton1"
             end
              EditMacro(i, "NS PA Macro", 132288, macrotext, false)
@@ -53,23 +54,30 @@ local function PASelfPingChanged()
     end
     if macrocount >= 120 then
         print("You reached the global Macro cap so the Private Aura Macro could not be created")
-    elseif not NSRT.PAMacro then
+    elseif not pafound then
         macrocount = macrocount+1
-        local macrotext = NSRT.PASelfPing and "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);\n/ping [@player] Warning;" or "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
-        NSRT.PAMacro = CreateMacro("NS PA Macro", 132288, macrotext, false)
+        local macrotext = "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
+        if NSRT.Settings["PASelfPing"] then
+             macrotext = macrotext.."\n/ping [@player] Warning;"
+         end
+        if NSRT.Settings["PAExtraAction"] then
+            macrotext = macrotext.."\n/click ExtraActionButton1"
+        end
+        CreateMacro("NS PA Macro", 132288, macrotext, false)
     end
 end
 
 -- need to run this code on settings change
 local function ExternalSelfPingChanged()
     local macrocount = 0
+    local extfound = false
     for i = 1, 120 do
         local macroname = C_Macro.GetMacroName(i)
         if not macroname then break end
         macrocount = i
         if macroname == "NS Ext Macro" then
-            NSRT.ExternalMacro = i
-            local macrotext = NSRT.ExternalSelfPing and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or
+            extfound = true
+            local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or
                 "/run NSAPI.ExternalRequest();"
             EditMacro(i, "NS Ext Macro", 135966, macrotext, false)
             extfound = true
@@ -78,10 +86,10 @@ local function ExternalSelfPingChanged()
     end
     if macrocount >= 120 then 
         print("You reached the global Macro cap so the External Macro could not be created")
-    elseif not NSRT.ExternalMacro then
+    elseif not extfound then
         macrocount = macrocount+1
-        local macrotext = NSRT.ExternalSelfPing and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI.ExternalRequest();"
-        NSRT.ExternalMacro = CreateMacro("NS Ext Macro", 135966, macrotext, false)
+        local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI.ExternalRequest();"
+        CreateMacro("NS Ext Macro", 135966, macrotext, false)
     end
 end
 
@@ -292,7 +300,7 @@ function NSUI:Init()
                 value = i,
                 onclick = function(_, _, value)
                     NSUI.OptionsChanged.nicknames["NICKNAME_SHARE"] = true
-                    NSRT.NickNamesShareSetting = value
+                    NSRT.Settings["Share"] = value
                 end
 
             })
@@ -362,7 +370,7 @@ function NSUI:Init()
 
         if NSUI.OptionsChanged.nicknames["NICKNAME"] then
             print("Nickname")
-            NSI:NickNameUpdated(NSRT.MyNickName)
+            NSI:NickNameUpdated(NSRT.Settings["MyNickName"])
         end
 
         if NSUI.OptionsChanged.nicknames["GLOBAL_NICKNAMES"] then
@@ -424,9 +432,9 @@ function NSUI:Init()
             boxfirst = true,
             name = "Disable Minimap Button",
             desc = "Hide the minimap button.",
-            get = function() return NSRT.minimap.hide end,
+            get = function() return NSRT.Settings["Minimap"].hide end,
             set = function(self, fixedparam, value)
-                NSRT.minimap.hide = value
+                NSRT.Settings["Minimap"].hide = value
 
                 LDBIcon:Refresh("NSRT", NSRT.minimap)
             end,
@@ -439,10 +447,10 @@ function NSUI:Init()
             type = "range",
             name = "TTS Voice",
             desc = "Voice to use for TTS",
-            get = function() return NSRT.TTSVoice end,
+            get = function() return NSRT.Settings["TTSVoice"] end,
             set = function(self, fixedparam, value) 
                 NSUI.OptionsChanged.general["TTS_VOICE"] = true
-                NSRT.TTSVoice = value 
+                NSRT.Settings["TTSVoice"] = value 
             end,
             min = 1,
             max = 5,
@@ -451,9 +459,9 @@ function NSUI:Init()
             type = "range",
             name = "TTS Volume",
             desc = "Volume of the TTS",
-            get = function() return NSRT.TTSVolume end,
+            get = function() return NSRT.Settings["TTSVolume"] end,
             set = function(self, fixedparam, value)
-                NSRT.TTSVolume = value
+                NSRT.Settings["TTSVolume"] = value
             end,
             min = 0,
             max = 100,
@@ -470,7 +478,7 @@ Press 'Enter' to hear the TTS]],
             end,
             hooks = {
                 OnEnterPressed = function(self)
-                    NSAPI:TTS(tts_text_preview, NSRT.TTSVoice)
+                    NSAPI:TTS(tts_text_preview, NSRT.Settings["TTSVoice"])
                 end
             }
         },
@@ -479,10 +487,10 @@ Press 'Enter' to hear the TTS]],
             boxfirst = true,
             name = "Enable TTS",
             desc = "Enable TTS",
-            get = function() return NSRT.TTS end,
+            get = function() return NSRT.Settings["TTS"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.general["TTS_ENABLED"] = true
-                NSRT.TTS = value
+                NSRT.Settings["TTS"] = value
             end,
         },
         {
@@ -498,10 +506,10 @@ Press 'Enter' to hear the TTS]],
             boxfirst = true,
             name = "Enable @player Ping",
             desc = "Enable a @player ping when the private aura macro is used.",
-            get = function() return NSRT.PASelfPing end,
+            get = function() return NSRT.Settings["PASelfPing"] end,
             set = function(self, fixedparam, value) 
                 NSUI.OptionsChanged.general["PA_MACRO"] = true
-                NSRT.PASelfPing = value 
+                NSRT.Settings["PASelfPing"] = value 
             end,
             nocombat = true
         },
@@ -510,10 +518,10 @@ Press 'Enter' to hear the TTS]],
             boxfirst = true,
             name = "Combine Extra Action Button",
             desc = "Combine the extra action button with the private aura macro.",
-            get = function() return NSRT.PAExtraAction end,
+            get = function() return NSRT.Settings["PAExtraAction"] end,
             set = function(self, fixedparam, value) 
                 NSUI.OptionsChanged.general["PA_MACRO"] = true
-                NSRT.PAExtraAction = value 
+                NSRT.Settings["PAExtraAction"] = value 
             end,
             nocombat = true
         },
@@ -545,10 +553,10 @@ Press 'Enter' to hear the TTS]],
             boxfirst = true,
             name = "Enable MRT Note Comparison",
             desc = "Enables MRT note comparison on ready check.",
-            get = function() return NSRT.MRTNoteComparison end,
+            get = function() return NSRT.Settings["MRTNoteComparison"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.general["MRT_NOTE_COMPARISON"] = true
-                NSRT.MRTNoteComparison = value
+                NSRT.Settings["MRTNoteComparison"] = value
             end,
             nocombat = true
         },
@@ -599,14 +607,14 @@ Press 'Enter' to hear the TTS]],
             type = "textentry",
             name = "Nickname",
             desc = "Set your nickname to be seen by others and used in assignments",
-            get = function() return NSRT.MyNickName end,
+            get = function() return NSRT.Settings["MyNickName"] end,
             set = function(self, fixedparam, value) 
                 NSUI.OptionsChanged.nicknames["NICKNAME"] = true
-                NSRT.MyNickName = string.sub(value, 1, 12)
+                NSRT.Settings["MyNickName"] = string.sub(value, 1, 12)
             end,
             hooks = {
                 OnEditFocusLost = function(self)
-                    self:SetText(NSRT.MyNickName)
+                    self:SetText(NSRT.Settings["MyNickName"])
                 end,
                 OnEnterPressed = function(self) return end
             },
@@ -617,16 +625,16 @@ Press 'Enter' to hear the TTS]],
             boxfirst = true,
             name = "Enable Nicknames",
             desc = "Globaly enable nicknames.",
-            get = function() return NSRT.GlobalNickNames end,
+            get = function() return NSRT.Settings["GlobalNickNames"] end,
             set = function(self, fixedparam, value) 
                 NSUI.OptionsChanged.nicknames["GLOBAL_NICKNAMES"] = true
-                NSRT.GlobalNickNames = value 
+                NSRT.Settings["GlobalNickNames"] = value 
             end,
             nocombat = true
         },
         {
             type = "select",
-            get = function() return NSRT.NickNamesShareSetting end,
+            get = function() return NSRT.Settings["Share"] end,
             values = function() return build_nickname_share_options() end,
             name = "Nickname Share",
             desc = "Choose who you share your nickname with.",
@@ -643,10 +651,10 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            get = function() return NSRT.BlizzardNickNames end,
+            get = function() return NSRT.Settings["Blizzard"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["BLIZZARD_NICKNAMES"] = true
-                NSRT.BlizzardNickNames = value
+                NSRT.Settings["Blizzard"] = value
             end,
             name = "Enable Blizzard Nicknames",
             desc = "Enable Nicknames to be used with Blizzard unit frames.",
@@ -655,10 +663,10 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            get = function() return NSRT.CellNickNames end,
+            get = function() return NSRT.Settings["Cell"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["CELL_NICKNAMES"] = true
-                NSRT.CellNickNames = value
+                NSRT.Settings["Cell"] = value
             end,
             name = "Enable Cell Nicknames",
             desc = "Enable Nicknames to be used with Cell unit frames.",
@@ -667,10 +675,10 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            get = function() return NSRT.Grid2NickNames end,
+            get = function() return NSRT.Settings["Grid2"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["GRID2_NICKNAMES"] = true
-                NSRT.Grid2NickNames = value
+                NSRT.Settings["Grid2"] = value
             end,
             name = "Enable Grid2 Nicknames",
             desc = "Enable Nicknames to be used with Grid2 unit frames.",
@@ -679,10 +687,10 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            get = function() return NSRT.ElvUINickNames end,
+            get = function() return NSRT.Settings["ElvUI"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["ELVUI_NICKNAMES"] = true
-                NSRT.ElvUINickNames = value
+                NSRT.Settings["ElvUI"] = value
             end,
             name = "Enable ElvUI Nicknames",
             desc = "Enable Nicknames to be used with ElvUI unit frames.",
@@ -691,10 +699,10 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            get = function() return enableSUFNicknames end,
+            get = function() return NSRT.Settings["SuF"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["SUF_NICKNAMES"] = true
-                NSRT.SuFNickNames = value
+                NSRT.Settings["SuF"] = value
             end,
             name = "Enable SUF Nicknames",
             desc = "Enable Nicknames to be used with SUF unit frames.",
@@ -703,10 +711,10 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            get = function() return NSRT.WANickNames end,
+            get = function() return NSRT.Settings["WA"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["WA_NICKNAMES"] = true
-                NSRT.WANickNames = value
+                NSRT.Settings["WA"] = value
             end,
             name = "Enable WeakAuras Nicknames",
             desc = "Enable Nicknames to be used with WeakAuras.",
@@ -715,10 +723,10 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            get = function() return NSRT.MRTNickNames end,
+            get = function() return NSRT.Settings["MRT"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["MRT_NICKNAMES"] = true
-                NSRT.MRTNickNames = value
+                NSRT.Settings["MRT"] = value
             end,
             name = "Enable MRT Nicknames",
             desc = "Enable Nicknames to be used with MRT.",
@@ -727,10 +735,10 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            get = function() return enableSUFNicknames end,
+            get = function() return NSRT.Settings["Unhalted"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["UNHALTED_NICKNAMES"] = true
-                NSRT.UnhaltedNickNames = value
+                NSRT.Settings["Unhalted"] = value
             end,
             name = "Enable Unhalted UI Nicknames",
             desc = "Enable Nicknames to be used with Unhalted UI.",
@@ -773,10 +781,10 @@ Press 'Enter' to hear the TTS]],
             boxfirst = true,
             name = "Enable @player Ping",
             desc = "Enable a @player ping when the external macro is used.",
-            get = function() return NSRT.ExternalSelfPing end,
+            get = function() return NSRT.Settings["ExternalSelfPing"] end,
             set = function(self, fixedparam, value) 
                 NSUI.OptionsChanged.externals["EXTERNAL_MACRO"] = true
-                NSRT.ExternalSelfPing = value 
+                NSRT.Settings["ExternalSelfPing"] = value 
             end,
             nocombat = true
         },
