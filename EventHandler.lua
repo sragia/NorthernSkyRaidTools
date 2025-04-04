@@ -126,14 +126,15 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             end
         end
     elseif e == "NS_VERSION_CHECK" and internal then
-        local unit, ver, type, name, duplicate = ...
-        NSI:VersionResponse(unit, ver, type, name, duplicate)
+        local unit, ver, duplicate = ...
+        NSI:VersionResponse({name = NSAPI:GetName(unit), version = ver, duplicate = duplicate})
     elseif e == "NS_VERSION_REQUEST" and internal then
         local unit, type, name = ...
+        if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't send to yourself
         if UnitExists(unit) and (UnitIsGroupLeader(unit) or UnitIsGroupAssistant(unit)) then
             if type == "Addon" then
                 local ver = C_AddOns.GetAddOnMetadata(name, "Version") or "0"
-                NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, ver, type, name)
+                NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, ver, false)
             elseif type == "WA" then
                 local waData = WeakAuras.GetData(name)
                 local ver = -1
@@ -148,11 +149,11 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
                     waData = WeakAuras.GetData(name.." "..i)
                     if waData then duplicate = true break end
                 end
-                NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, ver, type, name, duplicate)
+                NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, ver, duplicate)
             elseif type == "Note" then
                 local note = NSAI:GetNote()
                 local hashed = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(note) or ""
-                NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, hashed, type, name)
+                NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, hashed, false)
             end
         end
     elseif e == "NSAPI_NICKNAMES_COMMS" and internal then
