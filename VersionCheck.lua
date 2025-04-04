@@ -3,6 +3,7 @@ local _, NSI = ... -- Internal namespace
 function NSI:RequestVersionNumber(type, name) -- type == "Addon" or "WA" or "Note"
     if (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")) then
         local unit, ver, duplicate, url = NSI:GetVersionNumber(type, name, unit)
+        NSAPI:Broadcast("NS_VERSION_REQUEST", "RAID", type, name)
         return {name = UnitName("player"), version = ver, duplicate = duplicate}, url
     end
 end
