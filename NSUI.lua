@@ -448,6 +448,17 @@ function NSUI:Init()
             max = 5,
         },
         {
+            type = "range",
+            name = "TTS Volume",
+            desc = "Volume of the TTS",
+            get = function() return NSRT.TTSVolume end,
+            set = function(self, fixedparam, value)
+                NSRT.TTSVolume = value
+            end,
+            min = 0,
+            max = 100,
+        },
+        {
             type = "textentry",
             name = "TTS Preview",
             desc = [[Enter any text to preview TTS

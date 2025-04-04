@@ -22,6 +22,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             if not NSRT.NickNames then NSRT.NickNames = {} end
             -- default settings
             if not NSRT.TTSVoice then NSRT.TTSVoice = 2 end
+            if not NSRT.TTSVolume then NSRT.TTSVolume = 50 end
             if NSRT.TTS == nil then NSRT.TTS = true end
             if NSRT.PASelfPing == nil then NSRT.PASelfPing = true end
             if NSRT.ExternalSelfPing == nil then NSRT.ExternalSelfPing = true end
