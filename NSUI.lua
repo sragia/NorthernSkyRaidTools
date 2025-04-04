@@ -6,6 +6,7 @@ local WA = _G["WeakAuras"]
 
 local window_width = 800
 local window_height = 515
+local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 
 local options_text_template = DF:GetTemplate("font", "OPTIONS_FONT_TEMPLATE")
 local options_dropdown_template = DF:GetTemplate("dropdown", "OPTIONS_DROPDOWN_TEMPLATE")
@@ -94,8 +95,8 @@ local function ExternalSelfPingChanged()
 end
 
 -- version check ui
-local component_to_check = "WeakAuras"
-local checkable_components = {"WeakAuras", "Addon"}
+local component_type = "WA"
+local checkable_components = { "WA", "Addon", "Note" }
 local function build_checkable_components_options()
     local t = {}
     for i = 1, #checkable_components do
@@ -104,7 +105,7 @@ local function build_checkable_components_options()
             value = checkable_components[i],
             onclick = function(_, _, value)
                 print("Checkable type selected: " .. value)
-                component_to_check = value
+                component_type = value
             end
         })
     end
@@ -139,7 +140,7 @@ local function BuildVersionCheckUI(parent)
     local version_number_header = DF:CreateLabel(parent, "Version Number", 11)
     version_number_header:SetPoint("LEFT", character_name_header, "RIGHT", 120, 0)
 
-    local duplicate_header = DF:CreateLabel(parent, "Duplicates found?", 11)
+    local duplicate_header = DF:CreateLabel(parent, "Duplicate", 11)
     duplicate_header:SetPoint("LEFT", version_number_header, "RIGHT", 50, 0)
 
     local function refresh(self, data, offset, totalLines)
@@ -148,8 +149,26 @@ local function BuildVersionCheckUI(parent)
             local thisData = data[index]
             if thisData then
                 local line = self:GetLine(i)
-                line.name:SetText(thisData)
-                line.version:SetText("1.0.0")
+                local name = thisData.name
+                local version = thisData.version
+                local duplicate = thisData.duplicate
+                line.name:SetText(name)
+                line.version:SetText(version)
+                line.duplicates:SetText(duplicate and "Yes" or "No")
+
+                -- version number color
+                if version and data[1] and data[1].version and version == data[1].version then
+                    line.version:SetTextColor(0, 1, 0, 1)
+                else
+                    line.version:SetTextColor(1, 0, 0, 1)
+                end
+
+                -- duplicates color
+                if duplicate then
+                    line.duplicates:SetTextColor(1, 0, 0, 1)
+                else
+                    line.duplicates:SetTextColor(0, 1, 0, 1)
+                end
             end
         end
     end
@@ -158,42 +177,71 @@ local function BuildVersionCheckUI(parent)
         local line = CreateFrame("button", "$parentLine" .. index, self, "BackdropTemplate")
         line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index-1) * (self.LineHeight+1)) - 1)
         line:SetSize(self:GetWidth() - 2, self.LineHeight)
-        -- DF:ApplyStandardBackdrop(line)
+        DF:ApplyStandardBackdrop(line)
+        DF:CreateHighlightTexture(line)
         line.index = index
 
         local name = line:CreateFontString(nil, "OVERLAY")
         name:SetWidth(100)
         name:SetJustifyH("LEFT")
-        name:SetFont([[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]], 12, "OUTLINE")
+        name:SetFont(expressway, 12, "OUTLINE")
         name:SetPoint("LEFT", line, "LEFT", 5, 0)
         line.name = name
 
         local version = line:CreateFontString(nil, "OVERLAY")
         version:SetWidth(100)
         version:SetJustifyH("LEFT")
-        version:SetFont([[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]], 12, "OUTLINE")
-        version:SetPoint("LEFT", name, "RIGHT", 120, 0)
+        version:SetFont(expressway, 12, "OUTLINE")
+        version:SetPoint("LEFT", name, "RIGHT", 110, 0)
         line.version = version
 
         local duplicates = line:CreateFontString(nil, "OVERLAY")
         duplicates:SetWidth(100)
         duplicates:SetJustifyH("LEFT")
-        duplicates:SetFont([[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]], 12, "OUTLINE")
-        duplicates:SetPoint("LEFT", version, "RIGHT", 120, 0)
+        duplicates:SetFont(expressway, 12, "OUTLINE")
+        duplicates:SetPoint("LEFT", version, "RIGHT", 30, 0)
         line.duplicates = duplicates
 
+        line:SetScript("OnClick", function(self)
+            SendChatMessage("UPDATE YOUR SHIT NOOB", "WHISPER", nil, self.name:GetText())
+        end)
         return line
     end
 
-    local sample_data = {"ravxd", "bird", "bird2", "bird3", "bird4", "bird5", "bird6", "bird7", "bird8", "bird9", "bird10", "bird11", "bird12", "bird13", "bird14", "bird15", "bird16", "bird17", "bird18", "bird19", "bird20"}
-    local version_check_scrollbox = DF:CreateScrollBox(parent, "VersionCheckScrollBox", refresh, sample_data, window_width - 40, window_height - 180, 20, 20)
+    local scrollLines = 20
+    local version_check_scrollbox = DF:CreateScrollBox(parent, "VersionCheckScrollBox", refresh, {}, window_width - 40,
+        window_height - 180, scrollLines, 20, createLineFunc)
     DF:ReskinSlider(version_check_scrollbox)
     version_check_scrollbox.ReajustNumFrames = true
     version_check_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -150)
-    for i = 1, #sample_data do
+    for i = 1, scrollLines do
         version_check_scrollbox:CreateLine(createLineFunc)
     end
     version_check_scrollbox:Refresh()
+    local addData = function(self, data)
+        local currentData = self:GetData()
+        tinsert(currentData, data)
+        self:SetData(currentData)
+        self:Refresh()
+    end
+
+    local wipeData = function(self)
+        self:SetData({})
+        self:Refresh()
+    end
+
+    version_check_scrollbox.AddData = addData
+    version_check_scrollbox.WipeData = wipeData
+
+    version_check_button:SetScript("OnClick", function(self)
+        version_check_scrollbox:WipeData()
+        local userData = NSI:RequestVersionNumber(component_type, component_name)
+        if userData then
+            version_check_scrollbox:AddData(userData)
+        end
+    end)
+
+    return version_check_scrollbox
 end
 
 
@@ -932,7 +980,7 @@ Press 'Enter' to hear the TTS]],
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         externals_callback)
 
-    BuildVersionCheckUI(versions_tab)
+    NSUI.version_scrollbox = BuildVersionCheckUI(versions_tab)
 end
 
 function NSI:DisplayExternal(spellId, unit)

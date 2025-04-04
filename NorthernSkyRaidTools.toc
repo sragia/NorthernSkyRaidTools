@@ -21,6 +21,7 @@ Comms.lua
 NickNames.lua
 EventHandler.lua
 Externals.lua
+VersionCheck.lua
 WeakAuras/Imports.lua
 
 NSUI.lua

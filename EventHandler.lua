@@ -127,7 +127,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         end
     elseif e == "NS_VERSION_CHECK" and internal then
         local unit, ver, duplicate = ...
-        NSI:VersionResponse({name = NSAPI:GetName(unit), version = ver, duplicate = duplicate})
+        NSI:VersionResponse({name = NSAPI:Shorten(unit), version = ver, duplicate = duplicate})
     elseif e == "NS_VERSION_REQUEST" and internal then
         local unit, type, name = ...
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't send to yourself
@@ -151,7 +151,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
                 end
                 NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, ver, duplicate)
             elseif type == "Note" then
-                local note = NSAI:GetNote()
+                local note = NSAPI:GetNote()
                 local hashed = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(note) or ""
                 NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, hashed, false)
             end
