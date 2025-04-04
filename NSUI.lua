@@ -146,13 +146,15 @@ local function BuildVersionCheckUI(parent)
     local function refresh(self, data, offset, totalLines)
         for i = 1, totalLines do
             local index = i + offset
-            local thisData = data[index]
+            local thisData = data[index] -- thisData = {name = {version = 1.0, duplicate = true}}
             if thisData then
                 local line = self:GetLine(i)
-                local name = thisData.name
-                local version = thisData.version
-                local duplicate = thisData.duplicate
-                local nickname = NSAPI:Shorten(name)
+                local name, version, duplicate, nickname = nil, nil, nil, nil
+                for k, v in pairs(thisData) do
+                    version = v.version
+                    duplicate = v.duplicate
+                    nickname = NSAPI:Shorten(k)
+                end
                 line.name:SetText(nickname)
                 line.version:SetText(version)
                 line.duplicates:SetText(duplicate and "Yes" or "No")
@@ -220,9 +222,17 @@ local function BuildVersionCheckUI(parent)
         version_check_scrollbox:CreateLine(createLineFunc)
     end
     version_check_scrollbox:Refresh()
+
     local addData = function(self, data)
         local currentData = self:GetData()
-        tinsert(currentData, data)
+        for name, values in pairs(data) do
+            if currentData[name] then
+                currentData[name].version = values.version
+                currentData[name].duplicate = values.duplicate
+            else
+                tinsert(currentData, data)
+            end
+        end
         self:SetData(currentData)
         self:Refresh()
     end
