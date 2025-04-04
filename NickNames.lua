@@ -405,17 +405,21 @@ function NSI:SendNickName(channel)
         realm = GetNormalizedRealmName()
     end
     if nickname then
-        if UnitInRaid("player") and (NSRT.Settings["Share"] == 1 or NSRT.Settings["Share"] == 3) then
-            NSAPI:Broadcast("NSAPI_NICKNAMES_COMMS", "RAID", nickname, name, realm)
+        if UnitInRaid("player") and (NSRT.Settings["ShareNickNames"] == 1 or NSRT.Settings["ShareNickNames"] == 3) then
+            NSAPI:Broadcast("NSAPI_NICKNAMES_COMMS", "RAID", nickname, name, realm, "RAID")
         end
-        if NSRT.Settings["Share"] == 2 or NSRT.Settings["Share"] == 3 then
-            NSAPI:Broadcast("NSAPI_NICKNAMES_COMMS", "GUILD", nickname, name, realm) -- channel is either GUILD or RAID
+        if NSRT.Settings["ShareNickNames"] == 2 or NSRT.Settings["ShareNickNames"] == 3 then
+            NSAPI:Broadcast("NSAPI_NICKNAMES_COMMS", "GUILD", nickname, name, realm, "GUILD") -- channel is either GUILD or RAID
         end
     end
 end
 
-function NSI:NewNickName(unit, nickname, name, realm)
-    if WeakAuras.CurrentEncounter or (unit ~= "player" and not NSRT.Settings["IncomingNickNames"]) then return end
+function NSI:NewNickName(unit, nickname, name, realm, channel)
+    if WeakAuras.CurrentEncounter then return end
+    if unit ~= "player" and NSRT.Settings["AcceptNickNames"] ~= 3 then
+        if channel == "GUILD" and NSRT.Settings["AcceptNickNames"] ~= 2 then return end
+        if channel == "RAID" and NSRT.Settings["AcceptNickNames"] ~= 1 then return end
+    end
     print("new nickanme:", unit, nickname, name, realm)
     if not nickname or not name or not realm then return end   
     local oldnick = NSRT.NickNames[name.."-"..realm]      

@@ -470,13 +470,31 @@ function NSUI:Init()
                 value = i,
                 onclick = function(_, _, value)
                     NSUI.OptionsChanged.nicknames["NICKNAME_SHARE"] = true
-                    NSRT.Settings["Share"] = value
+                    NSRT.Settings["ShareNickNames"] = value
                 end
 
             })
         end
         return t
     end
+
+    local nickname_accept_options = { "Raid", "Guild", "Both", "None" }
+    local build_nickname_accept_options = function()
+        local t = {}
+        for i = 1, #nickname_accept_options do
+            tinsert(t, {
+                label = nickname_accept_options[i],
+                value = i,
+                onclick = function(_, _, value)
+                    NSUI.OptionsChanged.nicknames["NICKNAME_ACCEPT"] = true
+                    NSRT.Settings["AcceptNickNames"] = value
+                end
+
+            })
+        end
+        return t
+    end
+
     local function WipeNickNames()
         local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Wipe Nicknames", "NSRTWipeNicknamesPopup")
         popup:SetFrameStrata("DIALOG")
@@ -804,24 +822,21 @@ Press 'Enter' to hear the TTS]],
         },
         {
             type = "select",
-            get = function() return NSRT.Settings["Share"] end,
+            get = function() return NSRT.Settings["ShareNickNames"] end,
             values = function() return build_nickname_share_options() end,
             name = "Nickname Share",
             desc = "Choose who you share your nickname with.",
             nocombat = true
-        },
+        },        
         {
-            type = "toggle",
-            boxfirst = true,
-            name = "Enable Incoming Nicknames",
-            desc = "Toggle the ability to recieve updated nicknames from others.",
-            get = function() return NSRT.Settings["IncomingNickNames"] end,
-            set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.nicknames["INCOMING_NICKNAMES"] = true
-                NSRT.Settings["IncomingNickNames"] = value
-            end,
+            type = "select",
+            get = function() return NSRT.Settings["AcceptNickNames"] end,
+            values = function() return build_nickname_accept_options() end,
+            name = "Nickname Accept",
+            desc = "Choose you who are accepting Nicknames from",
             nocombat = true
         },
+
         {
             type = "blank",
         },

@@ -32,8 +32,8 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             NSRT.Settings["ElvUI"] = NSRT.Settings["ElvUI"] or false
             NSRT.Settings["SuF"] = NSRT.Settings["SuF"] or false
             NSRT.Settings["Unhalted"] = NSRT.Settings["Unhalted"] or false
-            NSRT.Settings["Share"] = NSRT.Settings["Share"] or 4
-            NSRT.Settings["IncomingNickNames"] = NSRT.Settings["IncomingNickNames"] or false
+            NSRT.Settings["ShareNickNames"] = NSRT.Settings["ShareNickNames"] or 4
+            NSRT.Settings["AcceptNickNames"] = NSRT.Settings["AcceptNickNames"] or 4
             NSRT.Settings["PAExtraAction"] = NSRT.Settings["PAExtraAction"] or false
             NSRT.Settings["PASelfPing"] = NSRT.Settings["PASelfPing"] or false
             NSRT.Settings["ExternalSelfPing"] = NSRT.Settings["ExternalSelfPing"] or false
@@ -137,9 +137,9 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, ver, duplicate)
         end
     elseif e == "NSAPI_NICKNAMES_COMMS" and internal then
-        local unit, nickname, name, realm = ...
+        local unit, nickname, name, realm, channel = ...
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't add new nickname if it's yourself because already adding it to the database when you edit it
-        NSI:NewNickName(unit, nickname, name, realm)
+        NSI:NewNickName(unit, nickname, name, realm, channel)
     elseif e == "NSAPI_SPEC" and internal then
         local unit, spec = ...
         NSI.specs = NSI.specs or {}
