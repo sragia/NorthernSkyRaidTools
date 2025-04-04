@@ -175,6 +175,13 @@ local function BuildVersionCheckUI(parent)
         version:SetPoint("LEFT", name, "RIGHT", 120, 0)
         line.version = version
 
+        local duplicates = line:CreateFontString(nil, "OVERLAY")
+        duplicates:SetWidth(100)
+        duplicates:SetJustifyH("LEFT")
+        duplicates:SetFont([[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]], 12, "OUTLINE")
+        duplicates:SetPoint("LEFT", version, "RIGHT", 120, 0)
+        line.duplicates = duplicates
+
         return line
     end
 
