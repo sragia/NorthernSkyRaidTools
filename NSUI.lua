@@ -144,17 +144,21 @@ local function BuildVersionCheckUI(parent)
     duplicate_header:SetPoint("LEFT", version_number_header, "RIGHT", 50, 0)
 
     local function refresh(self, data, offset, totalLines)
+        print("ThisData")
+        DevTools_Dump(data)
+        print("--------------------------------")
         for i = 1, totalLines do
             local index = i + offset
-            local thisData = data[index] -- thisData = {name = {version = 1.0, duplicate = true}}
+            local thisData = data[index] -- thisData = {{name = "Ravxd", version = 1.0, duplicate = true}}
             if thisData then
                 local line = self:GetLine(i)
-                local name, version, duplicate, nickname = nil, nil, nil, nil
-                for k, v in pairs(thisData) do
-                    version = v.version
-                    duplicate = v.duplicate
-                    nickname = NSAPI:Shorten(k)
-                end
+
+                local name = thisData.name
+                local version = thisData.version
+                local duplicate = thisData.duplicate
+
+                local nickname = NSAPI:Shorten(name)
+
                 line.name:SetText(nickname)
                 line.version:SetText(version)
                 line.duplicates:SetText(duplicate and "Yes" or "No")
@@ -223,22 +227,24 @@ local function BuildVersionCheckUI(parent)
     end
     version_check_scrollbox:Refresh()
 
+    version_check_scrollbox.name_map = {}
     local addData = function(self, data)
-        local currentData = self:GetData()
-        for name, values in pairs(data) do
-            if currentData[name] then
-                currentData[name].version = values.version
-                currentData[name].duplicate = values.duplicate
-            else
-                tinsert(currentData, data)
-            end
+        local currentData = self:GetData() -- currentData = {{name, version, duplicate}...}
+
+        if self.name_map[data.name] then
+            currentData[self.name_map[data.name]] = data
+        else
+            self.name_map[data.name] = #currentData + 1
+            tinsert(currentData, data)
         end
+        
         self:SetData(currentData)
         self:Refresh()
     end
 
     local wipeData = function(self)
         self:SetData({})
+        wipe(self.name_map)
         self:Refresh()
     end
 
