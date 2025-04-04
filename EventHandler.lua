@@ -33,6 +33,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             NSRT.Settings["SuF"] = NSRT.Settings["SuF"] or false
             NSRT.Settings["Unhalted"] = NSRT.Settings["Unhalted"] or false
             NSRT.Settings["Share"] = NSRT.Settings["Share"] or 4
+            NSRT.Settings["IncomingNickNames"] = NSRT.Settings["IncomingNickNames"] or false
             NSRT.Settings["PAExtraAction"] = NSRT.Settings["PAExtraAction"] or false
             NSRT.Settings["PASelfPing"] = NSRT.Settings["PASelfPing"] or false
             NSRT.Settings["ExternalSelfPing"] = NSRT.Settings["ExternalSelfPing"] or false
