@@ -641,6 +641,18 @@ Press 'Enter' to hear the TTS]],
             nocombat = true
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enable Incoming Nicknames",
+            desc = "Toggle the ability to recieve updated nicknames from others.",
+            get = function() return NSRT.Settings["IncomingNickNames"] end,
+            set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.nicknames["INCOMING_NICKNAMES"] = true
+                NSRT.Settings["IncomingNickNames"] = value
+            end,
+            nocombat = true
+        },
+        {
             type = "blank",
         },
         {
