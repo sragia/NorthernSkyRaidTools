@@ -152,7 +152,8 @@ local function BuildVersionCheckUI(parent)
                 local name = thisData.name
                 local version = thisData.version
                 local duplicate = thisData.duplicate
-                line.name:SetText(name)
+                local nickname = NSAPI:Shorten(name)
+                line.name:SetText(nickname)
                 line.version:SetText(version)
                 line.duplicates:SetText(duplicate and "Yes" or "No")
 
@@ -169,6 +170,10 @@ local function BuildVersionCheckUI(parent)
                 else
                     line.duplicates:SetTextColor(0, 1, 0, 1)
                 end
+                
+                line:SetScript("OnClick", function(self)
+                    SendChatMessage("UPDATE YOUR SHIT NOOB", "WHISPER", nil, name)
+                end)
             end
         end
     end
@@ -202,9 +207,6 @@ local function BuildVersionCheckUI(parent)
         duplicates:SetPoint("LEFT", version, "RIGHT", 30, 0)
         line.duplicates = duplicates
 
-        line:SetScript("OnClick", function(self)
-            SendChatMessage("UPDATE YOUR SHIT NOOB", "WHISPER", nil, self.name:GetText())
-        end)
         return line
     end
 
