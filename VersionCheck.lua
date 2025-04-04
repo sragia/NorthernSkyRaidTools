@@ -4,7 +4,7 @@ function NSI:RequestVersionNumber(type, name) -- type == "Addon" or "WA" or "Not
     if (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")) then
         if type == "Addon" then
             local ver = C_AddOns.GetAddOnMetadata(name, "Version") or "0"
-            return {name = NSAPI:GetName("player"), version = ver, duplicate = false}, "url"
+            return {name = NSAPI:GetName("player"), version = ver, duplicate = false}, ""
         elseif type == "WA" then
             local waData = WeakAuras.GetData(name)
             local ver = -1
