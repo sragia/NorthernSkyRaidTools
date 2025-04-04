@@ -137,7 +137,7 @@ function NSAPI:TTS(sound, voice)
                 sound,
                 Enum.VoiceTtsDestination.LocalPlayback,
                 C_TTSSettings and C_TTSSettings.GetSpeechRate() or 0,
-                C_TTSSettings and C_TTSSettings.GetSpeechVolume() or 100
+                NSRT.TTSVolume
         )
      end
 end
