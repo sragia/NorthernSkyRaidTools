@@ -34,12 +34,14 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             if NSRT.CellNickNames == nil then NSRT.CellNickNames = false end
             if NSRT.Grid2NickNames == nil then NSRT.Grid2NickNames = false end
             if NSRT.BlizzardNickNames == nil then NSRT.BlizzardNickNames = false end
+            if NSRT.OmniCDNickNames == nil then NSRT.OmniCDNickNames = false end
             if NSRT.PAExtraAction == nil then NSRT.PAExtraAction = false end
             if NSRT.MRTNoteComparison == nil then NSRT.MRTNoteComparison = false end
             if NSRT.NickNamesShareSetting == nil then NSRT.NickNamesShareSetting = 4 end
             if NSRT.TTSVolume == nil then NSRT.TTSVolume = 50 end
             NSRT.BlizzardNickNamesHook = false
             NSRT.MRTNickNamesHook = false
+            NSRT.OmniCDNickNamesHook = false
             if NSRT.minimap == nil then NSRT.minimap = { hide = false } end
             -- end of default settings
             NSI:InitNickNames()
@@ -107,7 +109,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         local hashed = ...
         if hashed ~= "" then
             local note = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""    
-            if note ~= "hased" then
+            if note ~= "" then
                 -- Display text that tells the user the MRT note is different
             end
         end

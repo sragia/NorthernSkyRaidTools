@@ -155,6 +155,13 @@ function NSI:MRTNickNameUpdated()
     end
 end
 
+function NSI:OmniCDNickNameUpdated()
+    if NSRT.OmniCDNickNames and C_AddOns.IsAddOnLoaded("OmniCD") and not NSRT.OmniCDNickNamesHook then
+        NSRT.OmniCDNickNamesHook = true
+        -- Add OmniCD Hook
+    end
+end
+
 -- Cell Option Change
 function NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname)
     if CellDB then
@@ -270,7 +277,7 @@ function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)
     NSI:UnhaltedNickNameUpdated()
     NSI:BlizzardNickNameUpdated()
     NSI:MRTNickNameUpdated()
-    -- Missing: SuF, Chat, Vuhdo
+    NSI:OmniCDNickNameUpdated()
 end
 
 function NSI:InitNickNames()
@@ -304,7 +311,7 @@ function NSI:InitNickNames()
 
     NSI:BlizzardNickNameUpdated()
     NSI:MRTNickNameUpdated()
-
+    NSI:OmniCDNickNameUpdated()
 
     if NSRT.GlobalNickNames then
         for name, nickname in pairs(NSRT.NickNames) do
