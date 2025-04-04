@@ -20,9 +20,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             -- if not NSRT.NSUI.main_frame then NSRT.NSUI.main_frame = {} end
             -- if not NSRT.NSUI.external_frame then NSRT.NSUI.external_frame = {} end
             if not NSRT.NickNames then NSRT.NickNames = {} end
-            if not NSRT.Settings then
-                NSRT.Settings = {}
-            end
+            if not NSRT.Settings then NSRT.Settings = {} end
             NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or ""
             NSRT.Settings["GlobalNickNames"] = NSRT.Settings["GlobalNickNames"] or false
             NSRT.Settings["Blizzard"] = NSRT.Settings["Blizzard"] or false
@@ -128,14 +126,15 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             end
         end
     elseif e == "NS_VERSION_CHECK" and internal then
-        local unit, ver, type, name = ...
-        -- build reponse UI, matching type & name
+        local unit, ver, type, name, duplicate = ...
+        print(unit, ver, type, name, duplicate)
+        NSI:VersionResponse(unit, ver, type, name, duplicate)
     elseif e == "NS_VERSION_REQUEST" and internal then
         local unit, type, name = ...
         if UnitExists(unit) and (UnitIsGroupLeader(unit) or UnitIsGroupAssistant(unit)) then
             if type == "Addon" then
                 local ver = C_AddOns.GetAddOnMetadata(name, "Version") or "0"
-                NSAPI:Broadcast("NS_VERSION_CHECK", "RAID", ver)
+                NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, ver, type, name)
             elseif type == "WA" then
                 local waData = WeakAuras.GetData(name)
                 local ver = -1
@@ -145,7 +144,16 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
                         ver = tonumber(waData["url"]:match('.*/(%d+)$'))
                     end
                 end
-                NSAPI:Broadcast("NS_VERSION_CHECK", "RAID", ver, type, name)
+                local duplicate = false
+                for i=2, 10 do -- check for duplicates of the Weakaura
+                    waData = WeakAuras.GetData(name.." "..i)
+                    if waData then duplicate = true break end
+                end
+                NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, ver, type, name, duplicate)
+            elseif type == "Note" then
+                local note = NSAI:GetNote()
+                local hashed = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(note) or ""
+                NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, hashed, type, name)
             end
         end
     elseif e == "NSAPI_NICKNAMES_COMMS" and internal then
