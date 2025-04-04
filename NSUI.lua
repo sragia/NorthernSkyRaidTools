@@ -175,6 +175,13 @@ local function BuildVersionCheckUI(parent)
         version:SetPoint("LEFT", name, "RIGHT", 120, 0)
         line.version = version
 
+        local duplicates = line:CreateFontString(nil, "OVERLAY")
+        duplicates:SetWidth(100)
+        duplicates:SetJustifyH("LEFT")
+        duplicates:SetFont([[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]], 12, "OUTLINE")
+        duplicates:SetPoint("LEFT", version, "RIGHT", 120, 0)
+        line.duplicates = duplicates
+
         return line
     end
 
@@ -735,6 +742,18 @@ Press 'Enter' to hear the TTS]],
             values = function() return build_nickname_share_options() end,
             name = "Nickname Share",
             desc = "Choose who you share your nickname with.",
+            nocombat = true
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enable Incoming Nicknames",
+            desc = "Toggle the ability to recieve updated nicknames from others.",
+            get = function() return NSRT.Settings["IncomingNickNames"] end,
+            set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.nicknames["INCOMING_NICKNAMES"] = true
+                NSRT.Settings["IncomingNickNames"] = value
+            end,
             nocombat = true
         },
         {
