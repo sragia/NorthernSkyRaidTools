@@ -93,6 +93,110 @@ local function ExternalSelfPingChanged()
     end
 end
 
+-- version check ui
+local component_to_check = "WeakAuras"
+local checkable_components = {"WeakAuras", "Addon"}
+local function build_checkable_components_options()
+    local t = {}
+    for i = 1, #checkable_components do
+        tinsert(t, {
+            label = checkable_components[i],
+            value = checkable_components[i],
+            onclick = function(_, _, value)
+                print("Checkable type selected: " .. value)
+                component_to_check = value
+            end
+        })
+    end
+    return t
+end
+
+local component_name = ""
+local function BuildVersionCheckUI(parent)
+    local component_type_label = DF:CreateLabel(parent, "Component Type", 9.5, "white")
+    component_type_label:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -100)
+    
+    local component_type_dropdown = DF:CreateDropDown(parent, function() return build_checkable_components_options() end, checkable_components[1])
+    component_type_dropdown:SetTemplate(options_dropdown_template)
+    component_type_dropdown:SetPoint("LEFT", component_type_label, "RIGHT", 5, 0)
+
+    local component_name_label = DF:CreateLabel(parent, "WeakAura/Addon Name", 9.5, "white")
+    component_name_label:SetPoint("LEFT", component_type_dropdown, "RIGHT", 10, 0)
+
+    local component_name_entry = DF:CreateTextEntry(parent, function(_, _, value) component_name = value end, 250, 18)
+    component_name_entry:SetTemplate(options_button_template)
+    component_name_entry:SetPoint("LEFT", component_name_label, "RIGHT", 5, 0)
+
+    local version_check_button = DF:CreateButton(parent, function()
+        print("Version check button clicked") -- replace with actual callback
+    end, 120, 18, "Check Versions")
+    version_check_button:SetTemplate(options_button_template)
+    version_check_button:SetPoint("LEFT", component_name_entry, "RIGHT", 20, 0)
+
+    local character_name_header = DF:CreateLabel(parent, "Character Name", 11)
+    character_name_header:SetPoint("TOPLEFT", component_type_label, "BOTTOMLEFT", 10, -20)
+
+    local version_number_header = DF:CreateLabel(parent, "Version Number", 11)
+    version_number_header:SetPoint("LEFT", character_name_header, "RIGHT", 120, 0)
+
+    local duplicate_header = DF:CreateLabel(parent, "Duplicates found?", 11)
+    duplicate_header:SetPoint("LEFT", version_number_header, "RIGHT", 50, 0)
+
+    local function refresh(self, data, offset, totalLines)
+        for i = 1, totalLines do
+            local index = i + offset
+            local thisData = data[index]
+            if thisData then
+                local line = self:GetLine(i)
+                line.name:SetText(thisData)
+                line.version:SetText("1.0.0")
+            end
+        end
+    end
+
+    local function createLineFunc(self, index)
+        local line = CreateFrame("button", "$parentLine" .. index, self, "BackdropTemplate")
+        line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index-1) * (self.LineHeight+1)) - 1)
+        line:SetSize(self:GetWidth() - 2, self.LineHeight)
+        -- DF:ApplyStandardBackdrop(line)
+        line.index = index
+
+        local name = line:CreateFontString(nil, "OVERLAY")
+        name:SetWidth(100)
+        name:SetJustifyH("LEFT")
+        name:SetFont([[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]], 12, "OUTLINE")
+        name:SetPoint("LEFT", line, "LEFT", 5, 0)
+        line.name = name
+
+        local version = line:CreateFontString(nil, "OVERLAY")
+        version:SetWidth(100)
+        version:SetJustifyH("LEFT")
+        version:SetFont([[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]], 12, "OUTLINE")
+        version:SetPoint("LEFT", name, "RIGHT", 120, 0)
+        line.version = version
+
+        local duplicates = line:CreateFontString(nil, "OVERLAY")
+        duplicates:SetWidth(100)
+        duplicates:SetJustifyH("LEFT")
+        duplicates:SetFont([[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]], 12, "OUTLINE")
+        duplicates:SetPoint("LEFT", version, "RIGHT", 120, 0)
+        line.duplicates = duplicates
+
+        return line
+    end
+
+    local sample_data = {"ravxd", "bird", "bird2", "bird3", "bird4", "bird5", "bird6", "bird7", "bird8", "bird9", "bird10", "bird11", "bird12", "bird13", "bird14", "bird15", "bird16", "bird17", "bird18", "bird19", "bird20"}
+    local version_check_scrollbox = DF:CreateScrollBox(parent, "VersionCheckScrollBox", refresh, sample_data, window_width - 40, window_height - 180, 20, 20)
+    DF:ReskinSlider(version_check_scrollbox)
+    version_check_scrollbox.ReajustNumFrames = true
+    version_check_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -150)
+    for i = 1, #sample_data do
+        version_check_scrollbox:CreateLine(createLineFunc)
+    end
+    version_check_scrollbox:Refresh()
+end
+
+
 function NSUI:Init()
     -- Create the tab container
     local tabContainer = DF:CreateTabContainer(NSUI, "Northern Sky", "NSUI_TabsTemplate", {
@@ -827,6 +931,8 @@ Press 'Enter' to hear the TTS]],
     DF:BuildMenu(externals_tab, externals_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         externals_callback)
+
+    BuildVersionCheckUI(versions_tab)
 end
 
 function NSI:DisplayExternal(spellId, unit)
