@@ -128,34 +128,13 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         end
     elseif e == "NS_VERSION_CHECK" and internal then
         local unit, ver, duplicate = ...
-        NSI:VersionResponse({ name = UnitName("player"), version = ver, duplicate = duplicate })
+        NSI:VersionResponse({ name = UnitName(unit), version = ver, duplicate = duplicate })
     elseif e == "NS_VERSION_REQUEST" and internal then
         local unit, type, name = ...
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't send to yourself
         if UnitExists(unit) and (UnitIsGroupLeader(unit) or UnitIsGroupAssistant(unit)) then
-            if type == "Addon" then
-                local ver = C_AddOns.GetAddOnMetadata(name, "Version") or "0"
-                NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, ver, false)
-            elseif type == "WA" then
-                local waData = WeakAuras.GetData(name)
-                local ver = -1
-                if waData then
-                    ver = 0
-                    if waData["url"] then
-                        ver = tonumber(waData["url"]:match('.*/(%d+)$'))
-                    end
-                end
-                local duplicate = false
-                for i=2, 10 do -- check for duplicates of the Weakaura
-                    waData = WeakAuras.GetData(name.." "..i)
-                    if waData then duplicate = true break end
-                end
-                NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, ver, duplicate)
-            elseif type == "Note" then
-                local note = NSAPI:GetNote()
-                local hashed = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(note) or ""
-                NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, hashed, false)
-            end
+            local u, ver, duplicate = NSI:GetVersionNumber(type, name, unit)
+            NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, ver, duplicate)
         end
     elseif e == "NSAPI_NICKNAMES_COMMS" and internal then
         local unit, nickname, name, realm = ...
