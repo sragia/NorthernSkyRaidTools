@@ -127,7 +127,6 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         end
     elseif e == "NS_VERSION_CHECK" and internal then
         local unit, ver, type, name, duplicate = ...
-        print(unit, ver, type, name, duplicate)
         NSI:VersionResponse(unit, ver, type, name, duplicate)
     elseif e == "NS_VERSION_REQUEST" and internal then
         local unit, type, name = ...
