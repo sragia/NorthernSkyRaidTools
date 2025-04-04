@@ -20,11 +20,11 @@ end
 
 function NSI:GetVersionNumber(type, name, unit)    
     if type == "Addon" then
-        local ver = C_AddOns.GetAddOnMetadata(name, "Version") or "0"
+        local ver = C_AddOns.GetAddOnMetadata(name, "Version") or "Addon Missing"
         return unit, ver, false, ""
     elseif type == "WA" then
         local waData = WeakAuras.GetData(name)
-        local ver = -1
+        local ver = "WA Missing"
         local url = ""
         if waData then
             ver = 0
@@ -41,7 +41,7 @@ function NSI:GetVersionNumber(type, name, unit)
         return unit, ver, duplicate, url
     elseif type == "Note" then
         local note = NSAPI:GetNote()
-        local hashed = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(note) or ""
+        local hashed = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(note) or "Note Missing"
         return unit, hashed, false, ""
     end
 end
