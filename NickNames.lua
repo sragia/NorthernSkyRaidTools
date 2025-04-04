@@ -441,3 +441,27 @@ function NSI:NewNickName(unit, nickname, name, realm, channel)
         NSI:UpdateNickNameDisplay(false, unit, name, realm, oldnick, nickname)
     end
 end
+
+
+function NSI:ImportNickNames(string) -- string format is charactername-realm:nickname;charactername-realm:nickname;...
+    if string ~= "" then
+        for _, str in pairs({strsplit(";", string)}) do
+            local namewithrealm, nickname = strsplit(":", str)
+            if namewithrealm and nickname then
+                local name, realm = strsplit("-", namewithrealm)
+                local unit
+                for u in NSI:IterateGroupMembers() do
+                    if UnitExists(u) and UnitIsUnit(u, name) then
+                        unit = u
+                        break
+                    end
+                end
+                if name and realm and namewithrealm and nickname then
+                    NSI:NewNickName(u, nickname, name, realm, "")
+                end
+            else
+                error("Error parsing names", str, namewithrealm, nickname)
+            end
+        end
+    end
+end
