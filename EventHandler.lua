@@ -37,6 +37,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             if NSRT.PAExtraAction == nil then NSRT.PAExtraAction = false end
             if NSRT.MRTNoteComparison == nil then NSRT.MRTNoteComparison = false end
             if NSRT.NickNamesShareSetting == nil then NSRT.NickNamesShareSetting = 4 end
+            if NSRT.TTSVolume == nil then NSRT.TTSVolume = 50 end
             NSRT.BlizzardNickNamesHook = false
             NSRT.MRTNickNamesHook = false
             if NSRT.minimap == nil then NSRT.minimap = { hide = false } end
