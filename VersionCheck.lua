@@ -24,7 +24,7 @@ function NSI:RequestVersionNumber(type, name) -- type == "Addon" or "WA" or "Not
             end
             return {name = NSAPI:GetName("player"), version = ver, duplicate = duplicate}, url
         elseif type == "Note" then
-            local note = NSAI:GetNote()
+            local note = NSAPI:GetNote()
             local hashed = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(note) or ""
             return {name = NSAPI:GetName("player"), version = hashed, duplicate = false}, ""
         end
