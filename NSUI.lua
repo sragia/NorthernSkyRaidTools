@@ -590,7 +590,7 @@ function NSUI:Init()
             set = function(self, fixedparam, value)
                 NSRT.Settings["Minimap"].hide = value
 
-                LDBIcon:Refresh("NSRT", NSRT.minimap)
+                LDBIcon:Refresh("NSRT", NSRT.Settings["Minimap"])
             end,
         },
         {
