@@ -2,14 +2,14 @@ local _, NSI = ... -- Internal namespace
 
 function NSI:RequestVersionNumber(type, name) -- type == "Addon" or "WA" or "Note"
     if (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")) then
-        NSAPI:Broadcast("NS_VERSION_REQUEST", "RAID", type, name)
-        local url = ""
         if type == "Addon" then
             local ver = C_AddOns.GetAddOnMetadata(name, "Version") or "0"
-            return {name = NSAPI:GetName("player"), version = ver, duplicate = false}, url
+            return {name = NSAPI:GetName("player"), version = ver, duplicate = false}, "url"
         elseif type == "WA" then
             local waData = WeakAuras.GetData(name)
             local ver = -1
+            NSAPI:Broadcast("NS_VERSION_REQUEST", "RAID", type, name)
+            local url = ""
             if waData then
                 ver = 0
                 if waData["url"] then
