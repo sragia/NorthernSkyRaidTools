@@ -32,8 +32,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["ElvUI"] = NSRT.Settings["ElvUI"] or false
             NSRT.Settings["SuF"] = NSRT.Settings["SuF"] or false
             NSRT.Settings["Unhalted"] = NSRT.Settings["Unhalted"] or false
-            NSRT.Settings["ShareNickNames"] = NSRT.Settings["ShareNickNames"] or 4
-            NSRT.Settings["AcceptNickNames"] = NSRT.Settings["AcceptNickNames"] or 4
+            NSRT.Settings["ShareNickNames"] = NSRT.Settings["ShareNickNames"] or 4 -- none default
+            NSRT.Settings["AcceptNickNames"] = NSRT.Settings["AcceptNickNames"] or 4 -- none default
+            NSRT.Settings["NickNamesSyncAccept"] = NSRT.Settings["NickNamesSyncAccept"] or 2 -- guild default
+            NSRT.Settings["NickNamesSyncSend"] = NSRT.Settings["NickNamesSyncSend"] or 2 -- guild default
             NSRT.Settings["PAExtraAction"] = NSRT.Settings["PAExtraAction"] or false
             NSRT.Settings["PASelfPing"] = NSRT.Settings["PASelfPing"] or false
             NSRT.Settings["ExternalSelfPing"] = NSRT.Settings["ExternalSelfPing"] or false
@@ -154,7 +156,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         NSI:NewNickName(unit, nickname, name, realm, channel)
 
     elseif e == "NSI_NICKNAMES_SYNCH" and (internal or NSI.Debug) then
-        local unit, nicknametable = ...
+        local unit, nicknametable, channel = ...
+        if NSRT.Settings["NickNamesSyncAccept"] == 3 or (NSRT.Settings["NickNamesSyncAccept"] == 2 and channel == "GUILD") or (NSRT.Settings["NickNamesSyncAccept"] == 1 and channel == "RAID") then -- accept sync if you are group leader or if the setting is set to 3 (always accept)
+            NSI:NewNickName(unit, nicknametable[unit], unit, nil) -- add nickname to database
+        end
         NSI:NickNamesSynchPopup(unit, nicknametable)    
     elseif e == "NSAPI_SPEC" then -- Should technically rename to "NSI_SPEC" but need to keep this open for the global broadcast to be compatible with the database WA
         local unit, spec = ...
