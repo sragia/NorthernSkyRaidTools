@@ -7,11 +7,11 @@ f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_LOGIN")
 
 f:SetScript("OnEvent", function(self, e, ...)
-    NSI:EventHandler(e, false, ...)
+    NSI:EventHandler(e, true, false, ...)
 end)
 
-function NSI:EventHandler(e, internal, ...) -- internal checks whether the event comes from addon comms. We don't want to allow blizzard events to be fired manually
-    if e == "ADDON_LOADED" and not internal then
+function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether the event comes from addon comms. We don't want to allow blizzard events to be fired manually
+    if e == "ADDON_LOADED" and wowevent then
         local name = ...
         if name == "NorthernSkyRaidTools" then
             if not NSRT then NSRT = {} end
@@ -44,10 +44,10 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             NSRT.Settings["Minimap"] = NSRT.Settings["Minimap"] or {hide = false}
             NSRT.BlizzardNickNamesHook = false
             NSRT.MRTNickNamesHook = false
-            NSRT.OmniCDNickNamesHook = false
+            NSRT.OmniCDNickNamesHook = false 
             NSI:InitNickNames()
         end
-    elseif e == "PLAYER_LOGIN" and not internal then
+    elseif e == "PLAYER_LOGIN" and wowevent then
         local pafound = false
         local extfound = false
         local macrocount = 0    
@@ -92,7 +92,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI.ExternalRequest();"
             CreateMacro("NS Ext Macro", 135966, macrotext, false)
         end
-        NSI:SendNickName()
+        if NSRT.MyNickName ~= "" then NSI:SendNickName() end -- only send nickname if it's not empty. empty nickname will only be sent if 
         if NSRT.Settings["GlobalNickNames"] then -- add own nickname if not already in database (for new characters)
             local name, realm = UnitName("player")
             if not realm then
@@ -107,11 +107,11 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         if WeakAuras.GetData("Northern Sky Externals") then
             print("Please uninstall the Northern Sky Externals Weakaura to prevent conflicts with the Northern Sky Raid Tools Addon.")
         end
-    elseif e == "READY_CHECK" and not internal then
+    elseif e == "READY_CHECK" and wowevent then
         if WeakAuras.CurrentEncounter then return end
-        NSI:SendNickName()
+        if NSRT.MyNickName ~= "" then NSI:SendNickName() end -- only send nickname if it's not empty. empty nickname will only be sent if 
         local hashed = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""        
-        NSAPI:Broadcast("MRT_NOTE", "RAID", hashed)
+        NSI:Broadcast("MRT_NOTE", "RAID", hashed)
     elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and internal then
         if WeakAuras.CurrentEncounter then return end
         local hashed = ...        
@@ -121,7 +121,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
                 -- Display text that tells the user the MRT note is different
             end
         end
-    elseif e == "COMBAT_LOG_EVENT_UNFILTERED" and not internal then
+    elseif e == "COMBAT_LOG_EVENT_UNFILTERED" and wowevent then
         local _, subevent, _, _, _, _, _, _, destName, _, _, spellID = CombatLogGetCurrentEventInfo()
         if subevent == "SPELL_AURA_APPLIED" and NSI.Externals and NSI.Externals.Automated[spellID] then
             local unit = destName
@@ -141,9 +141,9 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't send to yourself
         if UnitExists(unit) and (UnitIsGroupLeader(unit) or UnitIsGroupAssistant(unit)) then
             local u, ver, duplicate = NSI:GetVersionNumber(type, name, unit)
-            NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, ver, duplicate)
+            NSI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, ver, duplicate)
         end
-    elseif e == "NSAPI_NICKNAMES_COMMS" and internal then
+    elseif e == "NSI_NICKNAMES_COMMS" and internal then
         if WeakAuras.CurrentEncounter then return end
         local unit, nickname, name, realm, channel = ...
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't add new nickname if it's yourself because already adding it to the database when you edit it
@@ -152,7 +152,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         local unit, spec = ...
         NSI.specs = NSI.specs or {}
         NSI.specs[unit] = tonumber(spec)
-    elseif (e == "NSAPI_SPEC_REQUEST" and internal) or (e == "ENCOUNTER_START" and not internal) then
+    elseif (e == "NSAPI_SPEC_REQUEST" and internal) or (e == "ENCOUNTER_START" and wowevent) then
         NSI.specs = {}
 
         for u in NSI:IterateGroupMembers() do
@@ -162,7 +162,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         end
         -- broadcast spec info
         local specid = GetSpecializationInfo(GetSpecialization())
-        NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)
+        NSI:Broadcast("NSAPI_SPEC", "RAID", specid)
         if e == "ENCOUNTER_START" then
             C_Timer.After(3, function()
                 WeakAuras.ScanEvents("NSAPI_ENCOUNTER_START", true)
@@ -278,7 +278,7 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             end
         end
         -- No External Left
-        NSAPI:Broadcast("NS_EXTERNAL_NO", "WHISPER", unitID, "nilcheck")
+        NSI:Broadcast("NS_EXTERNAL_NO", "WHISPER", unitID, "nilcheck")
     elseif e == "NS_EXTERNAL_YES" and internal then
         NSI.Externals.lastrequest = GetTime()
         local _, unit, spellID = ...
