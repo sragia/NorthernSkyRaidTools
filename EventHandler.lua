@@ -104,12 +104,17 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
         end
         NSI.NSUI:Init()
         NSI:InitLDB()
+        if WeakAuras.GetData("Northern Sky Externals") then
+            print("Please uninstall the Northern Sky Externals Weakaura to prevent conflicts with the Northern Sky Raid Tools Addon.")
+        end
     elseif e == "READY_CHECK" and not internal then
+        if WeakAuras.CurrentEncounter then return end
         NSI:SendNickName()
         local hashed = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""        
         NSAPI:Broadcast("MRT_NOTE", "RAID", hashed)
     elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and internal then
-        local hashed = ...
+        if WeakAuras.CurrentEncounter then return end
+        local hashed = ...        
         if hashed ~= "" then
             local note = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""    
             if note ~= "" then
@@ -127,16 +132,19 @@ function NSI:EventHandler(e, internal, ...) -- internal checks whether the event
             end
         end
     elseif e == "NS_VERSION_CHECK" and internal then
-        local unit, ver, duplicate = ...
+        if WeakAuras.CurrentEncounter then return end
+        local unit, ver, duplicate = ...        
         NSI:VersionResponse({name = UnitName(unit), version = ver, duplicate = duplicate})
     elseif e == "NS_VERSION_REQUEST" and internal then
-        local unit, type, name = ...
+        if WeakAuras.CurrentEncounter then return end
+        local unit, type, name = ...        
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't send to yourself
         if UnitExists(unit) and (UnitIsGroupLeader(unit) or UnitIsGroupAssistant(unit)) then
             local u, ver, duplicate = NSI:GetVersionNumber(type, name, unit)
             NSAPI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, ver, duplicate)
         end
     elseif e == "NSAPI_NICKNAMES_COMMS" and internal then
+        if WeakAuras.CurrentEncounter then return end
         local unit, nickname, name, realm, channel = ...
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't add new nickname if it's yourself because already adding it to the database when you edit it
         NSI:NewNickName(unit, nickname, name, realm, channel)
