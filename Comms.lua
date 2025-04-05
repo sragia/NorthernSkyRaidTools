@@ -2,16 +2,14 @@ local _, NSI = ... -- Internal namespace
 local AceComm = LibStub("AceComm-3.0")
 local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub("LibDeflate")
--- Libraries are included in WeakAuras which is a dependancy
 
 local del = ":"
-function NSAPI:Broadcast(event, channel, ...)
+function NSAPI:Broadcast(event, channel, ...) -- only used for weakauras, everything in the addon uses the internal NSI function instead
     local message = event
     local argTable = {...}
     local target = ""
 
     local argCount = #argTable
-
     -- Always send unitID as second argument after event
     local unitID = UnitInRaid("player") and "raid"..UnitInRaid("player") or UnitName("player")
     message = string.format("%s"..del.."%s(%s)", message, unitID, "string")
@@ -35,16 +33,51 @@ function NSAPI:Broadcast(event, channel, ...)
         end
     end
     if channel == "WHISPER" then -- create "fake" whisper addon msg that actually just uses RAID instead and will be checked on receive
-        AceComm:SendCommMessage("NSWA_MSG2", message, "RAID")
+        AceComm:SendCommMessage("NSWA_MSG", message, "RAID")
     else
-        AceComm:SendCommMessage("NSWA_MSG", message, channel)
+        AceComm:SendCommMessage("NSWA_MSG2", message, channel)
     end
 end
 
-local function ReceiveComm(text, chan, sender, whisper)
+function NSI:Broadcast(event, channel, ...) -- using internal broadcast function for anything inside the addon to prevent users to send stuff they shouldn't be sending
+    local message = event
+    local argTable = {...}
+    local target = ""
+
+    local argCount = #argTable
+    -- Always send unitID as second argument after event
+    local unitID = UnitInRaid("player") and "raid"..UnitInRaid("player") or UnitName("player")
+    message = string.format("%s"..del.."%s(%s)", message, unitID, "string")
+
+
+    for i = 1, argCount do
+        local functionArg = argTable[i]
+        local argType = type(functionArg)
+
+        if argType == "table" then
+            functionArg = LibSerialize:Serialize(functionArg)
+            functionArg = LibDeflate:CompressDeflate(functionArg)
+            functionArg = LibDeflate:EncodeForWoWAddonChannel(functionArg)
+            message = string.format("%s"..del.."%s(%s)", message, tostring(functionArg), argType)
+        else
+            if argType ~= "string" and argType ~= "number" and argType ~= "boolean" then
+                functionArg = ""
+                argType = "string"
+            end
+            message = string.format("%s"..del.."%s(%s)", message, tostring(functionArg), argType)
+        end
+    end
+    if channel == "WHISPER" then -- create "fake" whisper addon msg that actually just uses RAID instead and will be checked on receive
+        AceComm:SendCommMessage("NSI_WHISPER", message, "RAID")
+    else
+        AceComm:SendCommMessage("NSI_MSG", message, channel)
+    end
+end
+
+local function ReceiveComm(text, chan, sender, whisper, internal)
     local argTable = {strsplit(del, text)}
     local event = argTable[1]
-    if (UnitExists(sender) and (UnitInRaid(sender) or UnitInParty(sender))) or (chan == "GUILD" and event == "NSAPI_NICKNAMES_COMMS") then -- block addon msg's from outside the raid
+    if (UnitExists(sender) and (UnitInRaid(sender) or UnitInParty(sender))) or (chan == "GUILD" and event == "NSI_NICKNAMES_COMMS") then -- block addon msg's from outside the raid
         local formattedArgTable = {}
         table.remove(argTable, 1)
         if whisper then
@@ -85,13 +118,16 @@ local function ReceiveComm(text, chan, sender, whisper)
                 tonext = tonext..functionArg..del -- if argtype wasn't given then this is part of a table that was falsely split by the delimeter so we're stitching it back together
             end
         end
-        NSI:EventHandler(event, true, unpack(formattedArgTable))
+        NSI:EventHandler(event, false, internal, unpack(formattedArgTable))
         WeakAuras.ScanEvents(event, unpack(formattedArgTable))
     end
 end
 
 
+AceComm:RegisterComm("NSWA_MSG", function(_, text, chan, sender) ReceiveComm(text, chan, sender, false, false) end)
+AceComm:RegisterComm("NSWA_MSG2", function(_, text, chan, sender) ReceiveComm(text, chan, sender, true, false) end)
+AceComm:RegisterComm("NSI_MSG", function(_, text, chan, sender) ReceiveComm(text, chan, sender, false, true) end)
+AceComm:RegisterComm("NSI_WHISPER", function(_, text, chan, sender) ReceiveComm(text, chan, sender, true, true) end)
 
-AceComm:RegisterComm("NSWA_MSG", function(_, text, chan, sender) ReceiveComm(text, chan, sender, false) end)
-AceComm:RegisterComm("NSWA_MSG2", function(_, text, chan, sender) ReceiveComm(text, chan, sender, true) end)
+
 -- NSAPI:Broadcast("NS_EVENTNAME", channel, targetunitID if whisper, arg1, arg2, arg3)

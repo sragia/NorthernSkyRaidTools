@@ -406,10 +406,10 @@ function NSI:SendNickName(channel)
     end
     if nickname then
         if UnitInRaid("player") and (NSRT.Settings["ShareNickNames"] == 1 or NSRT.Settings["ShareNickNames"] == 3) then
-            NSAPI:Broadcast("NSAPI_NICKNAMES_COMMS", "RAID", nickname, name, realm, "RAID")
+            NSI:Broadcast("NSI_NICKNAMES_COMMS", "RAID", nickname, name, realm, "RAID")
         end
         if NSRT.Settings["ShareNickNames"] == 2 or NSRT.Settings["ShareNickNames"] == 3 then
-            NSAPI:Broadcast("NSAPI_NICKNAMES_COMMS", "GUILD", nickname, name, realm, "GUILD") -- channel is either GUILD or RAID
+            NSI:Broadcast("NSI_NICKNAMES_COMMS", "GUILD", nickname, name, realm, "GUILD") -- channel is either GUILD or RAID
         end
     end
 end

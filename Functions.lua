@@ -23,7 +23,7 @@ function NSI:PrivateAuraMacro()
     if (not NSI.LastPAMacro) or (GetTime() > NSI.LastPAMacro + 4) then -- not allow people to spam this. Some auras might need to manually reset this to 0. Example: Withering flames on bandit because you could get the debuff instantly after being dispelled
         NSI.LastPAMacro = GetTime()
         WeakAuras.ScanEvents("NS_PA_MACRO", true)
-        -- NSAPI:Broadcast("NS_PA_MACRO", "RAID", "nilcheck") -- enable this if I want to send macro press data to everyone
+        -- NSI:Broadcast("NS_PA_MACRO", "RAID", "nilcheck") -- enable this if I want to send macro press data to everyone
     end
 end
 

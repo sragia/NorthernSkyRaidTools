@@ -213,9 +213,9 @@ function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellI
             and not NSI.Externals.assigned[spellID]
     then
         NSI.Externals.requested[k] = now -- set spell to requested
-        NSAPI:Broadcast("NS_EXTERNAL_LIST", "RAID", unit, sender, spellID) -- send List Data
-        NSAPI:Broadcast("NS_EXTERNAL_GIVE", "WHISPER", unit, sender, spellID) -- send External Alert
-        NSAPI:Broadcast("NS_EXTERNAL_YES", "WHISPER", unitID, giver, spellID) -- send Confirmation
+        NSI:Broadcast("NS_EXTERNAL_LIST", "RAID", unit, sender, spellID) -- send List Data
+        NSI:Broadcast("NS_EXTERNAL_GIVE", "WHISPER", unit, sender, spellID) -- send External Alert
+        NSI:Broadcast("NS_EXTERNAL_YES", "WHISPER", unitID, giver, spellID) -- send Confirmation
         if not NSI.Externals.stacks[spellID] then
             NSI.Externals.assigned[spellID] = true
         end
@@ -241,6 +241,6 @@ function NSAPI.ExternalRequest(key, num) -- optional arguments
             local _, r = WeakAuras.GetRange(u)
             table.insert(range, r)
         end
-        NSAPI:Broadcast("NS_EXTERNAL_REQ", "WHISPER", NSI.Externals.target, key, num, true, range)    -- request external
+        NSI:Broadcast("NS_EXTERNAL_REQ", "WHISPER", NSI.Externals.target, key, num, true, range)    -- request external
     end
 end

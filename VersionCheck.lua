@@ -4,7 +4,7 @@ function NSI:RequestVersionNumber(type, name) -- type == "Addon" or "WA" or "Not
     if (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")) then
         local unit, ver, duplicate, url = NSI:GetVersionNumber(type, name, unit)
         NSI:VersionResponse({name = UnitName("player"), version = "No Response", duplicate = false})
-        NSAPI:Broadcast("NS_VERSION_REQUEST", "RAID", type, name)
+        NSI:Broadcast("NS_VERSION_REQUEST", "RAID", type, name)
         for unit in NSI:IterateGroupMembers() do
             if not UnitIsUnit("player", unit) then
                 NSI:VersionResponse({name = UnitName(unit), version = "No Response", duplicate = false})
