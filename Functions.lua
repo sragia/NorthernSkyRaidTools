@@ -27,6 +27,10 @@ function NSI:PrivateAuraMacro()
     end
 end
 
+function NSAPI:Version() -- old version check function from the database WA, for compatibility reasons
+    return 14
+end
+
 function NSAPI:Shorten(unit, num, role) -- Returns color coded Name/Nickname
     local classFilename = unit and select(2, UnitClass(unit))
     if role then -- create role icon if requested
