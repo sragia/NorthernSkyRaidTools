@@ -66,7 +66,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 EditMacro(i, "NS PA Macro", 132288, macrotext, false)
                 pafound = true
             elseif macroname == "NS Ext Macro" then
-                local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI.ExternalRequest();"
+                local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI:ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI:ExternalRequest();"
                 EditMacro(i, "NS Ext Macro", 135966, macrotext, false)
                 extfound = true
             end
@@ -89,7 +89,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             print("You reached the global Macro cap so the External Macro could not be created")
         elseif not extfound then
             macrocount = macrocount+1
-            local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI.ExternalRequest();"
+            local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI:ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI:ExternalRequest();"
             CreateMacro("NS Ext Macro", 135966, macrotext, false)
         end
         if NSRT.MyNickName ~= "" then NSI:SendNickName() end -- only send nickname if it's not empty. empty nickname will only be sent if 
@@ -131,28 +131,32 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSI:EventHandler("NS_EXTERNAL_REQ", unit, key, NSI.Externals.Amount[key..spellID], false, "skip")
             end
         end
-    elseif e == "NS_VERSION_CHECK" and internal then
+    elseif e == "NSI_VERSION_CHECK" and internal then
         if WeakAuras.CurrentEncounter then return end
         local unit, ver, duplicate = ...        
         NSI:VersionResponse({name = UnitName(unit), version = ver, duplicate = duplicate})
-    elseif e == "NS_VERSION_REQUEST" and internal then
+    elseif e == "NSI_VERSION_REQUEST" and internal then
         if WeakAuras.CurrentEncounter then return end
         local unit, type, name = ...        
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't send to yourself
         if UnitExists(unit) and (UnitIsGroupLeader(unit) or UnitIsGroupAssistant(unit)) then
             local u, ver, duplicate = NSI:GetVersionNumber(type, name, unit)
-            NSI:Broadcast("NS_VERSION_CHECK", "WHISPER", unit, ver, duplicate)
+            NSI:Broadcast("NSI_VERSION_CHECK", "WHISPER", unit, ver, duplicate)
         end
     elseif e == "NSI_NICKNAMES_COMMS" and internal then
         if WeakAuras.CurrentEncounter then return end
         local unit, nickname, name, realm, channel = ...
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't add new nickname if it's yourself because already adding it to the database when you edit it
         NSI:NewNickName(unit, nickname, name, realm, channel)
-    elseif e == "NSAPI_SPEC" and internal then
+
+    elseif e == "NSI_NICKNAMES_SYNCH" and internal then
+        local unit, nicknametable = ...
+        NSI:NickNamesSynchPopup(unit, nicknametable)    
+    elseif e == "NSAPI_SPEC" then -- Should technically rename to "NSI_SPEC" but need to keep this open for the global broadcast to be compatible with the database WA
         local unit, spec = ...
         NSI.specs = NSI.specs or {}
         NSI.specs[unit] = tonumber(spec)
-    elseif (e == "NSAPI_SPEC_REQUEST" and internal) or (e == "ENCOUNTER_START" and wowevent) then
+    elseif (e == "NSAPI_SPEC_REQUEST") or (e == "ENCOUNTER_START" and wowevent) then
         NSI.specs = {}
 
         for u in NSI:IterateGroupMembers() do
@@ -177,7 +181,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
             if UnitIsUnit("player", NSI.Externals.target) then
-                NSI.Externals.UpdateExternals()
+                NSI.Externals:UpdateExternals()
                 local note = NSAPI:GetNote()
                 local list = false
                 local key = ""

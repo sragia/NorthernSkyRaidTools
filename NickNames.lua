@@ -89,16 +89,22 @@ function NSI:NickNameUpdated(nickname)
 end
 
 -- Grid2 Option Change
-function NSI:Grid2NickNameUpdated(unit)
+function NSI:Grid2NickNameUpdated(all, unit)
     if Grid2 then
-        for u in NSI:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
-            if unit then
-                if UnitExists(unit) and UnitIsUnit(u, unit) then
-                    Grid2Status:UpdateIndicators(u)
-                    break
-                end
-            else
+        if all then
+            for u in NSI:IterateGroupMembers() do
                 Grid2Status:UpdateIndicators(u)
+            end
+        else
+            for u in NSI:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
+                if unit then
+                    if UnitExists(unit) and UnitIsUnit(u, unit) then
+                        Grid2Status:UpdateIndicators(u)
+                        break
+                    end
+                else
+                    Grid2Status:UpdateIndicators(u)
+                end    
             end
         end
      end
@@ -271,7 +277,7 @@ function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)
         NSRT.NickNames[name.."-"..realm] = nil
         fullCharList[name.."-"..realm] = nil
         sortedCharList[nickname] = nil
-    end        
+    end     
     NSI:Grid2NickNameUpdated(unit)
     NSI:ElvUINickNameUpdated()
     NSI:UnhaltedNickNameUpdated()
@@ -450,18 +456,26 @@ function NSI:ImportNickNames(string) -- string format is charactername-realm:nic
             if namewithrealm and nickname then
                 local name, realm = strsplit("-", namewithrealm)
                 local unit
-                for u in NSI:IterateGroupMembers() do
-                    if UnitExists(u) and UnitIsUnit(u, name) then
-                        unit = u
-                        break
-                    end
-                end
-                if name and realm and namewithrealm and nickname then
-                    NSI:NewNickName(u, nickname, name, realm, "")
+                if not NSRT.NickNames[name.."-"..realm] then
+                    NSRT.NickNames[name.."-"..realm] = nickname
                 end
             else
                 error("Error parsing names", str, namewithrealm, nickname)
             end
         end
+        NSI:GlobalNickNameUpdate()
     end
+end
+
+function NSI:SynchNickNames(channel)
+    NSI:Broadcast("NSI_NICKNAMES_SYNCH", channel, NSRT.NickNames)
+end
+
+function NSI:SynchNickNamesAccept(nicknamestable)
+    for name, nickname in pairs(nicknamestable) do
+        if not NSRT.NickNames[k] then
+            NSRT.NickNames[name] = nickname
+        end
+    end
+    NSI:GlobalNickNameUpdate()
 end

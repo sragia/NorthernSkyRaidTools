@@ -2,9 +2,13 @@ local _, NSI = ... -- Internal namespace
 local AceComm = LibStub("AceComm-3.0")
 local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub("LibDeflate")
+local allowedcomms = {
+    ["NSI_NICKNAMES_COMMS"] = true,
+    ["NSI_NICKNAMES_SYNCH"] = true,
+}
 
 local del = ":"
-function NSAPI:Broadcast(event, channel, ...) -- only used for weakauras, everything in the addon uses the internal NSI function instead
+function NSAPI:Broadcast(event, channel, ...) -- only used for weakauras, everything in the addon uses the internal NSI function instead.
     local message = event
     local argTable = {...}
     local target = ""
@@ -77,7 +81,7 @@ end
 local function ReceiveComm(text, chan, sender, whisper, internal)
     local argTable = {strsplit(del, text)}
     local event = argTable[1]
-    if (UnitExists(sender) and (UnitInRaid(sender) or UnitInParty(sender))) or (chan == "GUILD" and event == "NSI_NICKNAMES_COMMS") then -- block addon msg's from outside the raid
+    if (UnitExists(sender) and (UnitInRaid(sender) or UnitInParty(sender))) or (chan == "GUILD" and allowedcomms[event]) then -- block addon msg's from outside the raid, only exception being a the guild nickname comms. 
         local formattedArgTable = {}
         table.remove(argTable, 1)
         if whisper then

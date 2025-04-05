@@ -225,7 +225,7 @@ function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellI
     end
 end
 -- /run NSAPI.External:Request()
-function NSAPI.ExternalRequest(key, num) -- optional arguments
+function NSAPI:ExternalRequest(key, num) -- optional arguments
     local now = GetTime()
     if UnitIsDead("player") or C_UnitAuras.GetAuraDataBySpellName("player", C_Spell.GetSpellInfo(27827).name) then  -- block incoming requests from dead people
         return

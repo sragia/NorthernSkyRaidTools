@@ -78,8 +78,8 @@ local function ExternalSelfPingChanged()
         macrocount = i
         if macroname == "NS Ext Macro" then
             extfound = true
-            local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or
-                "/run NSAPI.ExternalRequest();"
+            local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI:ExternalRequest();\n/ping [@player] Assist;" or
+                "/run NSAPI:ExternalRequest();"
             EditMacro(i, "NS Ext Macro", 135966, macrotext, false)
             extfound = true
             break
@@ -89,7 +89,7 @@ local function ExternalSelfPingChanged()
         print("You reached the global Macro cap so the External Macro could not be created")
     elseif not extfound then
         macrocount = macrocount+1
-        local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI.ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI.ExternalRequest();"
+        local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI:ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI:ExternalRequest();"
         CreateMacro("NS Ext Macro", 135966, macrotext, false)
     end
 end
