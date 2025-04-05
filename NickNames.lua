@@ -479,3 +479,18 @@ function NSI:SynchNickNamesAccept(nicknametable)
     end
     NSI:GlobalNickNameUpdate()
 end
+
+function NSI:AddNickName(name, realm, nickname) -- keeping the nickname empty acts as removing the nickname for that character
+    if name and realm and nickname then
+        local unit
+        if UnitExists(name) then
+            for u in NSI:IterateGroupMembers() do
+                if UnitIsUnit(u, name) then
+                    unit = u
+                    break
+                end
+            end
+        end
+        NSI:NewNickName(unit, nickname, name, realm, channel)
+    end
+end
