@@ -123,10 +123,8 @@ end
 function NSI:WipeCellDB()
     if CellDB then
         for name, nickname in pairs(NSRT.NickNames) do -- wipe cell database
-            print(name, nickname)
             local i = tIndexOf(CellDB.nicknames.list, name..":"..nickname)
             if i then
-                print("removing", name, nickname)
                 local charname = strsplit("-", name)
                 Cell.Fire("UpdateNicknames", "list-update", name, charname)
                 table.remove(CellDB.nicknames.list, i)
@@ -426,7 +424,7 @@ function NSI:NewNickName(unit, nickname, name, realm, channel)
         if channel == "GUILD" and NSRT.Settings["AcceptNickNames"] ~= 2 then return end
         if channel == "RAID" and NSRT.Settings["AcceptNickNames"] ~= 1 then return end
     end
-    print("new nickanme:", unit, nickname, name, realm)
+    NSI:Print("new nickanme:", unit, nickname, name, realm)
     if not nickname or not name or not realm then return end   
     local oldnick = NSRT.NickNames[name.."-"..realm]      
     if oldnick and oldnick == nickname then return end -- stop early if we already have this exact nickname  
@@ -456,7 +454,7 @@ function NSI:ImportNickNames(string) -- string format is charactername-realm:nic
             if namewithrealm and nickname then
                 local name, realm = strsplit("-", namewithrealm)
                 local unit
-                if not NSRT.NickNames[name.."-"..realm] then
+                if name and realm then
                     NSRT.NickNames[name.."-"..realm] = nickname
                 end
             else
@@ -467,15 +465,13 @@ function NSI:ImportNickNames(string) -- string format is charactername-realm:nic
     end
 end
 
-function NSI:SynchNickNames(channel)
-    NSI:Broadcast("NSI_NICKNAMES_SYNCH", channel, NSRT.NickNames)
+function NSI:SynchNickNames()
+    NSI:Broadcast("NSI_NICKNAMES_SYNCH", NSRT.Settings["NickNamesSyncSend"], NSRT.NickNames, NSRT.Settings["NickNamesSyncSend"]) -- channel is either GUILD or RAID
 end
 
 function NSI:SynchNickNamesAccept(nicknametable)
     for name, nickname in pairs(nicknametable) do
-        if not NSRT.NickNames[k] then
-            NSRT.NickNames[name] = nickname
-        end
+        NSRT.NickNames[name] = nickname
     end
     NSI:GlobalNickNameUpdate()
 end
