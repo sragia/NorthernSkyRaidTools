@@ -627,6 +627,18 @@ function NSUI:Init()
                 LDBIcon:Refresh("NSRT", NSRT.Settings["Minimap"])
             end,
         },
+
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enable Debug Mode",
+            desc = "Enables Debug Mode, which allows to call internal functions that are usually only available through the addon itself.",
+            get = function() return NSRT.Settings["Debug"] end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings["Debug"] = value
+            end,
+        },
+
         {
             type = "blank",
         },

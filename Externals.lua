@@ -10,6 +10,8 @@ NSI.Externals.known = {}
 NSI.Externals.requested = {}
 NSI.Externals.Automated = {}
 NSI.Externals.Amount = {}
+NSI.Externals.target = ""
+NSI.Externals.customprio = {}
 local Sac = 6940
 local Bop = 1022
 local Spellbop = 204018
@@ -65,8 +67,6 @@ lib.RegisterCallback(callbacks, "CooldownListWipe", "CooldownListWipe")
 lib.RegisterCallback(callbacks, "CooldownUpdate", "CooldownUpdate")
 lib.RegisterCallback(callbacks, "CooldownAdded", "CooldownAdded")
 
-NSI.Externals.target = ""
-NSI.Externals.customprio = {}
 
 
 
