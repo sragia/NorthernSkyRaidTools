@@ -114,6 +114,7 @@ end
 
 local component_name = ""
 local function BuildVersionCheckUI(parent)
+
     local component_type_label = DF:CreateLabel(parent, "Component Type", 9.5, "white")
     component_type_label:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -100)
     
@@ -156,7 +157,7 @@ local function BuildVersionCheckUI(parent)
                 local name = thisData.name
                 local version = thisData.version
                 local duplicate = thisData.duplicate
-
+                NSI:Print(NSRT.Settings["VersionCheckRemoveResponse"], duplicate, version, data[1], data[1].version)
                 local nickname = NSAPI:Shorten(name)
 
                 line.name:SetText(nickname)
@@ -232,12 +233,15 @@ local function BuildVersionCheckUI(parent)
         local currentData = self:GetData() -- currentData = {{name, version, duplicate}...}
 
         if self.name_map[data.name] then
-            currentData[self.name_map[data.name]] = data
+            if NSRT.Settings["VersionCheckRemoveResponse"] and currentData[1] and currentData[1].version and data.version and data.version == currentData[1].version and data.version ~= "WA Missing" and data.version ~= "Addon Missing" and data.version ~= "Note Missing" and not data.duplicate then
+                table.remove(currentData, self.name_map[data.name])
+            else
+                currentData[self.name_map[data.name]] = data
+            end
         else
             self.name_map[data.name] = #currentData + 1
             tinsert(currentData, data)
         end
-        
         self:SetData(currentData)
         self:Refresh()
     end
@@ -664,8 +668,7 @@ function NSUI:Init()
             desc = "Hide the minimap button.",
             get = function() return NSRT.Settings["Minimap"].hide end,
             set = function(self, fixedparam, value)
-                NSRT.Settings["Minimap"].hide = value
-
+                NSRT.Settings["Minimap"].hide = value                
                 LDBIcon:Refresh("NSRT", NSRT.Settings["Minimap"])
             end,
         },
@@ -678,6 +681,17 @@ function NSUI:Init()
             get = function() return NSRT.Settings["Debug"] end,
             set = function(self, fixedparam, value)
                 NSRT.Settings["Debug"] = value
+            end,
+        },
+
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Hide Version Check Responses",
+            desc = "Hides Version Check Responses of Users that are on the correct version and do not have any duplicates",
+            get = function() return NSRT.Settings["VersionCheckRemoveResponse"] end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings["VersionCheckRemoveResponse"] = value
             end,
         },
 
