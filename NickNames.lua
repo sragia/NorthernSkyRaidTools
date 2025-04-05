@@ -471,8 +471,8 @@ function NSI:SynchNickNames(channel)
     NSI:Broadcast("NSI_NICKNAMES_SYNCH", channel, NSRT.NickNames)
 end
 
-function NSI:SynchNickNamesAccept(nicknamestable)
-    for name, nickname in pairs(nicknamestable) do
+function NSI:SynchNickNamesAccept(nicknametable)
+    for name, nickname in pairs(nicknametable) do
         if not NSRT.NickNames[k] then
             NSRT.NickNames[name] = nickname
         end
