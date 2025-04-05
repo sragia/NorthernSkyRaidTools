@@ -269,7 +269,8 @@ function NSUI:Init()
         { name = "General",   text = "General" },
         { name = "Nicknames", text = "Nicknames" },
         { name = "Externals", text = "Externals" },
-        { name = "Versions",  text = "Versions" }
+        { name = "Versions",  text = "Versions" },
+        { name = "WeakAuras",   text = "WeakAuras Imports" },
     }, {
         width = window_width,
         height = window_height - 5,
@@ -284,6 +285,7 @@ function NSUI:Init()
     local nicknames_tab = tabContainer:GetTabFrameByName("Nicknames")
     local externals_tab = tabContainer:GetTabFrameByName("Externals")
     local versions_tab = tabContainer:GetTabFrameByName("Versions")
+    local weakaura_tab = tabContainer:GetTabFrameByName("WeakAuras")
 
     -- externals anchor frame
     local externals_anchor_panel_options = {
@@ -495,6 +497,41 @@ function NSUI:Init()
         return t
     end
 
+    
+    local nickname_syncaccept_options = { "Raid", "Guild", "Both", "None" }
+    local build_nickname_syncaccept_options = function()
+        local t = {}
+        for i = 1, #nickname_syncaccept_options do
+            tinsert(t, {
+                label = nickname_syncaccept_options[i],
+                value = i,
+                onclick = function(_, _, value)
+                    NSUI.OptionsChanged.nicknames["NICKNAME_SYNCACCEPT"] = true
+                    NSRT.Settings["NickNamesSyncAccept"] = value
+                end
+
+            })
+        end
+        return t
+    end
+
+    local nickname_syncsend_options = { "Raid", "Guild"}
+    local build_nickname_syncsend_options = function()
+        local t = {}
+        for i = 1, #nickname_syncsend_options do
+            tinsert(t, {
+                label = nickname_syncsend_options[i],
+                value = i,
+                onclick = function(_, _, value)
+                    NSUI.OptionsChanged.nicknames["NICKNAME_SYNCSEND"] = true
+                    NSRT.Settings["NickNamesSyncSend"] = value
+                end
+
+            })
+        end
+        return t
+    end
+
     local function WipeNickNames()
         local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Wipe Nicknames", "NSRTWipeNicknamesPopup")
         popup:SetFrameStrata("DIALOG")
@@ -612,6 +649,11 @@ function NSUI:Init()
         wipe(NSUI.OptionsChanged["versions"])
     end
 
+    local weakauras_callback = function()
+        NSI:Print("WeakAuras callback")
+        wipe(NSUI.OptionsChanged["WeakAuras"])
+    end
+
     -- options
     local general_options1_table = {
         { type = "label", get = function() return "General Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
@@ -632,7 +674,7 @@ function NSUI:Init()
             type = "toggle",
             boxfirst = true,
             name = "Enable Debug Mode",
-            desc = "Enables Debug Mode, which allows to call internal functions that are usually only available through the addon itself.",
+            desc = "Enables Debug Mode, which allows to call internal functions that are usually only available through the addon itself. Also enables debug prints in chat",
             get = function() return NSRT.Settings["Debug"] end,
             set = function(self, fixedparam, value)
                 NSRT.Settings["Debug"] = value
@@ -642,6 +684,28 @@ function NSUI:Init()
         {
             type = "blank",
         },
+
+        {
+            type = "label",
+            get = function() return "MRT Options" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enable MRT Note Comparison",
+            desc = "Enables MRT note comparison on ready check.",
+            get = function() return NSRT.Settings["MRTNoteComparison"] end,
+            set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.general["MRT_NOTE_COMPARISON"] = true
+                NSRT.Settings["MRTNoteComparison"] = value
+            end,
+            nocombat = true
+        },  
+
+        {
+            type = "breakline"
+        },   
         { type = "label", get = function() return "TTS Options" end,     text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
         {
             type = "range",
@@ -692,10 +756,10 @@ Press 'Enter' to hear the TTS]],
                 NSUI.OptionsChanged.general["TTS_ENABLED"] = true
                 NSRT.Settings["TTS"] = value
             end,
-        },
+        },        
         {
-            type = "blank"
-        },
+            type = "breakline"
+        },   
         {
             type = "label",
             get = function() return "Private Aura Macro" end,
@@ -739,69 +803,11 @@ Press 'Enter' to hear the TTS]],
                 registerKeybinding(self, param1, param2)
             end,
             id = "MACRO NS PA Macro",
-        },
-        {
-            type = "blank"
-        },
-        {
-            type = "label",
-            get = function() return "MRT Options" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Enable MRT Note Comparison",
-            desc = "Enables MRT note comparison on ready check.",
-            get = function() return NSRT.Settings["MRTNoteComparison"] end,
-            set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.general["MRT_NOTE_COMPARISON"] = true
-                NSRT.Settings["MRTNoteComparison"] = value
-            end,
-            nocombat = true
-        },
-        {
-            type = "breakline"
-        },
-        {
-            type = "label",
-            get = function() return "WeakAuras Imports" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-        {
-            type = "button",
-            name = "Import Anchors",
-            desc = "Import WeakAura Anchors required for all Northern Sky WeakAuras.",
-            func = function(self)
-                ImportWeakAura("anchor_weakaura")
-            end,
-            nocombat = true,
-            spacement = true
-        },
-        {
-            type = "button",
-            name = "Import External Alert",
-            desc = "Import WeakAura External Alert required for the external macro.",
-            func = function(self)
-                ImportWeakAura("external_weakaura")
-            end,
-            nocombat = true
-        }
+        },   
     }
 
     local nicknames_options1_table = {
-        {
-            type = "button",
-            name = "Wipe Nicknames",
-            desc = "Wipe all nicknames from the database.",
-            func = function(self)
-                WipeNickNames()
-            end,
-            nocombat = true
-        },
-        {
-            type = "blank"
-        },
+        
         { type = "label", get = function() return "Nicknames Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
         {
             type = "textentry",
@@ -847,10 +853,31 @@ Press 'Enter' to hear the TTS]],
             name = "Nickname Accept",
             desc = "Choose you who are accepting Nicknames from",
             nocombat = true
+        },        
+        
+        { type = "label", get = function() return "Nicknames Sync Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
+
+        {
+            type = "select",
+            get = function() return NSRT.Settings["NickNamesSyncSend"] end,
+            values = function() return build_nickname_syncsend_options() end,
+            name = "Nickname Sync Send",
+            desc = "Choose you who you are synching nicknames to when pressing on the sync button",
+            nocombat = true
+        },
+
+        
+        {
+            type = "select",
+            get = function() return NSRT.Settings["NickNamesSyncAccept"] end,
+            values = function() return build_nickname_syncaccept_options() end,
+            name = "Nickname Sync Accept",
+            desc = "Choose you who are accepting Nicknames sync requests to come from",
+            nocombat = true
         },
 
         {
-            type = "blank",
+            type = "breakline"
         },
         {
             type = "label",
@@ -953,37 +980,22 @@ Press 'Enter' to hear the TTS]],
             desc = "Enable Nicknames to be used with Unhalted UI.",
             nocombat = true
         },
+
+        {
+            type = "breakline"
+        },
+        {
+            type = "button",
+            name = "Wipe Nicknames",
+            desc = "Wipe all nicknames from the database.",
+            func = function(self)
+                WipeNickNames()
+            end,
+            nocombat = true
+        },
     }
 
     local externals_options1_table = {
-        {
-            type = "button",
-            name = "Test External",
-            desc = "Simulate recieving an external.",
-            func = function(self)
-                NSI:DisplayExternal(237554, GetUnitName("player"))
-            end,
-            nocombat = true
-        },
-        {
-            type = "blank",
-        },
-        {
-            type = "button",
-            name = "Toggle External Anchor",
-            desc = "Toggle the external anchor frame.",
-            func = function(self)
-                if NSUI.externals_anchor:IsShown() then
-                    NSUI.externals_anchor:Hide()
-                else
-                    NSUI.externals_anchor:Show()
-                end
-            end,
-            nocombat = true
-        },
-        {
-            type = "blank",
-        },
         { type = "label", get = function() return "Externals Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
         {
             type = "toggle",
@@ -1011,7 +1023,75 @@ Press 'Enter' to hear the TTS]],
                 registerKeybinding(self, param1, param2)
             end,
             id = "MACRO NS Ext Macro",
-        }
+        },
+        
+        {
+            type = "breakline"
+        },
+        {
+            type = "button",
+            name = "Test External",
+            desc = "Simulate recieving an external.",
+            func = function(self)
+                NSI:DisplayExternal(237554, GetUnitName("player"))
+            end,
+            nocombat = true
+        },
+        {
+            type = "blank",
+        },
+        {
+            type = "button",
+            name = "Toggle External Anchor",
+            desc = "Toggle the external anchor frame.",
+            func = function(self)
+                if NSUI.externals_anchor:IsShown() then
+                    NSUI.externals_anchor:Hide()
+                else
+                    NSUI.externals_anchor:Show()
+                end
+            end,
+            nocombat = true
+        },
+    }
+
+    local weakaura_options1_table = {
+        {
+            type = "label",
+            get = function() return "WeakAuras Imports" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "button",
+            name = "Import Anchors",
+            desc = "Import WeakAura Anchors required for all Northern Sky WeakAuras.",
+            func = function(self)
+                ImportWeakAura("anchor_weakaura")
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        {
+            type = "button",
+            name = "Import External Alert",
+            desc = "Import WeakAura External Alert required for the external macro.",
+            func = function(self)
+                ImportWeakAura("external_weakaura")
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        
+        {
+            type = "button",
+            name = "Import Interrupt WA",
+            desc = "Import Interrupt Anchor Weakaura",
+            func = function(self)
+                ImportWeakAura("interrupt_weakaura")
+            end,
+            nocombat = true,
+            spacement = true
+        },
     }
 
     -- Build options menu for each tab
@@ -1024,6 +1104,10 @@ Press 'Enter' to hear the TTS]],
     DF:BuildMenu(externals_tab, externals_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         externals_callback)
+    DF:BuildMenu(weakaura_tab, weakaura_options1_table, 10, -100, window_height - 10, false, options_text_template,
+        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+        weakaura_callback)
+
 
     NSUI.version_scrollbox = BuildVersionCheckUI(versions_tab)
 end
