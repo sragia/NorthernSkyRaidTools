@@ -31,6 +31,12 @@ function NSAPI:Version() -- old version check function from the database WA, for
     return 14
 end
 
+function NSI:Print(...)
+    if NSRT.Settings["Debug"] then
+        print(...)
+    end
+end
+
 function NSAPI:Shorten(unit, num, role) -- Returns color coded Name/Nickname
     local classFilename = unit and select(2, UnitClass(unit))
     if role then -- create role icon if requested

@@ -50,7 +50,7 @@ local function PASelfPingChanged()
                 macrotext = macrotext.."\n/click ExtraActionButton1"
             end
              EditMacro(i, "NS PA Macro", 132288, macrotext, false)
-            break
+            return
         end
     end
     if macrocount >= 120 then
@@ -82,7 +82,7 @@ local function ExternalSelfPingChanged()
                 "/run NSAPI:ExternalRequest();"
             EditMacro(i, "NS Ext Macro", 135966, macrotext, false)
             extfound = true
-            break
+            return
         end
     end
     if macrocount >= 120 then 
@@ -104,7 +104,7 @@ local function build_checkable_components_options()
             label = checkable_components[i],
             value = checkable_components[i],
             onclick = function(_, _, value)
-                print("Checkable type selected: " .. value)
+                NSI:Print("Checkable type selected: " .. value)
                 component_type = value
             end
         })
@@ -129,7 +129,7 @@ local function BuildVersionCheckUI(parent)
     component_name_entry:SetPoint("LEFT", component_name_label, "RIGHT", 5, 0)
 
     local version_check_button = DF:CreateButton(parent, function()
-        print("Version check button clicked") -- replace with actual callback
+        NSI:Print("Version check button clicked") -- replace with actual callback
     end, 120, 18, "Check Versions")
     version_check_button:SetTemplate(options_button_template)
     version_check_button:SetPoint("LEFT", component_name_entry, "RIGHT", 20, 0)
@@ -144,9 +144,9 @@ local function BuildVersionCheckUI(parent)
     duplicate_header:SetPoint("LEFT", version_number_header, "RIGHT", 50, 0)
 
     local function refresh(self, data, offset, totalLines)
-        print("ThisData")
-        DevTools_Dump(data)
-        print("--------------------------------")
+        NSI:Print("ThisData")
+        if NSRT.Settings["Debug"] then DevTools_Dump(data) end
+        NSI:Print("--------------------------------")
         for i = 1, totalLines do
             local index = i + offset
             local thisData = data[index] -- thisData = {{name = "Ravxd", version = 1.0, duplicate = true}}
@@ -367,16 +367,16 @@ function NSUI:Init()
             :gsub("MiddleButton", "BUTTON3")
 
         local existingBinding = GetBindingAction(keyCombo)
-        print("existingBinding" .. existingBinding)
+        NSI:Print("existingBinding" .. existingBinding)
         if existingBinding and existingBinding ~= macroName then
             SetBinding(keyCombo, nil)
         end
         local ok = SetBinding(keyCombo, macroName)
         if ok then
-            print("Keybind " .. macroName .. " set to: " .. keyCombo)
+            NSI:Print("Keybind " .. macroName .. " set to: " .. keyCombo)
             SaveBindings(GetCurrentBindingSet())
         else
-            print("Failed to set keybind.")
+            NSI:Print("Failed to set keybind.")
         end
     end
 
@@ -393,7 +393,7 @@ function NSUI:Init()
 
     local registerKeybinding = function(self, macroName, keybindName)
         if not listening then
-            print("Press a key (with optional modifiers) to bind...")
+            NSI:Print("Press a key (with optional modifiers) to bind...")
             listening = true
         else
             return
@@ -413,7 +413,7 @@ function NSUI:Init()
         local function OnKeyDown(self, key)
             if listening then
                 if key == "ESCAPE" then
-                    print("Keybind aborted")
+                    NSI:Print("Keybind aborted")
                     listening = false
                     self:SetScript("OnKeyDown", nil)
                     self:SetPropagateKeyboardInput(false)
@@ -433,7 +433,7 @@ function NSUI:Init()
                     return nil -- Don't register this as a full keybind yet
                 end
                 local keyCombo = GetModifiedKeyString(key)
-                print("Key bound to:", keyCombo)
+                NSI:Print("Key bound to:", keyCombo)
 
                 -- Bind keybind
                 bindKeybind(keyCombo, macroName)
@@ -531,15 +531,15 @@ function NSUI:Init()
     end
     -- when any setting is changed, call these respective callback function
     local general_callback = function()
-        print("General callback")
-        DevTools_Dump(NSUI.OptionsChanged.general)
+        NSI:Print("General callback")
+        if NSRT.Settings["Debug"] then DevTools_Dump(NSUI.OptionsChanged.general) end
 
         if NSUI.OptionsChanged.general["TTS_ENABLED"] then
-            print("TTS enabled")
+            NSI:Print("TTS enabled")
         end
 
         if NSUI.OptionsChanged.general["TTS_VOICE"] then
-            print("TTS voice")
+            NSI:Print("TTS voice")
         end
 
         if NSUI.OptionsChanged.general["PA_MACRO"] then
@@ -547,48 +547,48 @@ function NSUI:Init()
         end
 
         if NSUI.OptionsChanged.general["MRT_NOTE_COMPARISON"] then
-            print("MRT note comparison")
+            NSI:Print("MRT note comparison")
         end
         wipe(NSUI.OptionsChanged["general"])
-        DevTools_Dump(NSUI.OptionsChanged.general)
+        if NSRT.Settings["Debug"] then DevTools_Dump(NSUI.OptionsChanged.general) end
     end
     local nicknames_callback = function()
-        print("Nicknames callback")
-        DevTools_Dump(NSUI.OptionsChanged.nicknames)
+        NSI:Print("Nicknames callback")
+        if NSRT.Settings["Debug"] then DevTools_Dump(NSUI.OptionsChanged.nicknames) end
 
         if NSUI.OptionsChanged.nicknames["NICKNAME"] then
-            print("Nickname")
+            NSI:Print("Nickname")
             NSI:NickNameUpdated(NSRT.Settings["MyNickName"])
         end
 
         if NSUI.OptionsChanged.nicknames["GLOBAL_NICKNAMES"] then
-            print("Global nicknames")
+            NSI:Print("Global nicknames")
             NSI:GlobalNickNameUpdate()
         end
 
         if NSUI.OptionsChanged.nicknames["BLIZZARD_NICKNAMES"] then
-            print("Blizzard nicknames")
+            NSI:Print("Blizzard nicknames")
             NSI:BlizzardNickNameUpdated()
         end
 
         if NSUI.OptionsChanged.nicknames["CELL_NICKNAMES"] then
-            print("Cell nicknames")
+            NSI:Print("Cell nicknames")
             NSI:CellNickNameUpdated(true)
         end
 
         if NSUI.OptionsChanged.nicknames["ELVUI_NICKNAMES"] then
-            print("Elvui nicknames")
+            NSI:Print("Elvui nicknames")
             NSI:ElvUINickNameUpdated()
         end
 
         if NSUI.OptionsChanged.nicknames["GRID2_NICKNAMES"] then
-            print("Grid2 nicknames")
+            NSI:Print("Grid2 nicknames")
             NSI:Grid2NickNameUpdated()
         end
         -- no need for WA function
 
         if NSUI.OptionsChanged.nicknames["UNHALTED_NICKNAMES"] then
-            print("Unhalted nicknames")
+            NSI:Print("Unhalted nicknames")
             NSI:UnhaltedNickNameUpdated()
         end
 
@@ -596,11 +596,11 @@ function NSUI:Init()
     end
 
     local externals_callback = function()
-        print("Externals callback")
-        DevTools_Dump(NSUI.OptionsChanged.externals)
+        NSI:Print("Externals callback")
+        if NSRT.Settings["Debug"] then DevTools_Dump(NSUI.OptionsChanged.externals) end
 
         if NSUI.OptionsChanged.externals["EXTERNAL_MACRO"] then
-            print("External macro")
+            NSI:Print("External macro")
             ExternalSelfPingChanged()
         end
 
@@ -608,7 +608,7 @@ function NSUI:Init()
     end
 
     local versions_callback = function()
-        print("Versions callback")
+        NSI:Print("Versions callback")
         wipe(NSUI.OptionsChanged["versions"])
     end
 
@@ -1057,7 +1057,7 @@ function NSUI:LoadExternalsAnchorPosition()
         height = 70
     }
     if not NSRT.NSUI.externals_anchor.settings.anchorPoint or not NSRT.NSUI.externals_anchor.settings.width or not NSRT.NSUI.externals_anchor.settings.height then
-        print("No externals anchor settings found.... THIS SHOULD NOT HAPPEN")
+        NSI:Print("No externals anchor settings found.... THIS SHOULD NOT HAPPEN")
         return
     end
     NSUI.externals_anchor:SetPoint(unpack(NSRT.NSUI.externals_anchor.settings.anchorPoint))
@@ -1074,8 +1074,8 @@ function NSUI:SaveExternalsAnchorPosition()
         width = width,
         height = height
     }
-    print("Saving externals anchor position")
-    DevTools_Dump(NSRT.NSUI.externals_anchor.settings)
+    NSI:Print("Saving externals anchor position")
+    if NSRT.Settings["Debug"] then DevTools_Dump(NSRT.NSUI.externals_anchor.settings) end
 end
 
 function NSUI:ResetExternalsAnchorPosition()

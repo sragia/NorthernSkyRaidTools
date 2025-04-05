@@ -73,7 +73,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
             if pafound and extfound then break end
         end
-        if macrocount >= 120 then
+        if macrocount >= 120 and not pafound then
             print("You reached the global Macro cap so the Private Aura Macro could not be created")
         elseif not pafound then
             macrocount = macrocount+1            
@@ -86,7 +86,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
             CreateMacro("NS PA Macro", 132288, macrotext, false)
         end
-        if macrocount >= 120 then 
+        if macrocount >= 120 and not extfound then 
             print("You reached the global Macro cap so the External Macro could not be created")
         elseif not extfound then
             macrocount = macrocount+1
