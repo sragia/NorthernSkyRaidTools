@@ -136,7 +136,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if unit and UnitExists(unit) and UnitInRaid(unit) then
                 unit = "raid"..UnitInRaid(unit)
                 local key = NSI.Externals.Automated[spellID]
-                NSI:EventHandler("NS_EXTERNAL_REQ", unit, key, NSI.Externals.Amount[key..spellID], false, "skip")
+                NSI:EventHandler("NS_EXTERNAL_REQ", false, true, unit, key, NSI.Externals.Amount[key..spellID], false, "skip")
             end
         end
     elseif e == "NSI_VERSION_CHECK" and (internal or NSI.Debug) then
@@ -179,7 +179,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         -- broadcast spec info
         local specid = GetSpecializationInfo(GetSpecialization())
-        NSI:Broadcast("NSAPI_SPEC", "RAID", specid)
+        NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)
         if e == "ENCOUNTER_START" then
             C_Timer.After(3, function()
                 WeakAuras.ScanEvents("NSAPI_ENCOUNTER_START", true)
@@ -295,7 +295,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
         end
         -- No External Left
-        NSI:Broadcast("NS_EXTERNAL_NO", "WHISPER", unitID, "nilcheck")
+        NSAPI:Broadcast("NS_EXTERNAL_NO", "WHISPER", unitID, "nilcheck")
     elseif e == "NS_EXTERNAL_YES" and (internal or NSI.Debug) then
         NSI.Externals.lastrequest = GetTime()
         local _, unit, spellID = ...
