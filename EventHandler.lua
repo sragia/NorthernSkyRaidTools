@@ -46,9 +46,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["Minimap"] = NSRT.Settings["Minimap"] or {hide = false}
             NSRT.Settings["VersionCheckRemoveResponse"] = NSRT.Settings["VersionCheckRemoveResponse"] or false
             NSRT.Settings["Debug"] = NSRT.Settings["Debug"] or false
-            NSRT.BlizzardNickNamesHook = false
-            NSRT.MRTNickNamesHook = false
-            NSRT.OmniCDNickNamesHook = false 
+
+            NSI.BlizzardNickNamesHook = false
+            NSI.MRTNickNamesHook = false
+            NSI.OmniCDNickNamesHook = false 
             NSI:InitNickNames()
         end
     elseif e == "PLAYER_LOGIN" and wowevent then
