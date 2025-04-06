@@ -157,7 +157,6 @@ local function BuildVersionCheckUI(parent)
                 local name = thisData.name
                 local version = thisData.version
                 local duplicate = thisData.duplicate
-                NSI:Print(NSRT.Settings["VersionCheckRemoveResponse"], duplicate, version, data[1], data[1].version)
                 local nickname = NSAPI:Shorten(name)
 
                 line.name:SetText(nickname)
@@ -179,7 +178,32 @@ local function BuildVersionCheckUI(parent)
                 end
                 
                 line:SetScript("OnClick", function(self)
-                    SendChatMessage("UPDATE YOUR SHIT NOOB", "WHISPER", nil, name)
+                    local message = ""
+                    local now = GetTime()
+                    if (NSI.VersionCheckData.lastclick[name] and now < NSI.VersionCheckData.lastclick[name] + 5) or (thisData.version == NSI.VersionCheckData.version and not thisData.duplicate) or thisData.version == "No Response" then return end                    
+                    NSI.VersionCheckData.lastclick[name] = now
+                    if NSI.VersionCheckData.type == "WA" then
+                        local url = NSI.VersionCheckData.url ~= "" and NSI.VersionCheckData.url or NSI.VersionCheckData.name
+                        if thisData.version == "WA Missing" then message = "Please install the WeakAura: "..url
+                        elseif thisData.version ~= NSI.VersionCheckData.version then message = "Please update your WeakAura: "..url end
+                        if thisData.duplicate then
+                            if message == "" then 
+                                message = "Please delete the duplicate WeakAura of: '"..NSI.VersionCheckData.name.."'"
+                            else 
+                                message = message.." Please also delete the duplicate WeakAura"
+                            end
+                        end
+                    elseif NSI.VersionCheckData.type == "Addon" then
+                        if thisData.version == "Addon not enabled" then message = "Please enable the Addon: '"..NSI.VersionCheckData.name.."'"
+                        elseif thisData.version == "Addon Missing" then message = "Please install the Addon: '"..NSI.VersionCheckData.name.."'"
+                        else message = "Please update the Addon: '"..NSI.VersionCheckData.name.."'" end
+                    elseif NSI.VersionCheckData.type == "Note" then 
+                        if thisData.version == "MRT not enabled" then message = "Please enable MRT"
+                        elseif thisData.version == "MRT not installed" then message = "Please install MRT"
+                        else return end
+                    end
+                    NSI.VersionCheckData.lastclick[name] = GetTime()
+                    SendChatMessage(message, "WHISPER", nil, name)
                 end)
             end
         end
@@ -229,7 +253,7 @@ local function BuildVersionCheckUI(parent)
     version_check_scrollbox:Refresh()
 
     version_check_scrollbox.name_map = {}
-    local addData = function(self, data)
+    local addData = function(self, data, url)
         local currentData = self:GetData() -- currentData = {{name, version, duplicate}...}
 
         if self.name_map[data.name] then
@@ -257,9 +281,10 @@ local function BuildVersionCheckUI(parent)
 
     version_check_button:SetScript("OnClick", function(self)
         version_check_scrollbox:WipeData()
-        local userData = NSI:RequestVersionNumber(component_type, component_name)
+        local userData, url = NSI:RequestVersionNumber(component_type, component_name)
+        NSI.VersionCheckData = {version = userData.version, type = component_type, name = component_name, url = url, lastclick = {}}
         if userData then
-            version_check_scrollbox:AddData(userData)
+            version_check_scrollbox:AddData(userData, url)
         end
     end)
 
