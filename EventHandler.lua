@@ -114,9 +114,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "READY_CHECK" and (wowevent or NSI.Debug) then
         if WeakAuras.CurrentEncounter then return end
-        if NSRT.MyNickName ~= "" then NSI:SendNickName() end -- only send nickname if it's not empty. empty nickname will only be sent if 
         local difficultyID = select(3, GetInstanceInfo())
         if difficultyID == 15 or difficultyID == 16 or NSI.Debug then -- only care about note comparison in heroic&mythic raid
+            if NSRT.MyNickName ~= "" then NSI:SendNickName() end -- only send nickname if it's not empty. empty nickname will only be sent if 
             local hashed = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""     
             NSI:Broadcast("MRT_NOTE", "RAID", hashed)   
         end
