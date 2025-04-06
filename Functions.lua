@@ -1,6 +1,4 @@
 local _, NSI = ... -- Internal namespace
--- Todo
--- Need custom option for TTS
 
 -- Function from WeakAuras, thanks rivers
 function NSI:IterateGroupMembers(reversed, forceParty)
