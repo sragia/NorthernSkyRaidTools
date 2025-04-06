@@ -279,11 +279,14 @@ local function BuildVersionCheckUI(parent)
     version_check_scrollbox.AddData = addData
     version_check_scrollbox.WipeData = wipeData
 
-    version_check_button:SetScript("OnClick", function(self)
+    version_check_button:SetScript("OnClick", function(self)        
+        local now = GetTime()
+        if NSI.LastVersionCheck and NSI.LastVersionCheck > now-2 then return end -- don't let user spam requests
+        NSI.LastVersionCheck = now
         version_check_scrollbox:WipeData()
         local userData, url = NSI:RequestVersionNumber(component_type, component_name)
-        NSI.VersionCheckData = {version = userData.version, type = component_type, name = component_name, url = url, lastclick = {}}
         if userData then
+            NSI.VersionCheckData = {version = userData.version, type = component_type, name = component_name, url = url, lastclick = {}}
             version_check_scrollbox:AddData(userData, url)
         end
     end)

@@ -402,6 +402,9 @@ function NSI:InitNickNames()
 end
 
 function NSI:SendNickName(channel)
+    local now = GetTime()
+    if NSI.LastNickNameSend and NSI.LastNickNameSend > now-4 then return end -- don't let user spam requests
+    NSI.LastNickNameSend = now
     local nickname = NSRT.Settings["MyNickName"]
     if (not nickname) or WeakAuras.CurrentEncounter then return end
     local name, realm = UnitFullName("player")
@@ -466,6 +469,9 @@ function NSI:ImportNickNames(string) -- string format is charactername-realm:nic
 end
 
 function NSI:SynchNickNames()
+    local now = GetTime()
+    if NSI.LastNickNameSynch and NSI.LastNickNameSynch > now-4 then return end -- don't let user spam synchs
+    NSI.LastNickNameSynch = now
     NSI:Broadcast("NSI_NICKNAMES_SYNCH", NSRT.Settings["NickNamesSyncSend"], NSRT.NickNames, NSRT.Settings["NickNamesSyncSend"]) -- channel is either GUILD or RAID
 end
 
