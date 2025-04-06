@@ -134,8 +134,8 @@ function NSI:WipeCellDB()
 end
 
 function NSI:BlizzardNickNameUpdated()
-    if C_AddOns.IsAddOnLoaded("Blizzard_CompactRaidFrames") and NSRT.Settings["Blizzard"] and not NSRT.BlizzardNickNamesHook then
-        NSRT.BlizzardNickNamesHook = true
+    if C_AddOns.IsAddOnLoaded("Blizzard_CompactRaidFrames") and NSRT.Settings["Blizzard"] and not NSI.BlizzardNickNamesHook then
+        NSI.BlizzardNickNamesHook = true
         hooksecurefunc("CompactUnitFrame_UpdateName", function(frame)
             if frame:IsForbidden() or not frame.unit then
                 return
@@ -146,8 +146,8 @@ function NSI:BlizzardNickNameUpdated()
 end
 
 function NSI:MRTNickNameUpdated()
-    if NSRT.Settings["MRT"] and C_AddOns.IsAddOnLoaded("MRT") and GMRT and GMRT.F and not NSRT.MRTNickNamesHook then
-        NSRT.MRTNickNamesHook = true
+    if NSRT.Settings["MRT"] and C_AddOns.IsAddOnLoaded("MRT") and GMRT and GMRT.F and not NSI.MRTNickNamesHook then
+        NSI.MRTNickNamesHook = true
         GMRT.F:RegisterCallback(
             "RaidCooldowns_Bar_TextName",
             function(event, bar, data)
@@ -160,8 +160,8 @@ function NSI:MRTNickNameUpdated()
 end
 
 function NSI:OmniCDNickNameUpdated()
-    if NSRT.Settings["OmniCD"] and C_AddOns.IsAddOnLoaded("OmniCD") and not NSRT.OmniCDNickNamesHook then
-        NSRT.OmniCDNickNamesHook = true
+    if NSRT.Settings["OmniCD"] and C_AddOns.IsAddOnLoaded("OmniCD") and not NSI.OmniCDNickNamesHook then
+        NSI.OmniCDNickNamesHook = true
         -- Add OmniCD Hook
     end
 end
