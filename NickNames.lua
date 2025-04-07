@@ -23,7 +23,7 @@ function NSAPI:GetName(str, AddonName) -- Returns Nickname
     end
     -- check if setting for the requesting addon is enabled, if not return the original name.
     -- if no AddonName is given we assume it's from an old WeakAura as they never specified
-    if (not NSRT.Settings["GlobalNickNames"]) or (AddonName and not NSRT.Settings[AddonName]) or ((not AddonName) and (not NSRT.Settings["WA"])) then 
+    if (not NSRT.Settings["GlobalNickNames"]) or (AddonName and not NSRT.Settings[AddonName]) then
         return unitname
     end
 

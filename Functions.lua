@@ -35,7 +35,7 @@ function NSI:Print(...)
     end
 end
 
-function NSAPI:Shorten(unit, num, role) -- Returns color coded Name/Nickname
+function NSAPI:Shorten(unit, num, role, AddonName) -- Returns color coded Name/Nickname
     local classFilename = unit and select(2, UnitClass(unit))
     if role then -- create role icon if requested
         role = UnitGroupRolesAssigned(unit)
@@ -48,7 +48,7 @@ function NSAPI:Shorten(unit, num, role) -- Returns color coded Name/Nickname
     if classFilename then -- basically "if unit found"
         local name = UnitName(unit)
         local color = GetClassColorObj(classFilename)
-        name = num and WeakAuras.WA_Utf8Sub(NSAPI:GetName(name), num) or NSAPI:GetName(name) -- shorten name before wrapping in color
+        name = num and WeakAuras.WA_Utf8Sub(NSAPI:GetName(name, AddonName), num) or NSAPI:GetName(name, AddonName) -- shorten name before wrapping in color
         if color then -- should always be true anyway?
             return color:WrapTextInColorCode(name), role
         else
