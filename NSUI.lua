@@ -890,7 +890,7 @@ Press 'Enter' to hear the TTS]],
             type = "toggle",
             boxfirst = true,
             name = "Translit Names",
-            desc = "Translate Russian Names",
+            desc = "Translit Russian Names",
             get = function() return NSRT.Settings["Translit"] end,
             set = function(self, fixedparam, value) 
                 NSUI.OptionsChanged.nicknames["TRANSLIT"] = true
