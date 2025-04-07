@@ -83,7 +83,7 @@ function NSI:NickNameUpdated(nickname)
     end
     local oldnick = NSRT.NickNames[name .. "-" .. realm]
     if (not oldnick) or oldnick ~= nickname then
-        NSI:SendNickName()
+        NSI:SendNickName("Any")
         NSI:NewNickName("player", nickname, name, realm)
     end
 end
@@ -401,9 +401,9 @@ function NSI:InitNickNames()
     end
 end
 
-function NSI:SendNickName(channel)
+function NSI:SendNickName(channel, requestback, unit)
     local now = GetTime()
-    if NSI.LastNickNameSend and NSI.LastNickNameSend > now-4 then return end -- don't let user spam requests
+    if (NSI.LastNickNameSend and NSI.LastNickNameSend > now-4) or NSRT.Settings["ShareNickNames"] == 4 then return end -- don't let user spam requests
     NSI.LastNickNameSend = now
     local nickname = NSRT.Settings["MyNickName"]
     if (not nickname) or WeakAuras.CurrentEncounter then return end
@@ -413,10 +413,14 @@ function NSI:SendNickName(channel)
     end
     if nickname then
         if UnitInRaid("player") and (NSRT.Settings["ShareNickNames"] == 1 or NSRT.Settings["ShareNickNames"] == 3) then
-            NSI:Broadcast("NSI_NICKNAMES_COMMS", "RAID", nickname, name, realm, "RAID")
+            if channel == "WHISPER" then
+                NSI:Broadcast("NSI_NICKNAMES_COMMS", "WHISPER", unit, nickname, name, realm, requestback, "RAID")
+            elseif channel == "Any" or channel == "RAID" then
+                NSI:Broadcast("NSI_NICKNAMES_COMMS", "RAID", nickname, name, realm, requestback, "RAID")
+            end
         end
-        if NSRT.Settings["ShareNickNames"] == 2 or NSRT.Settings["ShareNickNames"] == 3 then
-            NSI:Broadcast("NSI_NICKNAMES_COMMS", "GUILD", nickname, name, realm, "GUILD") -- channel is either GUILD or RAID
+        if NSRT.Settings["ShareNickNames"] == 2 or NSRT.Settings["ShareNickNames"] == 3 and channel == "Any" or channel == "GUILD" then
+            NSI:Broadcast("NSI_NICKNAMES_COMMS", "GUILD", nickname, name, realm, false, "GUILD") -- channel is either GUILD or RAID
         end
     end
 end

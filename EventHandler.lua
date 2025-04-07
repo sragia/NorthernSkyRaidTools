@@ -3,6 +3,7 @@ local f = CreateFrame("Frame")
 f:RegisterEvent("ENCOUNTER_START")
 f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 f:RegisterEvent("READY_CHECK")
+f:RegisterEvent("GROUP_FORMED")
 f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_LOGIN")
 
@@ -97,7 +98,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI:ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI:ExternalRequest();"
             CreateMacro("NS Ext Macro", 135966, macrotext, false)
         end
-        if NSRT.MyNickName ~= "" then NSI:SendNickName() end -- only send nickname if it's not empty. empty nickname will only be sent if 
+        if NSRT.MyNickName ~= "" then NSI:SendNickName("Any") end -- only send nickname if it's not empty. empty nickname will only be sent if 
         if NSRT.Settings["GlobalNickNames"] then -- add own nickname if not already in database (for new characters)
             local name, realm = UnitName("player")
             if not realm then
@@ -116,10 +117,13 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if WeakAuras.CurrentEncounter then return end
         local difficultyID = select(3, GetInstanceInfo())
         if difficultyID == 15 or difficultyID == 16 or NSI.Debug then -- only care about note comparison in heroic&mythic raid
-            if NSRT.MyNickName ~= "" then NSI:SendNickName() end -- only send nickname if it's not empty. empty nickname will only be sent if 
             local hashed = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""     
             NSI:Broadcast("MRT_NOTE", "RAID", hashed)   
         end
+    elseif e == "GROUP_FORMED" and (wowevent or NSI.Debug) then 
+        if WeakAuras.CurrentEncounter then return end
+        if NSRT.MyNickName ~= "" then NSI:SendNickName("RAID", true) end -- only send nickname if it's not empty. empty nickname will only be sent if entered manually
+
     elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and (internal or NSI.Debug) then
         if WeakAuras.CurrentEncounter then return end
         local hashed = ...        
@@ -153,8 +157,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "NSI_NICKNAMES_COMMS" and (internal or NSI.Debug) then
         if WeakAuras.CurrentEncounter then return end
-        local unit, nickname, name, realm, channel = ...
+        local unit, nickname, name, realm, channel, requestback = ...
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't add new nickname if it's yourself because already adding it to the database when you edit it
+        if requestback then NSI:SendNickName("WHISPER", false, unit) end -- send nickname back to the person who requested it
         NSI:NewNickName(unit, nickname, name, realm, channel)
 
     elseif e == "NSI_NICKNAMES_SYNCH" and (internal or NSI.Debug) then
