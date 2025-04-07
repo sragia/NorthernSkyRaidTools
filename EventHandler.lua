@@ -32,6 +32,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["OmniCD"] = NSRT.Settings["OmniCD"] or false
             NSRT.Settings["ElvUI"] = NSRT.Settings["ElvUI"] or false
             NSRT.Settings["SuF"] = NSRT.Settings["SuF"] or false
+            NSRT.Settings["Translit"] = NSRT.Settings["Translit"] or false
             NSRT.Settings["Unhalted"] = NSRT.Settings["Unhalted"] or false
             NSRT.Settings["ShareNickNames"] = NSRT.Settings["ShareNickNames"] or 4 -- none default
             NSRT.Settings["AcceptNickNames"] = NSRT.Settings["AcceptNickNames"] or 4 -- none default

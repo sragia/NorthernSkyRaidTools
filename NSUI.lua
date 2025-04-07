@@ -635,6 +635,11 @@ function NSUI:Init()
             NSI:GlobalNickNameUpdate()
         end
 
+        if NSUI.OptionsChanged.nicknames["TRANSLIT"] then
+            NSI:Print("Translit nicknames")
+            NSI:UpdateNickNameDisplay(true)
+        end
+
         if NSUI.OptionsChanged.nicknames["BLIZZARD_NICKNAMES"] then
             NSI:Print("Blizzard nicknames")
             NSI:BlizzardNickNameUpdated()
@@ -877,6 +882,19 @@ Press 'Enter' to hear the TTS]],
             set = function(self, fixedparam, value) 
                 NSUI.OptionsChanged.nicknames["GLOBAL_NICKNAMES"] = true
                 NSRT.Settings["GlobalNickNames"] = value 
+            end,
+            nocombat = true
+        },
+        
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Translit Names",
+            desc = "Translate Russian Names",
+            get = function() return NSRT.Settings["Translit"] end,
+            set = function(self, fixedparam, value) 
+                NSUI.OptionsChanged.nicknames["TRANSLIT"] = true
+                NSRT.Settings["Translit"] = value 
             end,
             nocombat = true
         },

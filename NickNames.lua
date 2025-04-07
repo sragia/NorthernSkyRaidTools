@@ -2,6 +2,7 @@ local _, NSI = ... -- Internal namespace
 local Grid2Status
 local fullCharList = {}
 local sortedCharList = {}
+local LibTranslit = LibStub("LibTranslit-1.0")
 
 function NSAPI:GetCharacters(str) -- Returns table of all Characters from Nickname or Character Name
     if not str then
@@ -16,32 +17,14 @@ function NSAPI:GetAllCharacters()
 end
 
 function NSAPI:GetName(str, AddonName) -- Returns Nickname
-    if not NSRT.Settings["GlobalNickNames"] then
-        return UnitExists(str) and UnitName(str) or str
+    local unitname = UnitExists(str) and UnitName(str) or str
+    if NSRT.Settings["Translit"] then
+        unitname = LibTranslit:Transliterate(unitname)
     end
-    if AddonName == "MRT" and not NSRT.Settings["MRT"] then
-        return UnitExists(str) and UnitName(str) or str
-    end    
-    if AddonName == "WA" and not NSRT.Settings["WA"] then
-        return UnitExists(str) and UnitName(str) or str
-    end
-    if AddonName == "Grid2" and not NSRT.Settings["Grid2"] then
-        return UnitExists(str) and UnitName(str) or str
-    end
-    if AddonName == "ElvUI" and not NSRT.Settings["ElvUI"] then
-        return UnitExists(str) and UnitName(str) or str
-    end    
-    if AddonName == "SuF" and not NSRT.Settings["SuF"] then
-        return UnitExists(str) and UnitName(str) or str
-    end    
-    if AddonName == "Unhalted" and not NSRT.Settings["Unhalted"] then
-        return UnitExists(str) and UnitName(str) or str
-    end
-    if AddonName == "Blizzard" and not NSRT.Settings["Blizzard"] then
-        return UnitExists(str) and UnitName(str) or str
-    end
-    if AddonName == "OmniCD" and not NSRT.Settings["OmniCD"] then
-        return UnitExists(str) and UnitName(str) or str
+    -- check if setting for the requesting addon is enabled, if not return the original name.
+    -- if no AddonName is given we assume it's from an old WeakAura as they never specified
+    if (not NSRT.Settings["GlobalNickNames"]) or (AddonName and not NSRT.Settings[AddonName]) or ((not AddonName) and (not NSRT.Settings["WA"])) then 
+        return unitname
     end
 
     if not str then
@@ -53,9 +36,20 @@ function NSAPI:GetName(str, AddonName) -- Returns Nickname
         if not realm then
             realm = GetNormalizedRealmName()
         end
-        return name and realm and fullCharList[name.."-"..realm] or name
+        local nickname = name and realm and fullCharList[name.."-"..realm]
+        if nickname and NSRT.Settings["Translit"] then
+            nickname = LibTranslit:Transliterate(nickname)
+        end
+        if NSRT.Settings["Translit"] then
+            name = LibTranslit:Transliterate(name)
+        end
+        return nickname or name
     else
-        return fullCharList[str] or str
+        local nickname = fullCharList[str]
+        if nickname and NSRT.Settings["Translit"] then
+            nickname = LibTranslit:Transliterate(nickname)
+        end
+        return nickname or unitname
     end
 end
 
