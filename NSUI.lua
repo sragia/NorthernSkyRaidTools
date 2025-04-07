@@ -404,13 +404,22 @@ function NSUI:Init()
         NSI:Print("existingBinding" .. existingBinding)
         if existingBinding and existingBinding ~= macroName then
             SetBinding(keyCombo, nil)
+            print("|cFF00FFFFNSRT:|r Overriding existing binding for " .. existingBinding .. " to " .. macroName)
         end
+
+        local existingKeybind = GetBindingKey(macroName)
+        if existingKeybind and existingKeybind ~= keyCombo then
+            SetBinding(existingKeybind, nil)
+        end
+
         local ok = SetBinding(keyCombo, macroName)
         if ok then
             NSI:Print("Keybind " .. macroName .. " set to: " .. keyCombo)
             SaveBindings(GetCurrentBindingSet())
+            return true
         else
             NSI:Print("Failed to set keybind.")
+            return false
         end
     end
 
@@ -467,6 +476,11 @@ function NSUI:Init()
                     return nil -- Don't register this as a full keybind yet
                 end
                 local keyCombo = GetModifiedKeyString(key)
+                NSI:Print("keyCombo" .. keyCombo)
+                if keyCombo == "LeftButton" or keyCombo == "RightButton" then
+                    NSI:Print("keyCombo is a pure mouse button ABORTING KEYBIND")
+                    return nil -- dont register pure mouse buttons as keybinds, only with modifier
+                end
                 NSI:Print("Key bound to:", keyCombo)
 
                 -- Bind keybind
