@@ -1,6 +1,7 @@
 local _, NSI = ... -- Internal namespace
 NSI.groupData = {}
 NSI.auraData = {}
+NSI.AuraSizeData = {}
 local SharedMedia = LibStub("LibSharedMedia-3.0")
 NSI.auranames = {
     ["Icons"] = "NS Icon Anchor",  
@@ -14,6 +15,7 @@ NSI.auranames = {
     ["Circle"] = "NS Circle Anchor",  
     ["Big Icons"] = "NS Big Icon Anchor",  
     ["Big Bars"] = "NS Big Bar Anchor",
+    ["Tank Bars"] = "NS Tank Bar Anchor",
 }
 
 function NSAPI:AnchorSettings(type) -- call this when someone edits anchors to fix options preview    
@@ -37,13 +39,22 @@ function NSAPI:AuraPosition(type, pos, reg)
             local Xoffset = 0
             local Yoffset = 0
             if WeakAuras.IsOptionsOpen() then
+                local height = reg[1].region.height
+                if reg[1].region.regionType == "text" then
+                    height = NSI.AuraSizeData[type] or height
+                end
                 Xoffset = -reg[1].region.width*directionX
-                Yoffset = -reg[1].region.height*directionY
+                Yoffset = height*directionY*-1
             end                        
             local max = anchorData.limit            
             max = #reg <= max and #reg or max
             for i =1, max do
-                local width = ((type == "Bars" or type == "Texts" or type == "Assignment" or type == "Big Bars" or type == "Overview" or type == "TankTexts") and reg[i].region.height+space) or reg[i].region.width+space
+                local width
+                if reg[i].region.regionType == "text" then
+                    width = NSI.AuraSizeData[type]+space or reg[i].region.height+space
+                else
+                    width = ((type == "Bars" or type == "Big Bars" or type == "Overview" or type == "Tank Bars") and reg[i].region.height+space) or reg[i].region.width+space
+                end
                 pos[i] = {
                     Xoffset,
                     Yoffset,
@@ -116,8 +127,8 @@ function NSAPI:AuraResize(type, positions, regions)
             region.text:SetFont(SharedMedia:Fetch("font", data.font), data.fontSize, data.outline)
             region.text:SetShadowColor(unpack(data.shadowColor))
             region.text:SetShadowOffset(data.shadowXOffset, data.shadowYOffset)            
-            
-            region:SetHeight(data.height)
+            NSI.AuraSizeData[type] = data.fontSize -- somehow even when setting the height it doesn't update to that value so I'm storing it here instead
+            region:SetHeight(data.fontSize)
             region:SetWidth(region.text:GetWidth())
             
             
