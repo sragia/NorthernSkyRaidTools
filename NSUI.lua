@@ -296,6 +296,10 @@ end
 
 
 function NSUI:Init()
+    -- Create the scale bar
+    DF:CreateScaleBar(NSUI, NSRT.NSUI)
+    NSUI:SetScale(NSRT.NSUI.scale)
+
     -- Create the tab container
     local tabContainer = DF:CreateTabContainer(NSUI, "Northern Sky", "NSUI_TabsTemplate", {
         { name = "General",   text = "General" },
@@ -432,6 +436,13 @@ function NSUI:Init()
         if IsAltKeyDown() then modifier = modifier .. "ALT-" end
 
         return modifier .. key
+    end
+
+    local clearKeybinding = function(self, _, macroName)
+        SetBinding(GetBindingKey(macroName), nil)
+        SaveBindings(GetCurrentBindingSet())
+        self:SetText("Unbound")
+        print("|cFF00FFFFNSRT:|r Keybinding cleared for " .. macroName)
     end
 
     local registerKeybinding = function(self, macroName, keybindName)
@@ -1093,7 +1104,7 @@ Press 'Enter' to hear the TTS]],
             desc = "Set the keybind for the external macro",
             param1 = "MACRO NS Ext Macro",
             param2 = "External Macro Keybind",
-            func = function(self, _, param1, param2)
+            func = function(self, _, param1, param2) -- this only ever registers leftclick need to manually set right click
                 registerKeybinding(self, param1, param2)
             end,
             id = "MACRO NS Ext Macro",
@@ -1194,7 +1205,17 @@ Press 'Enter' to hear the TTS]],
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         weakaura_callback)
 
+    -- Set right click functions for clearing keybinding on keybind buttons
+    PAMacroButton = general_tab:GetWidgetById("MACRO NS PA Macro")
+    ExternalMacroButton = externals_tab:GetWidgetById("MACRO NS Ext Macro")
+    if PAMacroButton then
+        PAMacroButton:SetClickFunction(clearKeybinding, PAMacroButton.param1, PAMacroButton.param2, "RightButton")
+    end
+    if ExternalMacroButton then
+        ExternalMacroButton:SetClickFunction(clearKeybinding, ExternalMacroButton.param1, ExternalMacroButton.param2, "RightButton")
+    end
 
+    -- Build version check UI
     NSUI.version_scrollbox = BuildVersionCheckUI(versions_tab)
 end
 
@@ -1273,6 +1294,9 @@ SlashCmdList["NSUI"] = function(msg)
         end
     elseif msg == "test" then
         NSI:DisplayExternal(nil, GetUnitName("player"))
+    elseif msg == "wipe" then
+        wipe(NSRT)
+        ReloadUI()
     else
         NSUI:ToggleOptions()
     end

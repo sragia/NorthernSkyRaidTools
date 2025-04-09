@@ -16,7 +16,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local name = ...
         if name == "NorthernSkyRaidTools" then
             if not NSRT then NSRT = {} end
-            if not NSRT.NSUI then NSRT.NSUI = {} end
+            if not NSRT.NSUI then NSRT.NSUI = {scale = 1} end
             if not NSRT.NSUI.externals_anchor then NSRT.NSUI.externals_anchor = {} end
             -- if not NSRT.NSUI.main_frame then NSRT.NSUI.main_frame = {} end
             -- if not NSRT.NSUI.external_frame then NSRT.NSUI.external_frame = {} end
