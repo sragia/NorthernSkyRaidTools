@@ -128,12 +128,29 @@ local function BuildVersionCheckUI(parent)
     local component_name_entry = DF:CreateTextEntry(parent, function(_, _, value) component_name = value end, 250, 18)
     component_name_entry:SetTemplate(options_button_template)
     component_name_entry:SetPoint("LEFT", component_name_label, "RIGHT", 5, 0)
+    component_name_entry:SetHook("OnEditFocusGained", function(self)
+        component_name_entry.WAAutoCompleteList = NSRT.NSUI.AutoComplete["WA"] or {}
+        component_name_entry.AddonAutoCompleteList = NSRT.NSUI.AutoComplete["Addon"] or {}
+        local component_type = component_type_dropdown:GetValue()
+        if component_type == "WA" then
+            component_name_entry:SetAsAutoComplete("WAAutoCompleteList", _, true)
+        elseif component_type == "Addon" then
+            component_name_entry:SetAsAutoComplete("AddonAutoCompleteList", _, true)
+        end
+    end)
 
     local version_check_button = DF:CreateButton(parent, function()
         NSI:Print("Version check button clicked") -- replace with actual callback
     end, 120, 18, "Check Versions")
     version_check_button:SetTemplate(options_button_template)
     version_check_button:SetPoint("LEFT", component_name_entry, "RIGHT", 20, 0)
+    version_check_button:SetHook("OnShow", function(self)
+        if (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")) then
+            self:Enable()
+        else
+            self:Disable()
+        end
+    end)
 
     local character_name_header = DF:CreateLabel(parent, "Character Name", 11)
     character_name_header:SetPoint("TOPLEFT", component_type_label, "BOTTOMLEFT", 10, -20)
@@ -279,7 +296,16 @@ local function BuildVersionCheckUI(parent)
     version_check_scrollbox.AddData = addData
     version_check_scrollbox.WipeData = wipeData
 
-    version_check_button:SetScript("OnClick", function(self)        
+    version_check_button:SetScript("OnClick", function(self)
+        
+        local text = component_name_entry:GetText()
+        local component_type = component_type_dropdown:GetValue()
+        if text and text ~= ""  and not tContains(NSRT.NSUI.AutoComplete[component_type], text) then
+            tinsert(NSRT.NSUI.AutoComplete[component_type], text)
+        end
+
+        if not text or text == "" and component_type ~= "Note" then return end
+        
         local now = GetTime()
         if NSI.LastVersionCheck and NSI.LastVersionCheck > now-2 then return end -- don't let user spam requests
         NSI.LastVersionCheck = now

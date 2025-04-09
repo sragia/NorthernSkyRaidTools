@@ -48,6 +48,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["Minimap"] = NSRT.Settings["Minimap"] or {hide = false}
             NSRT.Settings["VersionCheckRemoveResponse"] = NSRT.Settings["VersionCheckRemoveResponse"] or false
             NSRT.Settings["Debug"] = NSRT.Settings["Debug"] or false
+            NSRT.NSUI.AutoComplete = NSRT.NSUI.AutoComplete or {}
+            NSRT.NSUI.AutoComplete["WA"] = NSRT.NSUI.AutoComplete["WA"] or {}
+            NSRT.NSUI.AutoComplete["Addon"] = NSRT.NSUI.AutoComplete["Addon"] or {}
 
             NSI.BlizzardNickNamesHook = false
             NSI.MRTNickNamesHook = false
