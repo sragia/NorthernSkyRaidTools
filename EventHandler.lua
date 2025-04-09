@@ -105,7 +105,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not realm then
                 realm = GetNormalizedRealmName()
             end
-            if not NSRT.NickNames[name.."-"..realm] then
+            if (not NSRT.NickNames[name.."-"..realm]) or (NSRT.Settings["MyNickName"] ~= NSRT.NickNames[name.."-"..realm]) then
                 NSI:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
             end
         end
