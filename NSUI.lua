@@ -1135,6 +1135,18 @@ Press 'Enter' to hear the TTS]],
             get = function() return "WeakAuras Imports" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
+
+        {
+            type = "button",
+            name = "Import Raid WA",
+            desc = "Import Liberation of Undermine Raid WeakAuras",
+            func = function(self)
+                ImportWeakAura("raid_weakaura")
+            end,
+            nocombat = true,
+            spacement = true
+        },
+
         {
             type = "button",
             name = "Import Anchors",
@@ -1159,7 +1171,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "button",
             name = "Import Interrupt WA",
-            desc = "Import Interrupt Anchor Weakaura",
+            desc = "Import Interrupt Anchor WeakAura",
             func = function(self)
                 ImportWeakAura("interrupt_weakaura")
             end,
