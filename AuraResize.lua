@@ -38,29 +38,31 @@ function NSAPI:AuraPosition(type, pos, reg)
             local space = anchorData.space
             local Xoffset = 0
             local Yoffset = 0
-            if WeakAuras.IsOptionsOpen() then
+            -- old code that doesn't seem to be neccesary anymore after changing anchors to individual aura instead of the group but keeping it here just in case
+           --[[ if WeakAuras.IsOptionsOpen() then
                 local height = reg[1].region.height
                 if reg[1].region.regionType == "text" then
                     height = NSI.AuraSizeData[type] or height
                 end
                 Xoffset = -reg[1].region.width*directionX
                 Yoffset = height*directionY*-1
-            end                        
+            end     ]]                   
             local max = anchorData.limit            
             max = #reg <= max and #reg or max
             for i =1, max do
-                local width
+                local height
                 if reg[i].region.regionType == "text" then
-                    width = NSI.AuraSizeData[type]+space or reg[i].region.height+space
+                    height = NSI.AuraSizeData[type]+space or reg[i].region.height+space                    
                 else
-                    width = ((type == "Bars" or type == "Big Bars" or type == "Overview" or type == "Tank Bars") and reg[i].region.height+space) or reg[i].region.width+space
+                    height = reg[i].region.height+space
                 end
+                local width = reg[i].region.width+space
                 pos[i] = {
                     Xoffset,
                     Yoffset,
                 }
                 Xoffset = Xoffset+((width)*directionX)
-                Yoffset = Yoffset+((width)*directionY)
+                Yoffset = Yoffset+((height)*directionY)
             end
         elseif type == "Circle" then            
             for i, region in ipairs(reg) do
