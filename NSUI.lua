@@ -1221,7 +1221,7 @@ end
 function NSUI:LoadExternalsAnchorPosition()
     NSRT.NSUI.externals_anchor.settings = NSRT.NSUI.externals_anchor.settings or {
         anchorPoint = {
-            "CENTER", UIParent, "CENTER", 0, 150
+            "CENTER", "UIParent", "CENTER", 0, 150
         },
         width = 70,
         height = 70
