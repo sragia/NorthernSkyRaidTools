@@ -150,6 +150,7 @@ end
 
 
 function NSI.Externals:UpdateSpell(unit, spellID, cooldownInfo)
+    if not (WeakAuras.CurrentEncounter or NSRT.Settings["Debug"]) then return end
     if UnitIsUnit("player", NSI.Externals.target) then
         if unit and UnitExists(unit) and spellID and cooldownInfo and NSI.Externals.AllSpells[spellID] then
             if UnitInRaid(unit) then
@@ -176,6 +177,7 @@ function NSI.Externals:UpdateSpell(unit, spellID, cooldownInfo)
 end
 
 function NSI.Externals:UpdateExternals()
+    if not (WeakAuras.CurrentEncounter or NSRT.Settings["Debug"]) then return end
     local allUnitsCooldown = lib.GetAllUnitsCooldown()
     NSI.Externals.known = {}
     NSI.Externals.ready = {}
@@ -230,7 +232,7 @@ function NSAPI:ExternalRequest(key, num) -- optional arguments
     if UnitIsDead("player") or C_UnitAuras.GetAuraDataBySpellName("player", C_Spell.GetSpellInfo(27827).name) then  -- block incoming requests from dead people
         return
     end
-    if not WeakAuras.CurrentEncounter then return end
+    if not (WeakAuras.CurrentEncounter or NSRT.Settings["Debug"]) then return end
     if ((not NSI.Externals.lastrequest) or (NSI.Externals.lastrequest < now - 4)) then
         NSI.Externals.lastrequest = now
         key = key or "default"

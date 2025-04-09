@@ -37,9 +37,9 @@ function NSAPI:Broadcast(event, channel, ...) -- only used for weakauras, everyt
         end
     end
     if channel == "WHISPER" then -- create "fake" whisper addon msg that actually just uses RAID instead and will be checked on receive
-        AceComm:SendCommMessage("NSWA_MSG", message, "RAID")
+        AceComm:SendCommMessage("NSWA_MSG2", message, "RAID")
     else
-        AceComm:SendCommMessage("NSWA_MSG2", message, channel)
+        AceComm:SendCommMessage("NSWA_MSG", message, channel)
     end
 end
 

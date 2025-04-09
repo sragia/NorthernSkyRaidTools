@@ -117,27 +117,27 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if WeakAuras.GetData("Northern Sky Externals") then
             print("Please uninstall the Northern Sky Externals Weakaura to prevent conflicts with the Northern Sky Raid Tools Addon.")
         end
-    elseif e == "READY_CHECK" and (wowevent or NSI.Debug) then
+    elseif e == "READY_CHECK" and (wowevent or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
         local difficultyID = select(3, GetInstanceInfo())
-        if difficultyID == 15 or difficultyID == 16 or NSI.Debug then -- only care about note comparison in heroic&mythic raid
+        if difficultyID == 15 or difficultyID == 16 or NSRT.Settings["Debug"] then -- only care about note comparison in heroic&mythic raid
             local hashed = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""     
             NSI:Broadcast("MRT_NOTE", "RAID", hashed)   
         end
-    elseif e == "GROUP_FORMED" and (wowevent or NSI.Debug) then 
+    elseif e == "GROUP_FORMED" and (wowevent or NSRT.Settings["Debug"]) then 
         if WeakAuras.CurrentEncounter then return end
         if NSRT.MyNickName ~= "" then NSI:SendNickName("RAID", true) end -- only send nickname if it's not empty. empty nickname will only be sent if entered manually
 
-    elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and (internal or NSI.Debug) then
+    elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and (internal or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
         local hashed = ...        
         if hashed ~= "" then
             local note = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""    
-            if note ~= "" then
+            if note ~= "" and note ~= hashed then
                 -- Display text that tells the user the MRT note is different
             end
         end
-    elseif e == "COMBAT_LOG_EVENT_UNFILTERED" and (wowevent or NSI.Debug) then
+    elseif e == "COMBAT_LOG_EVENT_UNFILTERED" and (wowevent or NSRT.Settings["Debug"]) then
         local _, subevent, _, _, _, _, _, _, destName, _, _, spellID = CombatLogGetCurrentEventInfo()
         if subevent == "SPELL_AURA_APPLIED" and NSI.Externals and NSI.Externals.Automated[spellID] then
             local unit = destName
@@ -147,11 +147,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSI:EventHandler("NS_EXTERNAL_REQ", false, true, unit, key, NSI.Externals.Amount[key..spellID], false, "skip")
             end
         end
-    elseif e == "NSI_VERSION_CHECK" and (internal or NSI.Debug) then
+    elseif e == "NSI_VERSION_CHECK" and (internal or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
         local unit, ver, duplicate = ...        
         NSI:VersionResponse({name = UnitName(unit), version = ver, duplicate = duplicate})
-    elseif e == "NSI_VERSION_REQUEST" and (internal or NSI.Debug) then
+    elseif e == "NSI_VERSION_REQUEST" and (internal or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
         local unit, type, name = ...        
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't send to yourself
@@ -159,14 +159,14 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             local u, ver, duplicate = NSI:GetVersionNumber(type, name, unit)
             NSI:Broadcast("NSI_VERSION_CHECK", "WHISPER", unit, ver, duplicate)
         end
-    elseif e == "NSI_NICKNAMES_COMMS" and (internal or NSI.Debug) then
+    elseif e == "NSI_NICKNAMES_COMMS" and (internal or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
         local unit, nickname, name, realm, channel, requestback = ...
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't add new nickname if it's yourself because already adding it to the database when you edit it
         if requestback then NSI:SendNickName("WHISPER", false, unit) end -- send nickname back to the person who requested it
         NSI:NewNickName(unit, nickname, name, realm, channel)
 
-    elseif e == "NSI_NICKNAMES_SYNCH" and (internal or NSI.Debug) then
+    elseif e == "NSI_NICKNAMES_SYNCH" and (internal or NSRT.Settings["Debug"]) then
         local unit, nicknametable, channel = ...
         if NSRT.Settings["NickNamesSyncAccept"] == 3 or (NSRT.Settings["NickNamesSyncAccept"] == 2 and channel == "GUILD") or (NSRT.Settings["NickNamesSyncAccept"] == 1 and channel == "RAID") then -- accept sync if you are group leader or if the setting is set to 3 (always accept)
             NSI:NewNickName(unit, nicknametable[unit], unit, nil) -- add nickname to database
@@ -176,9 +176,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local unit, spec = ...
         NSI.specs = NSI.specs or {}
         NSI.specs[unit] = tonumber(spec)
-    elseif (e == "NSAPI_SPEC_REQUEST") or (e == "ENCOUNTER_START" and (wowevent or NSI.Debug)) then -- allow sending fake encounter_start if in debug mode  
+    elseif (e == "NSAPI_SPEC_REQUEST") or (e == "ENCOUNTER_START" and (wowevent or NSRT.Settings["Debug"])) then -- allow sending fake encounter_start if in debug mode  
         local _, _, difficultyID = ...     
-        if e == "ENCOUNTER_START" and difficultyID ~= 15 and difficultyID ~= 16 and not NSI.Debug then return end -- only send spec info in mythic and heroic raids
+        print(difficultyID, NSRT.Settings["Debug"])
+        if e == "ENCOUNTER_START" and difficultyID ~= 15 and difficultyID ~= 16 and difficultyID ~= 14 and not NSRT.Settings["Debug"] then return end -- only send spec info in mythic and heroic raids
         NSI.specs = {}
 
         for u in NSI:IterateGroupMembers() do
@@ -253,11 +254,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
-    elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") and (internal or NSI.Debug) then -- only accept scanevent if you are the "server"
+    elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") and (internal or NSRT.Settings["Debug"]) then -- only accept scanevent if you are the "server"
         -- unitID = player that requested
         -- unit = player that shall give the external
         local unitID, key, num, req, range = ...
-        if UnitIsDead(unitID) or C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(27827).name) then  -- block incoming requests from dead people
+        local diff = select(3, GetInstanceInfo()) or 0
+        if UnitIsDead(unitID) or C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(27827).name) or not (diff == 14 or diff == 15 or diff == 16 or NSRT.Settings["Debug"]) then  -- block incoming requests from dead people
             return
         end
         num = num or 1
@@ -305,14 +307,14 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         -- No External Left
         NSAPI:Broadcast("NS_EXTERNAL_NO", "WHISPER", unitID, "nilcheck")
-    elseif e == "NS_EXTERNAL_YES" and (internal or NSI.Debug) then
+    elseif e == "NS_EXTERNAL_YES" and (internal or NSRT.Settings["Debug"]) then
         NSI.Externals.lastrequest = GetTime()
         local _, unit, spellID = ...
         NSI:DisplayExternal(spellID, unit)
-    elseif e == "NS_EXTERNAL_NO" and (internal or NSI.Debug) then
+    elseif e == "NS_EXTERNAL_NO" and (internal or NSRT.Settings["Debug"]) then
         NSI.Externals.lastrequest = GetTime()
         NSI:DisplayExternal(nil, ...)
-    elseif e == "NS_EXTERNAL_GIVE" and ... and (internal or NSI.Debug) then
+    elseif e == "NS_EXTERNAL_GIVE" and ... and (internal or NSRT.Settings["Debug"]) then
         local _, unit, spellID = ...
         local hyperlink = C_Spell.GetSpellLink(spellID)
         WeakAuras.ScanEvents("CHAT_MSG_WHISPER", hyperlink, unit)
