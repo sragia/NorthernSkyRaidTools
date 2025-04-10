@@ -451,15 +451,18 @@ end
 function NSI:ImportNickNames(string) -- string format is charactername-realm:nickname;charactername-realm:nickname;...
     if string ~= "" then
         for _, str in pairs({strsplit(";", string)}) do
-            local namewithrealm, nickname = strsplit(":", str)
-            if namewithrealm and nickname then
-                local name, realm = strsplit("-", namewithrealm)
-                local unit
-                if name and realm then
-                    NSRT.NickNames[name.."-"..realm] = nickname
+            if str ~= "" then
+                local namewithrealm, nickname = strsplit(":", str)
+                if namewithrealm and nickname then
+                    local name, realm = strsplit("-", namewithrealm)
+                    local unit
+                    if name and realm then
+                        NSRT.NickNames[name.."-"..realm] = nickname
+                    end
+                else
+                    error("Error parsing names: "..str, 1)
+            
                 end
-            else
-                error("Error parsing names", str, namewithrealm, nickname)
             end
         end
         NSI:GlobalNickNameUpdate()
