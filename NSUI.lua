@@ -459,7 +459,7 @@ local function BuildNicknameEditUI()
     add_button:SetPoint("LEFT", new_nickname_entry, "RIGHT", 10, 0)
     add_button:SetTemplate(options_button_template)
 
-    local sync_button = DF:CreateButton(nicknames_edit_frame, function() NSI:SynchNickNames() end, 225, 20, "Sync Nicknames")
+    local sync_button = DF:CreateButton(nicknames_edit_frame, function() NSI:SyncNickNames() end, 225, 20, "Sync Nicknames")
     sync_button:SetPoint("BOTTOMLEFT", nicknames_edit_frame, "BOTTOMLEFT", 10, 10)
     sync_button:SetTemplate(options_button_template)
 

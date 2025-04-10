@@ -166,11 +166,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if requestback then NSI:SendNickName("WHISPER", false, unit) end -- send nickname back to the person who requested it
         NSI:NewNickName(unit, nickname, name, realm, channel)
 
-    elseif e == "NSI_NICKNAMES_SYNCH" and (internal or NSRT.Settings["Debug"]) then
+    elseif e == "NSI_NICKNAMES_SYNC" and (internal or NSRT.Settings["Debug"]) then
         local unit, nicknametable, channel = ...
         if NSRT.Settings["NickNamesSyncAccept"] == 3 or (NSRT.Settings["NickNamesSyncAccept"] == 2 and channel == "GUILD") or (NSRT.Settings["NickNamesSyncAccept"] == 1 and channel == "RAID") then 
             if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't accept sync requests from yourself
-            NSI:NickNamesSynchPopup(unit, nicknametable)    
+            NSI:NickNamesSyncPopup(unit, nicknametable)    
         end
     elseif e == "NSAPI_SPEC" then -- Should technically rename to "NSI_SPEC" but need to keep this open for the global broadcast to be compatible with the database WA
         local unit, spec = ...

@@ -469,14 +469,14 @@ function NSI:ImportNickNames(string) -- string format is charactername-realm:nic
     end
 end
 
-function NSI:SynchNickNames()
+function NSI:SyncNickNames()
     local now = GetTime()
-    if NSI.LastNickNameSynch and NSI.LastNickNameSynch > now-4 then return end -- don't let user spam synchs
-    NSI.LastNickNameSynch = now
-    NSI:Broadcast("NSI_NICKNAMES_SYNCH", NSRT.Settings["NickNamesSyncSend"], NSRT.NickNames, NSRT.Settings["NickNamesSyncSend"]) -- channel is either GUILD or RAID
+    if NSI.LastNickNameSync and NSI.LastNickNameSync > now-4 then return end -- don't let user spam syncs
+    NSI.LastNickNameSync = now
+    NSI:Broadcast("NSI_NICKNAMES_SYNC", NSRT.Settings["NickNamesSyncSend"], NSRT.NickNames, NSRT.Settings["NickNamesSyncSend"]) -- channel is either GUILD or RAID
 end
 
-function NSI:SynchNickNamesAccept(nicknametable)
+function NSI:SyncNickNamesAccept(nicknametable)
     for name, nickname in pairs(nicknametable) do
         NSRT.NickNames[name] = nickname
     end
