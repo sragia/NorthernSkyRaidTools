@@ -103,7 +103,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI:ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI:ExternalRequest();"
             CreateMacro("NS Ext Macro", 135966, macrotext, false)
         end
-        if NSRT.MyNickName ~= "" then NSI:SendNickName("Any") end -- only send nickname if it's not empty. empty nickname will only be sent if 
+        if NSRT.MyNickName ~= "" then NSI:SendNickName("Any") end -- only send nickname if it's not empty. empty nickname will only be sent if entered manually
         if NSRT.Settings["GlobalNickNames"] then -- add own nickname if not already in database (for new characters)
             local name, realm = UnitName("player")
             if not realm then
