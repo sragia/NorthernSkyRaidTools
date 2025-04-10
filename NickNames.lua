@@ -369,23 +369,6 @@ function NSI:InitNickNames()
         end
     end
 
-    if UUFG and UUFG.Tags then
-        UUFG.Tags.Events['NSNickName'] = 'UNIT_NAME_UPDATE'
-        UUFG.Tags.Methods['NSNickName'] = function(unit)
-            local name = UnitName(unit)
-            return name and NSAPI and NSAPI:GetName(name, "Unhalted") or name
-        end
-        for i=1, 12 do
-            UUFG.Tags.Events['NSNickName:'..i] = 'UNIT_NAME_UPDATE'
-            UUFG.Tags.Methods['NSNickName:'..i] = function(unit)
-                local name = UnitName(unit)
-                name = name and NSAPI and NSAPI:GetName(name, "Unhalted") or name
-                return string.sub(name, 1, i)
-            end
-        end
-    end
-
-
     if CellDB and NSRT.Settings["Cell"] then
         for name, nickname in pairs(NSRT.NickNames) do
             if tInsertUnique(CellDB.nicknames.list, name..":"..nickname) then
