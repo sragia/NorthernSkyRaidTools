@@ -334,7 +334,7 @@ local function BuildNicknameEditUI()
             tinsert(data, {player = player, nickname = nickname})
         end
         table.sort(data, function(a, b)
-            return a.player < b.player
+            return a.nickname < b.nickname
         end)
         return data
     end
