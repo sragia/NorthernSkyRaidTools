@@ -17,14 +17,6 @@ function NSI:IterateGroupMembers(reversed, forceParty)
     end
 end
 
-function NSI:PrivateAuraMacro()
-    if (not NSI.LastPAMacro) or (GetTime() > NSI.LastPAMacro + 4) then -- not allow people to spam this. Some auras might need to manually reset this to 0. Example: Withering flames on bandit because you could get the debuff instantly after being dispelled
-        NSI.LastPAMacro = GetTime()
-        WeakAuras.ScanEvents("NS_PA_MACRO", true)
-        -- NSI:Broadcast("NS_PA_MACRO", "RAID", "nilcheck") -- enable this if I want to send macro press data to everyone
-    end
-end
-
 function NSAPI:Version() -- old version check function from the database WA, for compatibility reasons
     return 14
 end
