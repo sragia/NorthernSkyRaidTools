@@ -320,6 +320,124 @@ local function BuildVersionCheckUI(parent)
     return version_check_scrollbox
 end
 
+local function BuildNicknameEditUI()
+    local nicknames_edit_frame = DF:CreateSimplePanel(UIParent, 485, 400, "Nicknames Management", "NicknamesEditFrame", {
+        DontRightClickClose = true
+    })
+    nicknames_edit_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    
+    local function refresh(self, data, offset, totalLines)
+        local dataInOrder = {}
+        for player, nickname in pairs(NSRT.NickNames) do
+            tinsert(dataInOrder, {player = player, nickname = nickname})
+        end
+
+        for i = 1, totalLines do
+            local index = i + offset
+            local nickData = dataInOrder[index]
+            if nickData then
+                local line = self:GetLine(i)
+        
+                line.player = nickData.player
+                line.playerText.text = nickData.player
+                line.nicknameEntry.text = nickData.nickname
+                line:Show()
+            end
+        end
+    end
+
+    local function createLineFunc(self, index)
+        local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
+        line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index-1) * (self.LineHeight+1)) - 1)
+        line:SetSize(self:GetWidth() - 2, self.LineHeight)
+        DF:ApplyStandardBackdrop(line)
+
+        -- Player name text
+        line.playerText = DF:CreateLabel(line, "")
+        line.playerText:SetPoint("LEFT", line, "LEFT", 5, 0)
+        -- line.playerText:SetFont(expressway, 12, "OUTLINE")
+        
+        -- Nickname text
+        line.nicknameEntry = DF:CreateTextEntry(line, function(self, _, value) NSRT.NickNames[line.player] = value end, 120, 20)
+        line.nicknameEntry:SetTemplate(options_dropdown_template)
+        -- line.nicknameEntry.editbox:SetFont(expressway, 12, "OUTLINE")
+        line.nicknameEntry:SetPoint("LEFT", line, "LEFT", 185, 0)
+        
+        -- Delete button
+        line.deleteButton = DF:CreateButton(line, function() 
+            NSRT.NickNames[line.player] = nil
+            self:Refresh()
+        end, 20, 20, "X")
+        -- line.deleteButton:SetFontFace(expressway)
+        line.deleteButton:SetTextColor(0.7, 0.7, 0.7, 1)
+        line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
+        DF:CreateHighlightTexture(line.deleteButton)
+
+        return line
+    end
+
+    local scrollLines = 15
+    local nicknames_edit_scrollbox = DF:CreateScrollBox(nicknames_edit_frame, "$parentNicknameEditScrollBox", refresh, NSRT.NickNames, 445, 300, scrollLines, 20, createLineFunc)
+    nicknames_edit_frame.scrollbox = nicknames_edit_scrollbox
+    nicknames_edit_scrollbox:SetPoint("TOPLEFT", nicknames_edit_frame, "TOPLEFT", 10, -50)
+    DF:ReskinSlider(nicknames_edit_scrollbox)
+    -- nicknames_edit_scrollbox:SetBackdrop({
+    --     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+    --     edgeFile = "Interface\\Buttons\\WHITE8X8",
+    --     tile = true,
+    --     tileSize = 16,
+    --     edgeSize = 1,
+    --     insets = {left = 1, right = 1, top = 1, bottom = 1}
+    -- })
+    -- nicknames_edit_scrollbox:SetBackdropColor(0, 0, 0, 0.2)
+    -- nicknames_edit_scrollbox:SetBackdropBorderColor(.3, .3, .3, 1)
+
+    for i = 1, scrollLines do
+        nicknames_edit_scrollbox:CreateLine(createLineFunc)
+    end
+
+    local player_name_header = DF:CreateLabel(nicknames_edit_frame, "Player Name", 11)
+    player_name_header:SetPoint("TOPLEFT", nicknames_edit_frame, "TOPLEFT", 20, -30)
+
+    local nickname_header = DF:CreateLabel(nicknames_edit_frame, "Nickname", 11)
+    nickname_header:SetPoint("TOPLEFT", nicknames_edit_frame, "TOPLEFT", 200, -30)
+
+
+    nicknames_edit_scrollbox:SetScript("OnShow", function(self) 
+        self:Refresh() 
+    end)
+
+    -- Add new nickname section
+    local new_player_label = DF:CreateLabel(nicknames_edit_frame, "New Player:", 11)
+    new_player_label:SetPoint("TOPLEFT", nicknames_edit_scrollbox, "BOTTOMLEFT", 0, -20)
+
+    local new_player_entry = DF:CreateTextEntry(nicknames_edit_frame, function() end, 120, 20)
+    new_player_entry:SetPoint("LEFT", new_player_label, "RIGHT", 10, 0)
+    new_player_entry:SetTemplate(options_dropdown_template)
+
+    local new_nickname_label = DF:CreateLabel(nicknames_edit_frame, "Nickname:", 11)
+    new_nickname_label:SetPoint("LEFT", new_player_entry, "RIGHT", 10, 0)
+
+    local new_nickname_entry = DF:CreateTextEntry(nicknames_edit_frame, function() end, 120, 20)
+    new_nickname_entry:SetPoint("LEFT", new_nickname_label, "RIGHT", 10, 0)
+    new_nickname_entry:SetTemplate(options_dropdown_template)
+
+    local add_button = DF:CreateButton(nicknames_edit_frame, function()
+        local player = new_player_entry:GetText()
+        local nickname = new_nickname_entry:GetText()
+        if player ~= "" and nickname ~= "" then
+            NSRT.NickNames[player] = nickname
+            new_player_entry:SetText("")
+            new_nickname_entry:SetText("")
+            nicknames_edit_scrollbox:Refresh()
+        end
+    end, 60, 20, "Add")
+    add_button:SetPoint("LEFT", new_nickname_entry, "RIGHT", 10, 0)
+    add_button:SetTemplate(options_button_template)
+
+    nicknames_edit_frame:Hide()
+    return nicknames_edit_frame
+end
 
 function NSUI:Init()
     -- Create the scale bar
@@ -1104,6 +1222,17 @@ Press 'Enter' to hear the TTS]],
             end,
             nocombat = true
         },
+        {
+            type = "button",
+            name = "Edit Nicknames",
+            desc = "Edit the nicknames database stored locally.",
+            func = function(self)
+                if not NSUI.nickname_scrollbox:IsShown() then
+                NSUI.nickname_scrollbox:Show()
+                end
+            end,
+            nocombat = true
+        }
     }
 
     local externals_options1_table = {
@@ -1243,6 +1372,7 @@ Press 'Enter' to hear the TTS]],
 
     -- Build version check UI
     NSUI.version_scrollbox = BuildVersionCheckUI(versions_tab)
+    NSUI.nickname_scrollbox = BuildNicknameEditUI(NSUI)
 end
 
 function NSI:DisplayExternal(spellId, unit)
