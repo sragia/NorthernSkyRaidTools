@@ -341,9 +341,6 @@ local function BuildNicknameEditUI()
 
     local function MasterRefresh(self) 
         local data = PrepareData()
-        table.sort(data, function(a, b)
-            return a.player < b.player
-        end)
         self:SetData(data)
         self:Refresh()
     end
@@ -368,6 +365,7 @@ local function BuildNicknameEditUI()
     end
 
     local function createLineFunc(self, index)
+        local parent = self
         local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
         line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index-1) * (self.LineHeight)) - 1)
         line:SetSize(self:GetWidth() - 2, self.LineHeight)
@@ -380,7 +378,8 @@ local function BuildNicknameEditUI()
         -- Nickname text
         line.nicknameEntry = DF:CreateTextEntry(line, function(self, _, value) 
             NSI:AddNickName(line.player, line.realm, string.sub(value, 1, 12)) 
-            line.nicknameEntry.text = string.sub(value, 1, 12) 
+            line.nicknameEntry.text = string.sub(value, 1, 12)
+            parent:MasterRefresh()
         end, 120, 20)
         line.nicknameEntry:SetTemplate(options_dropdown_template)
         line.nicknameEntry:SetPoint("LEFT", line, "LEFT", 185, 0)
