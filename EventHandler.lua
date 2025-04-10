@@ -6,6 +6,7 @@ f:RegisterEvent("READY_CHECK")
 f:RegisterEvent("GROUP_FORMED")
 f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_LOGIN")
+f:RegisterEvent("PLAYER_LEAVE_COMBAT")
 
 f:SetScript("OnEvent", function(self, e, ...)
     NSI:EventHandler(e, true, false, ...)
@@ -166,11 +167,21 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if requestback then NSI:SendNickName("WHISPER", false, unit) end -- send nickname back to the person who requested it
         NSI:NewNickName(unit, nickname, name, realm, channel)
 
+    elseif e == "PLAYER_LEAVE_COMBAT" and (wowevent or NSRT.Settings["Debug"]) then
+        if NSI.SyncNickNamesStore then
+            NSI:NickNamesSyncPopup(NSI.SyncNickNamesStore.unit, NSI.SyncNickNamesStore.nicknametable)    
+            NSI.SyncNickNamesStore = nil
+        end
+
     elseif e == "NSI_NICKNAMES_SYNC" and (internal or NSRT.Settings["Debug"]) then
         local unit, nicknametable, channel = ...
         if NSRT.Settings["NickNamesSyncAccept"] == 3 or (NSRT.Settings["NickNamesSyncAccept"] == 2 and channel == "GUILD") or (NSRT.Settings["NickNamesSyncAccept"] == 1 and channel == "RAID") then 
             if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't accept sync requests from yourself
-            NSI:NickNamesSyncPopup(unit, nicknametable)    
+            if UnitAffectingCombat("player") then
+                NSI.SyncNickNamesStore = {unit = unit, nicknametable = nicknametable}
+            else
+                NSI:NickNamesSyncPopup(unit, nicknametable)    
+            end
         end
     elseif e == "NSAPI_SPEC" then -- Should technically rename to "NSI_SPEC" but need to keep this open for the global broadcast to be compatible with the database WA
         local unit, spec = ...
