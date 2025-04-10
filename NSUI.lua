@@ -406,41 +406,12 @@ local function BuildNicknameEditUI()
         return line
     end
 
-
-    local sampleData = {
-        {player = "Relowindi-Blackhand", nickname = "Reloe"},
-        {player = "Senfi-Blackhand", nickname = "Senfi"},
-        {player = "Hoori-Blackhand", nickname = "Hori"},
-        {player = "Liebrepriest-Blackhand", nickname = "Liebre"},
-        {player = "Garonx-Blackhand", nickname = "Garon"},
-        {player = "Maleapriest-Blackhand", nickname = "Malea"},
-        {player = "Shirup-Blackhand", nickname = "Shiru"},
-        {player = "Rihrih-Blackhand", nickname = "Riri"},
-        {player = "Fonkydan-Blackhand", nickname = "Ponky"},
-        {player = "Tophifee-Blackhand", nickname = "Toph"},
-        {player = "Doraw-Blackhand", nickname = "Dorag"},
-        {player = "Impyr-Blackhand", nickname = "Impy"},
-        {player = "Therzs-Blackhand", nickname = "Therz"},
-        {player = "Tharkaydk-Blackhand", nickname = "Tharkay"},
-        {player = "Gyi-Blackhand", nickname = "Gyi"},
-        {player = "Nezyp-Blackhand", nickname = "Nezy"}
-    }
     local scrollLines = 15
     local nicknames_edit_scrollbox = DF:CreateScrollBox(nicknames_edit_frame, "$parentNicknameEditScrollBox", refresh, {}, 445, 300, scrollLines, 20, createLineFunc)
     nicknames_edit_frame.scrollbox = nicknames_edit_scrollbox
     nicknames_edit_scrollbox:SetPoint("TOPLEFT", nicknames_edit_frame, "TOPLEFT", 10, -50)
     nicknames_edit_scrollbox.MasterRefresh = MasterRefresh
     DF:ReskinSlider(nicknames_edit_scrollbox)
-    -- nicknames_edit_scrollbox:SetBackdrop({
-    --     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-    --     edgeFile = "Interface\\Buttons\\WHITE8X8",
-    --     tile = true,
-    --     tileSize = 16,
-    --     edgeSize = 1,
-    --     insets = {left = 1, right = 1, top = 1, bottom = 1}
-    -- })
-    -- nicknames_edit_scrollbox:SetBackdropColor(0, 0, 0, 0.2)
-    -- nicknames_edit_scrollbox:SetBackdropBorderColor(.3, .3, .3, 1)
 
     for i = 1, scrollLines do
         nicknames_edit_scrollbox:CreateLine(createLineFunc)
