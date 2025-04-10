@@ -189,7 +189,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         NSI.specs[unit] = tonumber(spec)
     elseif (e == "NSAPI_SPEC_REQUEST") or (e == "ENCOUNTER_START" and (wowevent or NSRT.Settings["Debug"])) then -- allow sending fake encounter_start if in debug mode  
         local _, _, difficultyID = ...     
-        print(difficultyID, NSRT.Settings["Debug"])
+        NSI:Print(difficultyID, NSRT.Settings["Debug"])
         if e == "ENCOUNTER_START" and difficultyID ~= 15 and difficultyID ~= 16 and difficultyID ~= 14 and not NSRT.Settings["Debug"] then return end -- only send spec info in mythic and heroic raids
         NSI.specs = {}
 
@@ -214,6 +214,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                     break
                 end
             end
+            NSI:Print(NSI.Externals.target)
             if UnitIsUnit("player", NSI.Externals.target) then
                 NSI.Externals:UpdateExternals()
                 local note = NSAPI:GetNote()
@@ -265,7 +266,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
-    elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") and (internal or NSRT.Settings["Debug"]) then -- only accept scanevent if you are the "server"
+    elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
         -- unitID = player that requested
         -- unit = player that shall give the external
         local unitID, key, num, req, range = ...
@@ -318,15 +319,16 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         -- No External Left
         NSAPI:Broadcast("NS_EXTERNAL_NO", "WHISPER", unitID, "nilcheck")
-    elseif e == "NS_EXTERNAL_YES" and (internal or NSRT.Settings["Debug"]) then
+    elseif e == "NS_EXTERNAL_YES" and ...then
         NSI.Externals.lastrequest = GetTime()
         local _, unit, spellID = ...
         NSI:DisplayExternal(spellID, unit)
-    elseif e == "NS_EXTERNAL_NO" and (internal or NSRT.Settings["Debug"]) then
+    elseif e == "NS_EXTERNAL_NO" then
         NSI.Externals.lastrequest = GetTime()
         NSI:DisplayExternal(nil, ...)
-    elseif e == "NS_EXTERNAL_GIVE" and ... and (internal or NSRT.Settings["Debug"]) then
+    elseif e == "NS_EXTERNAL_GIVE" and ... then
         local _, unit, spellID = ...
+        NSI:Print("external give", unit, spellID)
         local hyperlink = C_Spell.GetSpellLink(spellID)
         WeakAuras.ScanEvents("CHAT_MSG_WHISPER", hyperlink, unit)
     end  
