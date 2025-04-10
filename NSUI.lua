@@ -1147,7 +1147,7 @@ Press 'Enter' to hear the TTS]],
             get = function() return NSRT.Settings["AcceptNickNames"] end,
             values = function() return build_nickname_accept_options() end,
             name = "Nickname Accept",
-            desc = "Choose you who are accepting Nicknames from",
+            desc = "Choose who you are accepting Nicknames from",
             nocombat = true
         },        
         
@@ -1158,7 +1158,7 @@ Press 'Enter' to hear the TTS]],
             get = function() return NSRT.Settings["NickNamesSyncSend"] end,
             values = function() return build_nickname_syncsend_options() end,
             name = "Nickname Sync Send",
-            desc = "Choose you who you are synching nicknames to when pressing on the sync button",
+            desc = "Choose who you are synching nicknames to when pressing on the sync button",
             nocombat = true
         },
 
@@ -1201,7 +1201,7 @@ Press 'Enter' to hear the TTS]],
                 NSRT.Settings["Cell"] = value
             end,
             name = "Enable Cell Nicknames",
-            desc = "Enable Nicknames to be used with Cell unit frames.",
+            desc = "Enable Nicknames to be used with Cell unit frames. This requires enabling nicknames within Cell.",
             nocombat = true
         },
         {
@@ -1213,7 +1213,7 @@ Press 'Enter' to hear the TTS]],
                 NSRT.Settings["Grid2"] = value
             end,
             name = "Enable Grid2 Nicknames",
-            desc = "Enable Nicknames to be used with Grid2 unit frames.",
+            desc = "Enable Nicknames to be used with Grid2 unit frames. This requires selecting the 'NSNickName' indicator within Grid2.",
             nocombat = true
         },
         {
@@ -1225,7 +1225,7 @@ Press 'Enter' to hear the TTS]],
                 NSRT.Settings["ElvUI"] = value
             end,
             name = "Enable ElvUI Nicknames",
-            desc = "Enable Nicknames to be used with ElvUI unit frames.",
+            desc = "Enable Nicknames to be used with ElvUI unit frames. This requires editing your Tags. Available options are [NSNickName] and [NSNickName:1-12]",
             nocombat = true
         },
         {
@@ -1237,7 +1237,7 @@ Press 'Enter' to hear the TTS]],
                 NSRT.Settings["SuF"] = value
             end,
             name = "Enable SUF Nicknames",
-            desc = "Enable Nicknames to be used with SUF unit frames.",
+            desc = "Enable Nicknames to be used with SUF unit frames. This requires adding your own Tag to the addon here: https://i.imgur.com/SRGaWaJ.png",
             nocombat = true
         },
         {
@@ -1249,7 +1249,7 @@ Press 'Enter' to hear the TTS]],
                 NSRT.Settings["WA"] = value
             end,
             name = "Enable WeakAuras Nicknames",
-            desc = "Enable Nicknames to be used with WeakAuras.",
+            desc = "Enable Nicknames to be used with WeakAuras. This only works if name formatting is used in Display or for any assignment aura.",
             nocombat = true
         },
         {
@@ -1261,7 +1261,7 @@ Press 'Enter' to hear the TTS]],
                 NSRT.Settings["MRT"] = value
             end,
             name = "Enable MRT Nicknames",
-            desc = "Enable Nicknames to be used with MRT.",
+            desc = "Enable Nicknames to be used with MRT. This only affects the Cooldown Tracking",
             nocombat = true
         },
         {
@@ -1272,8 +1272,8 @@ Press 'Enter' to hear the TTS]],
                 NSUI.OptionsChanged.nicknames["UNHALTED_NICKNAMES"] = true
                 NSRT.Settings["Unhalted"] = value
             end,
-            name = "Enable Unhalted UI Nicknames",
-            desc = "Enable Nicknames to be used with Unhalted UI.",
+            name = "Enable Unhalted UF Nicknames",
+            desc = "Enable Nicknames to be used with Unhalted Unit Frames. This requires editing your Tags. Available options are [NSNickName] and [NSNickName:1-12]",
             nocombat = true
         },
 
