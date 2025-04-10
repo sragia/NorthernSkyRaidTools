@@ -108,6 +108,12 @@ function NSAPI:AuraResize(type, positions, regions)
             region.textureSource = auraData.textureSource
             region:UpdateStatusBarTexture()
             for i, subRegion in ipairs(region.subRegions) do
+               --[[ if subRegion.type == "subborder" then
+                    local data = auraData.subRegions[i]
+                    for k, v in pairs(subRegion) do
+                        print(k, v)
+                    end
+                end]]
                 if subRegion.type == "subtext" then
                     local data = auraData.subRegions[i]
                     if not data then break end

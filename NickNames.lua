@@ -473,7 +473,8 @@ function NSI:SyncNickNames()
     local now = GetTime()
     if NSI.LastNickNameSync and NSI.LastNickNameSync > now-4 then return end -- don't let user spam syncs
     NSI.LastNickNameSync = now
-    NSI:Broadcast("NSI_NICKNAMES_SYNC", NSRT.Settings["NickNamesSyncSend"], NSRT.NickNames, NSRT.Settings["NickNamesSyncSend"]) -- channel is either GUILD or RAID
+    local channel = NSRT.Settings["NickNamesSyncSend"] == 1 and "RAID" or "GUILD"
+    NSI:Broadcast("NSI_NICKNAMES_SYNC", channel, NSRT.NickNames, channel) -- channel is either GUILD or RAID
 end
 
 function NSI:SyncNickNamesAccept(nicknametable)
