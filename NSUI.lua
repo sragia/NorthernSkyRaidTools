@@ -321,65 +321,115 @@ local function BuildVersionCheckUI(parent)
 end
 
 local function BuildNicknameEditUI()
-    local nicknames_edit_frame = DF:CreateSimplePanel(UIParent, 485, 400, "Nicknames Management", "NicknamesEditFrame", {
+    local nicknames_edit_frame = DF:CreateSimplePanel(UIParent, 485, 420, "Nicknames Management", "NicknamesEditFrame", {
         DontRightClickClose = true
     })
     nicknames_edit_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+
+    local refresh_count = 0
+
+    local function PrepareData(data)
+        local data = {}
+        for player, nickname in pairs(NSRT.NickNames) do
+            tinsert(data, {player = player, nickname = nickname})
+        end
+        table.sort(data, function(a, b)
+            return a.player < b.player
+        end)
+        return data
+    end
+
+    local function MasterRefresh(self) 
+        local data = PrepareData()
+        table.sort(data, function(a, b)
+            return a.player < b.player
+        end)
+        self:SetData(data)
+        self:Refresh()
+    end
     
     local function refresh(self, data, offset, totalLines)
-        local dataInOrder = {}
-        for player, nickname in pairs(NSRT.NickNames) do
-            tinsert(dataInOrder, {player = player, nickname = nickname})
-        end
-
         for i = 1, totalLines do
             local index = i + offset
-            local nickData = dataInOrder[index]
+            local nickData = data[index]
             if nickData then
                 local line = self:GetLine(i)
+
+                local player, realm = strsplit("-", nickData.player)
         
-                line.player = nickData.player
+                line.fullName = nickData.player
+                line.player = player
+                line.realm = realm
                 line.playerText.text = nickData.player
                 line.nicknameEntry.text = nickData.nickname
-                line:Show()
+                -- line:Show()
             end
         end
     end
 
     local function createLineFunc(self, index)
         local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
-        line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index-1) * (self.LineHeight+1)) - 1)
+        line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index-1) * (self.LineHeight)) - 1)
         line:SetSize(self:GetWidth() - 2, self.LineHeight)
         DF:ApplyStandardBackdrop(line)
 
         -- Player name text
         line.playerText = DF:CreateLabel(line, "")
         line.playerText:SetPoint("LEFT", line, "LEFT", 5, 0)
-        -- line.playerText:SetFont(expressway, 12, "OUTLINE")
         
         -- Nickname text
-        line.nicknameEntry = DF:CreateTextEntry(line, function(self, _, value) NSRT.NickNames[line.player] = value end, 120, 20)
+        line.nicknameEntry = DF:CreateTextEntry(line, function(self, _, value) 
+            NSI:AddNickName(line.player, line.realm, string.sub(value, 1, 12)) 
+            line.nicknameEntry.text = string.sub(value, 1, 12) 
+        end, 120, 20)
         line.nicknameEntry:SetTemplate(options_dropdown_template)
-        -- line.nicknameEntry.editbox:SetFont(expressway, 12, "OUTLINE")
         line.nicknameEntry:SetPoint("LEFT", line, "LEFT", 185, 0)
         
         -- Delete button
-        line.deleteButton = DF:CreateButton(line, function() 
-            NSRT.NickNames[line.player] = nil
-            self:Refresh()
-        end, 20, 20, "X")
+        line.deleteButton = DF:CreateButton(line, function()
+            NSI:AddNickName(line.player, line.realm, "")
+            self:SetData(NSRT.NickNames)
+            self:MasterRefresh()
+        end, 12, 12)
+        line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:SetPushedTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+
+        line.deleteButton:GetNormalTexture():SetDesaturated(true)
+        line.deleteButton:GetHighlightTexture():SetDesaturated(true)
+        line.deleteButton:GetPushedTexture():SetDesaturated(true)
         -- line.deleteButton:SetFontFace(expressway)
-        line.deleteButton:SetTextColor(0.7, 0.7, 0.7, 1)
         line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
-        DF:CreateHighlightTexture(line.deleteButton)
+
+
 
         return line
     end
 
+
+    local sampleData = {
+        {player = "Relowindi-Blackhand", nickname = "Reloe"},
+        {player = "Senfi-Blackhand", nickname = "Senfi"},
+        {player = "Hoori-Blackhand", nickname = "Hori"},
+        {player = "Liebrepriest-Blackhand", nickname = "Liebre"},
+        {player = "Garonx-Blackhand", nickname = "Garon"},
+        {player = "Maleapriest-Blackhand", nickname = "Malea"},
+        {player = "Shirup-Blackhand", nickname = "Shiru"},
+        {player = "Rihrih-Blackhand", nickname = "Riri"},
+        {player = "Fonkydan-Blackhand", nickname = "Ponky"},
+        {player = "Tophifee-Blackhand", nickname = "Toph"},
+        {player = "Doraw-Blackhand", nickname = "Dorag"},
+        {player = "Impyr-Blackhand", nickname = "Impy"},
+        {player = "Therzs-Blackhand", nickname = "Therz"},
+        {player = "Tharkaydk-Blackhand", nickname = "Tharkay"},
+        {player = "Gyi-Blackhand", nickname = "Gyi"},
+        {player = "Nezyp-Blackhand", nickname = "Nezy"}
+    }
     local scrollLines = 15
-    local nicknames_edit_scrollbox = DF:CreateScrollBox(nicknames_edit_frame, "$parentNicknameEditScrollBox", refresh, NSRT.NickNames, 445, 300, scrollLines, 20, createLineFunc)
+    local nicknames_edit_scrollbox = DF:CreateScrollBox(nicknames_edit_frame, "$parentNicknameEditScrollBox", refresh, {}, 445, 300, scrollLines, 20, createLineFunc)
     nicknames_edit_frame.scrollbox = nicknames_edit_scrollbox
     nicknames_edit_scrollbox:SetPoint("TOPLEFT", nicknames_edit_frame, "TOPLEFT", 10, -50)
+    nicknames_edit_scrollbox.MasterRefresh = MasterRefresh
     DF:ReskinSlider(nicknames_edit_scrollbox)
     -- nicknames_edit_scrollbox:SetBackdrop({
     --     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -404,7 +454,7 @@ local function BuildNicknameEditUI()
 
 
     nicknames_edit_scrollbox:SetScript("OnShow", function(self) 
-        self:Refresh() 
+        self:MasterRefresh() 
     end)
 
     -- Add new nickname section
@@ -423,17 +473,63 @@ local function BuildNicknameEditUI()
     new_nickname_entry:SetTemplate(options_dropdown_template)
 
     local add_button = DF:CreateButton(nicknames_edit_frame, function()
-        local player = new_player_entry:GetText()
+        local name = new_player_entry:GetText()
         local nickname = new_nickname_entry:GetText()
         if player ~= "" and nickname ~= "" then
-            NSRT.NickNames[player] = nickname
+            local player, realm = strsplit("-", name)
+            if not realm then
+                realm = GetRealmName()
+            end
+            NSI:AddNickName(player, realm, nickname)
             new_player_entry:SetText("")
             new_nickname_entry:SetText("")
-            nicknames_edit_scrollbox:Refresh()
+            nicknames_edit_scrollbox:MasterRefresh()
         end
     end, 60, 20, "Add")
     add_button:SetPoint("LEFT", new_nickname_entry, "RIGHT", 10, 0)
     add_button:SetTemplate(options_button_template)
+
+    local sync_button = DF:CreateButton(nicknames_edit_frame, function() NSI:SynchNickNames() end, 225, 20, "Sync Nicknames")
+    sync_button:SetPoint("BOTTOMLEFT", nicknames_edit_frame, "BOTTOMLEFT", 10, 10)
+    sync_button:SetTemplate(options_button_template)
+
+    local function createImportPopup()
+        local popup = DF:CreateSimplePanel(nicknames_edit_frame, 300, 150, "Import Nicknames", "ImportPopup", {
+            DontRightClickClose = true
+        })
+        popup:SetPoint("CENTER", nicknames_edit_frame, "CENTER", 0, 0)
+        popup:SetFrameLevel(100)
+
+        popup.import_text_box = DF:CreateTextEntry(popup, function() end, 280, 80, "ImportTextBox")
+        popup.import_text_box:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
+        popup.import_text_box:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -10, 40)
+        popup.import_text_box:SetTemplate(options_dropdown_template)
+        popup.import_text_box:SetMultiLine(true)
+        popup.import_text_box:SetTextInsets(4, 4, 4, 4)
+        popup.import_text_box:SetClipsChildren(true)
+
+        popup.import_confirm_button = DF:CreateButton(popup, function()
+            local import_string = popup.import_text_box:GetText()
+            NSI:ImportNickNames(import_string)
+            popup.import_text_box:SetText("")
+            popup:Hide()
+            nicknames_edit_scrollbox:MasterRefresh()
+        end, 280, 20, "Import")
+        popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
+        popup.import_confirm_button:SetTemplate(options_button_template)
+
+        popup:Hide()
+        return popup
+    end
+
+    local import_popup = createImportPopup()
+    local import_button = DF:CreateButton(nicknames_edit_frame, function() 
+        if not import_popup:IsShown() then 
+            import_popup:Show() 
+        end 
+    end, 225, 20, "Import Nicknames")
+    import_button:SetPoint("BOTTOMRIGHT", nicknames_edit_frame, "BOTTOMRIGHT", -10, 10)
+    import_button:SetTemplate(options_button_template)
 
     nicknames_edit_frame:Hide()
     return nicknames_edit_frame
@@ -745,6 +841,7 @@ function NSUI:Init()
 
         local confirmButton = DF:CreateButton(popup, function()
             NSI:WipeNickNames()
+            NSUI.nickname_frame.scrollbox:MasterRefresh()
             popup:Hide()
         end, 100, 30, "Confirm")
         confirmButton:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 5, 10)
@@ -1227,8 +1324,8 @@ Press 'Enter' to hear the TTS]],
             name = "Edit Nicknames",
             desc = "Edit the nicknames database stored locally.",
             func = function(self)
-                if not NSUI.nickname_scrollbox:IsShown() then
-                NSUI.nickname_scrollbox:Show()
+                if not NSUI.nickname_frame:IsShown() then
+                    NSUI.nickname_frame:Show()
                 end
             end,
             nocombat = true
@@ -1372,7 +1469,7 @@ Press 'Enter' to hear the TTS]],
 
     -- Build version check UI
     NSUI.version_scrollbox = BuildVersionCheckUI(versions_tab)
-    NSUI.nickname_scrollbox = BuildNicknameEditUI(NSUI)
+    NSUI.nickname_frame = BuildNicknameEditUI(NSUI)
 end
 
 function NSI:DisplayExternal(spellId, unit)
