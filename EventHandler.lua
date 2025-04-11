@@ -206,134 +206,15 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             C_Timer.After(3, function()
                 WeakAuras.ScanEvents("NSAPI_ENCOUNTER_START", true)
             end)
-            NSI.Externals.target = "raid1"
-            NSI.Externals.pull = GetTime()
-
-            for u in NSI:IterateGroupMembers() do
-                if UnitIsVisible(u) and (UnitIsGroupLeader(u) or UnitIsGroupAssistant(u)) then
-                    NSI.Externals.target = u
-                    break
-                end
-            end
-            NSI:Print(NSI.Externals.target)
-            if UnitIsUnit("player", NSI.Externals.target) then
-                NSI.Externals:UpdateExternals()
-                local note = NSAPI:GetNote()
-                local list = false
-                local key = ""
-                local spell = 0
-                NSI.Externals.customprio = {}
-                NSI.Externals.Automated = {}
-                NSI.Externals.Amount = {}
-                NSI.Externals.ignorecd = {}
-                NSI.Externals.block = {}
-                if note == "" then return end
-                for line in note:gmatch('[^\r\n]+') do
-                    --check for start/end of the name list
-                    if strlower(line) == "nsexternalstart" then
-                        list = true
-                        key = ""
-                    elseif strlower(line) == "nsexternalend" then
-                        list = false
-                        NSI.Externalss.Amount[key] = NSI.Externals.Amount[key] or 1
-                        key = ""
-                    end
-                    if list then
-                        for k in line:gmatch("key:(%S+)") do
-                            if k ~= "default" then
-                                NSI.Externals.customprio[k] = NSI.Externals.customprio[k] or {}
-                            end
-                            key = k
-                            NSI.Externals.ignorecd[key] = {}
-                            NSI.Externals.block[key] = {}
-                        end
-                        if key ~= "" then
-                            for spellID in line:gmatch("automated:(%d+)") do
-                                spell = tonumber(spellID)
-                                NSI.Externals.Automated[tonumber(spell)] = key
-                            end
-                            if spell ~= 0 then
-                                for num in line:gmatch("amount:(%d+)") do
-                                    NSI.Externals.Amount[key..spell] = tonumber(num)
-                                end
-                            end
-                            for spellID in line:gmatch("ignorecd:(%d+)") do
-                                NSI.Externals.ignorecd[key][tonumber(spellID)] = true
-                            end
-                            for name, spellID in line:gmatch("block:(%S+):(%d+)") do
-                                if UnitInRaid(name) and spellID then
-                                    NSI.Externals.block[key][spellID] = NSI.Externals.block[key][spellID] or {}
-                                    NSI.Externals.block[key][spellID][name] = true
-                                end
-                            end
-                        end
-                        for name, id in line:gmatch("(%S+):(%d+)") do
-                            if UnitInRaid(name) and key ~= "" then
-                                if key == "default" then-- only make a custom prio if the user actually provides one, otherwise we keep the initial default prio
-                                    NSI.Externals.customprio[key] = NSI.Externals.customprio[key] or {}
-                                end
-                                local u = "raid"..UnitInRaid(name)
-                                table.insert(NSI.Externals.customprio[key], {u, id})
-                            end
-                        end               
-                    end
-                end
-            end
+            NSI.Externals:Init()
         end
     elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
-        -- unitID = player that requested
-        -- unit = player that shall give the external
         local unitID, key, num, req, range = ...
         local diff = select(3, GetInstanceInfo()) or 0
         if UnitIsDead(unitID) or C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(27827).name) or not (diff == 14 or diff == 15 or diff == 16 or NSRT.Settings["Debug"]) then  -- block incoming requests from dead people
             return
         end
-        num = num or 1
-        local now = GetTime()
-        local name, realm = UnitName(unitID)
-        if key == "default" then
-            key = NSI.Externals:getprio(unitID)
-        end
-        NSI.Externals.assigned = {}
-        local sender = realm and name.."-"..realm or name
-        local found = 0
-        if NSI.Externals.check[key] then -- see if an immunity or other assigned self cd's are available first
-            for i, spellID in ipairs(NSI.Externals.check[key]) do
-                if (spellID ~= 1022 and spellID ~= 204018 and spellID ~= 633 and spellID ~= 204018) or not C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(25771).name) then -- check forebearance
-                    local check = unitID..spellID
-                    if NSI.Externals.ready[check] then
-                        return true
-                    end
-                end
-            end
-        end
-        local count = 0
-        if NSI.Externals.customprio[key] then
-            for i, v in ipairs(NSI.Externals.customprio[key]) do
-                local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, v[1], v[2], sender)
-                if assigned then
-                    count = count+1
-                end
-                if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
-            end
-        end
-        -- continue with regular prio if no assignment was found within the custom prio
-        if not NSI.Externals.prio[key] then key = "default" end -- if no specific prio was found, use default prio
-        for i, spellID in ipairs(NSI.Externals.prio[key]) do -- go through spellid's in prio order
-            if NSI.Externals.known[spellID] then
-                for unit, _ in pairs(NSI.Externals.known[spellID]) do -- check each person who knows that spell if it's available and not already requested
-                    if num > count then
-                        local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender)
-                        if assigned then
-                            count = count+1
-                        end
-                        if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
-                    end
-                end
-            end
-        end
-        -- No External Left
-        NSAPI:Broadcast("NS_EXTERNAL_NO", "WHISPER", unitID, "nilcheck")
+        NSI.Externals:Request(unitID, key, num, req, range)
     elseif e == "NS_EXTERNAL_YES" and ...then
         NSI.Externals.lastrequest = GetTime()
         local _, unit, spellID = ...
