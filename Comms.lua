@@ -4,7 +4,7 @@ local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub("LibDeflate")
 local allowedcomms = {
     ["NSI_NICKNAMES_COMMS"] = true,
-    ["NSI_NICKNAMES_SYNCH"] = true,
+    ["NSI_NICKNAMES_SYNC"] = true,
 }
 
 local del = ":"
