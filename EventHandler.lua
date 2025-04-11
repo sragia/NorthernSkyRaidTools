@@ -225,6 +225,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSI.Externals.customprio = {}
                 NSI.Externals.Automated = {}
                 NSI.Externals.Amount = {}
+                NSI.Externals.ignorecd = {}
+                NSI.Externals.block = {}
                 if note == "" then return end
                 for line in note:gmatch('[^\r\n]+') do
                     --check for start/end of the name list
@@ -242,6 +244,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                                 NSI.Externals.customprio[k] = NSI.Externals.customprio[k] or {}
                             end
                             key = k
+                            NSI.Externals.ignorecd[key] = {}
+                            NSI.Externals.block[key] = {}
                         end
                         if key ~= "" then
                             for spellID in line:gmatch("automated:(%d+)") do
@@ -251,6 +255,15 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                             if spell ~= 0 then
                                 for num in line:gmatch("amount:(%d+)") do
                                     NSI.Externals.Amount[key..spell] = tonumber(num)
+                                end
+                            end
+                            for spellID in line:gmatch("ignorecd:(%d+)") do
+                                NSI.Externals.ignorecd[key][tonumber(spellID)] = true
+                            end
+                            for name, spellID in line:gmatch("block:(%S+):(%d+)") do
+                                if UnitInRaid(name) and spellID then
+                                    NSI.Externals.block[key][spellID] = NSI.Externals.block[key][spellID] or {}
+                                    NSI.Externals.block[key][spellID][name] = true
                                 end
                             end
                         end
