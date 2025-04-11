@@ -145,7 +145,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if unit and UnitExists(unit) and UnitInRaid(unit) then
                 unit = "raid"..UnitInRaid(unit)
                 local key = NSI.Externals.Automated[spellID]
-                NSI:EventHandler("NS_EXTERNAL_REQ", false, true, unit, key, NSI.Externals.Amount[key..spellID], false, "skip")
+                local num = (key and NSI.Externals.Amount[key..spellID]) or 1
+                NSI:EventHandler("NS_EXTERNAL_REQ", false, true, unit, key, num, false, "skip")
             end
         end
     elseif e == "NSI_VERSION_CHECK" and (internal or NSRT.Settings["Debug"]) then
@@ -244,8 +245,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                         end
                         if key ~= "" then
                             for spellID in line:gmatch("automated:(%d+)") do
-                                NSI.Externals.Automated[tonumber(spellID)] = key
                                 spell = tonumber(spellID)
+                                NSI.Externals.Automated[tonumber(spell)] = key
                             end
                             if spell ~= 0 then
                                 for num in line:gmatch("amount:(%d+)") do
@@ -253,15 +254,15 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                                 end
                             end
                         end
-                        for name, id in line:gmatch("(%S+):(%d+)") do --
+                        for name, id in line:gmatch("(%S+):(%d+)") do
                             if UnitInRaid(name) and key ~= "" then
-                                if key == "default" then-- only make a default custom prio if the user actually provides one, otherwise we keep the initial default prio
+                                if key == "default" then-- only make a custom prio if the user actually provides one, otherwise we keep the initial default prio
                                     NSI.Externals.customprio[key] = NSI.Externals.customprio[key] or {}
                                 end
                                 local u = "raid"..UnitInRaid(name)
                                 table.insert(NSI.Externals.customprio[key], {u, id})
                             end
-                        end
+                        end               
                     end
                 end
             end
@@ -302,17 +303,18 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
                 if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
             end
-        else
-            for i, spellID in ipairs(NSI.Externals.prio[key]) do -- go through spellid's in prio order
-                if NSI.Externals.known[spellID] then
-                    for unit, _ in pairs(NSI.Externals.known[spellID]) do -- check each person who knows that spell if it's available and not already requested
-                        if num > count then
-                            local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender)
-                            if assigned then
-                                count = count+1
-                            end
-                            if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
+        end
+        -- continue with regular prio if no assignment was found within the custom prio
+        if not NSI.Externals.prio[key] then key = "default" end -- if no specific prio was found, use default prio
+        for i, spellID in ipairs(NSI.Externals.prio[key]) do -- go through spellid's in prio order
+            if NSI.Externals.known[spellID] then
+                for unit, _ in pairs(NSI.Externals.known[spellID]) do -- check each person who knows that spell if it's available and not already requested
+                    if num > count then
+                        local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender)
+                        if assigned then
+                            count = count+1
                         end
+                        if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
                     end
                 end
             end
