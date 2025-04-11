@@ -86,7 +86,21 @@ function NSAPI:AuraResize(type, positions, regions)
         if region.regionType == "icon"  then     
             region:SetRegionWidth(auraData.width)
             region:SetRegionHeight(auraData.height)
-            for i, subRegion in ipairs(region.subRegions) do
+            for i, subRegion in ipairs(region.subRegions) do                
+                if subRegion.type == "subborder" then
+                    local data = auraData.subRegions[i]
+                    local backdrop = subRegion:GetBackdrop()
+                    local colors = data.border_color
+                    if backdrop then
+                        backdrop.edgeSize = data.border_size
+                        local offset = data.border_offset
+                        subRegion:SetBackdrop(backdrop)
+                    end
+                    if colors then
+                        subRegion:SetBorderColor(unpack(colors))
+                    end
+                    subRegion:SetVisible(data.border_visible)
+                end
                 if subRegion.type == "subtext" then
                     local data = auraData.subRegions[i]
                     if not data then break end 
@@ -108,12 +122,20 @@ function NSAPI:AuraResize(type, positions, regions)
             region.textureSource = auraData.textureSource
             region:UpdateStatusBarTexture()
             for i, subRegion in ipairs(region.subRegions) do
-               --[[ if subRegion.type == "subborder" then
+                if subRegion.type == "subborder" then
                     local data = auraData.subRegions[i]
-                    for k, v in pairs(subRegion) do
-                        print(k, v)
+                    local backdrop = subRegion:GetBackdrop()
+                    local colors = data.border_color
+                    if backdrop then
+                        backdrop.edgeSize = data.border_size
+                        local offset = data.border_offset
+                        subRegion:SetBackdrop(backdrop)
                     end
-                end]]
+                    if colors then
+                        subRegion:SetBorderColor(unpack(colors))
+                    end
+                    subRegion:SetVisible(data.border_visible)
+                end
                 if subRegion.type == "subtext" then
                     local data = auraData.subRegions[i]
                     if not data then break end
