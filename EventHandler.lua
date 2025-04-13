@@ -23,7 +23,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             -- if not NSRT.NSUI.external_frame then NSRT.NSUI.external_frame = {} end
             if not NSRT.NickNames then NSRT.NickNames = {} end
             if not NSRT.Settings then NSRT.Settings = {} end
-            NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or ""
+            NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or nil
             NSRT.Settings["GlobalNickNames"] = NSRT.Settings["GlobalNickNames"] or false
             NSRT.Settings["Blizzard"] = NSRT.Settings["Blizzard"] or false
             NSRT.Settings["WA"] = NSRT.Settings["WA"] or false
@@ -103,7 +103,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI:ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI:ExternalRequest();"
             CreateMacro("NS Ext Macro", 135966, macrotext, false)
         end
-        if NSRT.MyNickName ~= "" then NSI:SendNickName("Any") end -- only send nickname if it's not empty. empty nickname will only be sent if entered manually
+        if NSRT.MyNickName then NSI:SendNickName("Any") end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
         if NSRT.Settings["GlobalNickNames"] then -- add own nickname if not already in database (for new characters)
             local name, realm = UnitName("player")
             if not realm then
@@ -127,7 +127,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "GROUP_FORMED" and (wowevent or NSRT.Settings["Debug"]) then 
         if WeakAuras.CurrentEncounter then return end
-        if NSRT.MyNickName ~= "" then NSI:SendNickName("RAID", true) end -- only send nickname if it's not empty. empty nickname will only be sent if entered manually
+        if NSRT.MyNickName then NSI:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
 
     elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and (internal or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
@@ -163,9 +163,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "NSI_NICKNAMES_COMMS" and (internal or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
-        local unit, nickname, name, realm, channel, requestback = ...
+        local unit, nickname, name, realm, requestback, channel = ...
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't add new nickname if it's yourself because already adding it to the database when you edit it
-        if requestback then NSI:SendNickName("WHISPER", false, unit) end -- send nickname back to the person who requested it
+        if requestback then NSI:SendNickName(channel, false) end -- send nickname back to the person who requested it
         NSI:NewNickName(unit, nickname, name, realm, channel)
 
     elseif e == "PLAYER_LEAVE_COMBAT" and (wowevent or NSRT.Settings["Debug"]) then
@@ -203,7 +203,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local specid = GetSpecializationInfo(GetSpecialization())
         NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)
         if e == "ENCOUNTER_START" then
-            C_Timer.After(3, function()
+            C_Timer.After(0.5, function()
                 WeakAuras.ScanEvents("NSAPI_ENCOUNTER_START", true)
             end)
             NSI.Externals:Init()
