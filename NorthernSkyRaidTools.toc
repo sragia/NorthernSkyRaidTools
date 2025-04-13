@@ -5,7 +5,7 @@
 ## IconTexture: Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo.blp
 ## Author: Reloe
 ## DefaultState: Enable
-## Dependencies: WeakAuras MRT
+## Dependencies: WeakAuras
 ## SavedVariables: NSRT
 ## Category: Northern Sky
 
