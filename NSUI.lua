@@ -1096,7 +1096,7 @@ Press 'Enter' to hear the TTS]],
             type = "textentry",
             name = "Nickname",
             desc = "Set your nickname to be seen by others and used in assignments",
-            get = function() return NSRT.Settings["MyNickName"] end,
+            get = function() return NSRT.Settings["MyNickName"] or "" end,
             set = function(self, fixedparam, value) 
                 NSUI.OptionsChanged.nicknames["NICKNAME"] = true
                 NSRT.Settings["MyNickName"] = string.sub(value, 1, 12)
