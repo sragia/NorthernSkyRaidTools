@@ -131,11 +131,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
 
     elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and (internal or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
-        local hashed = ...        
+        local _, hashed = ...     
         if hashed ~= "" then
             local note = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""    
             if note ~= "" and note ~= hashed then
-                -- Display text that tells the user the MRT note is different
+                NSAPI:DisplayText("MRT Note Mismatch detected", 5)
             end
         end
     elseif e == "COMBAT_LOG_EVENT_UNFILTERED" and (wowevent or NSRT.Settings["Debug"]) then
