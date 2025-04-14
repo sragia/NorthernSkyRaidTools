@@ -1373,7 +1373,7 @@ Press 'Enter' to hear the TTS]],
 
         {
         type = "label",
-        get = function() return "Innervate Request Macro Keybind:" end,
+        get = function() return "Innervate Request Keybind:" end,
         },
         
         {
