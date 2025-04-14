@@ -28,6 +28,7 @@ local Turtle = 186265
 local Netherwalk = 196555
 local Cloak = 31224
 local Icebound = 48792
+local Innervate = 29166
 
 NSI.Externals.prio = {
     -- Life Cocoon, Time Dilation, Pain Suppression, Ironbark, Sac, Guardian  Spiritx2, Lay on Hands
@@ -53,6 +54,7 @@ NSI.Externals.AllSpells = { -- 1 = if a mechanic requests multiple externals thi
     [Netherwalk] = true, -- Netherwalk
     [Cloak] = true, -- Cloak
     [Icebound] = true, -- Icebound Fortitude
+    [Innervate] = true, -- Innervate
 }
 
 local callbacks = {
@@ -117,6 +119,7 @@ NSI.Externals.range = { -- slight variance on +5 yards as a little bit of moveme
     [Cocoon] = 45, -- Life Cocoon
     [TD] = 35, -- Time Dilation
     [LoH] = 45, -- Lay on Hands
+    [Innervate] = 45, -- Innervate
 }
 
 
@@ -201,6 +204,11 @@ function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellI
     local giver, realm = UnitName(unit)
     local blocked = NSI.Externals.block[key] and NSI.Externals.block[key][spellID] and NSI.Externals.block[key][spellID][giver]
     local self = UnitIsUnit(unit, unitID)
+    if spellID == Innervate then
+        if UnitGroupRolesAssigned(unitID) ~= "HEALER" or UnitGroupRolesAssigned(unit) == "HEALER" then -- don't assign Innervate if requester is not a healer or the person we are checking is a healer
+            return false
+        end        
+    end
     if
     UnitIsVisible(unit) -- in same instance
             and (NSI.Externals.ready[k] or (NSI.Externals.ignorecd[key] and NSI.Externals.ignorecd[key][spellID])) -- spell is ready or we are ignoring its cd
@@ -226,7 +234,7 @@ function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellI
         return false
     end
 end
--- /run NSAPI.External:Request()
+-- /run NSAPI:ExternalRequest()
 function NSAPI:ExternalRequest(key, num) -- optional arguments
     local now = GetTime()
     if UnitIsDead("player") or C_UnitAuras.GetAuraDataBySpellName("player", C_Spell.GetSpellInfo(27827).name) then  -- block incoming requests from dead people
@@ -243,7 +251,27 @@ function NSAPI:ExternalRequest(key, num) -- optional arguments
             local _, r = WeakAuras.GetRange(u)
             table.insert(range, r)
         end
+        NSI:Print("broadcasting to", NSI.Externals.target)
         NSAPI:Broadcast("NS_EXTERNAL_REQ", "WHISPER", NSI.Externals.target, key, num, true, range)    -- request external
+    end
+end
+
+-- /run NSAPI:Innervate:Request()
+function NSAPI:InnervateRequest()    
+    local now = GetTime()
+    if UnitIsDead("player") or C_UnitAuras.GetAuraDataBySpellName("player", C_Spell.GetSpellInfo(27827).name) then  -- block incoming requests from dead people
+        return
+    end
+    if not (WeakAuras.CurrentEncounter or NSRT.Settings["Debug"]) then return end
+    if ((not NSI.Externals.lastrequest2) or (NSI.Externals.lastrequest2 < now - 4)) then
+        NSI.Externals.lastrequest2 = now
+        local range = {}
+        for u in NSI:IterateGroupMembers() do
+            local _, r = WeakAuras.GetRange(u)
+            table.insert(range, r)
+        end
+        NSI:Print("broadcasting to", NSI.Externals.target)
+        NSI:Broadcast("NS_INNERVATE_REQ", "WHISPER", NSI.Externals.target, key, num, true, range)    -- request external
     end
 end
 
@@ -270,6 +298,7 @@ function NSI.Externals:Init()
         NSI.Externals.ignorecd = {}
         NSI.Externals.block = {}
         NSI.Externals.SkipDefault = {}
+        NSI.Externals.assigned = {}
         if note == "" then return end
         for line in note:gmatch('[^\r\n]+') do
             --check for start/end of the name list
@@ -333,18 +362,30 @@ function NSI.Externals:Init()
     end
 end
 
-function NSI.Externals:Request(unitID, key, num, req, range)
+function NSI.Externals:Request(unitID, key, num, req, range, innervate)
     -- unitID = player that requested
     -- unit = player that shall give the external
     num = num or 1
     local now = GetTime()
     local name, realm = UnitName(unitID)
+    local sender = realm and name.."-"..realm or name
+    local found = 0
+    local count = 0
+    NSI.Externals.assigned = {}
+    if innervate then
+        for unit, _ in pairs(NSI.Externals.known[Innervate]) do
+            if num > count then                
+                local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, Innervate, sender)
+                if assigned then count = count+1 end
+                if count >= num then return end
+            end
+        end        
+        NSAPI:Broadcast("NS_EXTERNAL_NO", "WHISPER", unitID, "Innervate")   
+        return
+    end
     if key == "default" then
         key = NSI.Externals:getprio(unitID)
     end
-    NSI.Externals.assigned = {}
-    local sender = realm and name.."-"..realm or name
-    local found = 0
     if NSI.Externals.check[key] then -- see if an immunity or other assigned self cd's are available first
         for i, spellID in ipairs(NSI.Externals.check[key]) do
             if (spellID ~= 1022 and spellID ~= 204018 and spellID ~= 633 and spellID ~= 204018) or not C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(25771).name) then -- check forebearance
@@ -353,7 +394,6 @@ function NSI.Externals:Request(unitID, key, num, req, range)
             end
         end
     end
-    local count = 0
     -- check specific player prio first
     if NSI.Externals.customprio[key] then
         for i, v in ipairs(NSI.Externals.customprio[key]) do
