@@ -269,15 +269,16 @@ function NSI.Externals:Init()
         NSI.Externals.Amount = {}
         NSI.Externals.ignorecd = {}
         NSI.Externals.block = {}
+        NSI.Externals.SkipDefault = {}
         if note == "" then return end
         for line in note:gmatch('[^\r\n]+') do
             --check for start/end of the name list
             if strlower(line) == "nsexternalstart" then
-                list = true
+                list = true 
                 key = ""
             elseif strlower(line) == "nsexternalend" then
                 list = false
-                NSI.Externalss.Amount[key] = NSI.Externals.Amount[key] or 1
+                NSI.Externals.Amount[key] = NSI.Externals.Amount[key] or 1
                 key = ""
             end
             if list then
@@ -303,6 +304,7 @@ function NSI.Externals:Init()
                     end
                     for name, spellID in line:gmatch("block:(%S+):(%d+)") do -- block certain spells from someone to be assigned
                         if UnitInRaid(name) and spellID then
+                            spellID = tonumber(spellID)
                             NSI.Externals.block[key][spellID] = NSI.Externals.block[key][spellID] or {}
                             NSI.Externals.block[key][spellID][name] = true
                         end
@@ -318,10 +320,13 @@ function NSI.Externals:Init()
                             table.insert(NSI.Externals.customprio[key], {u, tonumber(id)})
                         end
                     end    
-                    for spellID in line:gmatch("(spell):(%d+)") do
+                    for spellID in line:gmatch("spell:(%d+)") do
                         NSI.Externals.customspellprio[key] = NSI.Externals.customspellprio[key] or {}
                         table.insert(NSI.Externals.customspellprio[key], tonumber(spellID))
                     end     
+                    if line == "skipdefault" then
+                        NSI.Externals.SkipDefault[key] = true
+                    end
                 end      
             end
         end
@@ -372,9 +377,12 @@ function NSI.Externals:Request(unitID, key, num, req, range)
             end
         end
     end
-    if count >= num then return end
+    if count >= num  then return end
     -- continue with default prio if nothing was found yet
     if not NSI.Externals.prio[key] then key = "default" end -- if no specific prio was found, use default prio
+    if NSI.Externals.SkipDefault[key] then return 
+        NSAPI:Broadcast("NS_EXTERNAL_NO", "WHISPER", unitID, "nilcheck")      
+    end
     for i, spellID in ipairs(NSI.Externals.prio[key]) do -- go through spellid's in prio order
         if NSI.Externals.known[spellID] then
             for unit, _ in pairs(NSI.Externals.known[spellID]) do -- check each person who knows that spell if it's available and not already requested
