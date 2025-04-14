@@ -115,8 +115,20 @@ end
 local component_name = ""
 local function BuildVersionCheckUI(parent)
 
+    local hide_version_response_button = DF:CreateSwitch(parent,
+        function(self, _, value) NSRT.Settings["VersionCheckRemoveResponse"] = value end,
+        NSRT.Settings["VersionCheckRemoveResponse"], 20, 20, nil, nil, nil, "VersionCheckResponseToggle", nil, nil, nil,
+        "Hide Version Check Responses", options_switch_template, options_text_template)
+    hide_version_response_button:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -100)
+    hide_version_response_button:SetAsCheckBox()
+    hide_version_response_button:SetTooltip(
+        "Hides Version Check Responses of Users that are on the correct version and do not have any duplicates")
+    local hide_version_response_label = DF:CreateLabel(parent, "Hide Version Check Responses", 10, "white", "", nil,
+        "VersionCheckResponseLabel", "overlay")
+    hide_version_response_label:SetTemplate(options_text_template)
+    hide_version_response_label:SetPoint("LEFT", hide_version_response_button, "RIGHT", 2, 0)
     local component_type_label = DF:CreateLabel(parent, "Component Type", 9.5, "white")
-    component_type_label:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -100)
+    component_type_label:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -130)
     
     local component_type_dropdown = DF:CreateDropDown(parent, function() return build_checkable_components_options() end, checkable_components[1])
     component_type_dropdown:SetTemplate(options_dropdown_template)
@@ -258,12 +270,36 @@ local function BuildVersionCheckUI(parent)
         return line
     end
 
-    local scrollLines = 20
-    local version_check_scrollbox = DF:CreateScrollBox(parent, "VersionCheckScrollBox", refresh, {}, window_width - 40,
-        window_height - 180, scrollLines, 20, createLineFunc)
+    local scrollLines = 19
+    -- sample data for testing
+    local sample_data = {
+        { name = "Player1",  version = "1.0.0",         duplicate = false },
+        { name = "Player2",  version = "WA Missing",    duplicate = false },
+        { name = "Player3",  version = "1.0.1",         duplicate = true },
+        { name = "Player4",  version = "0.9.9",         duplicate = false },
+        { name = "Player5",  version = "1.0.0",         duplicate = false },
+        { name = "Player6",  version = "Addon Missing", duplicate = false },
+        { name = "Player7",  version = "1.0.0",         duplicate = true },
+        { name = "Player8",  version = "0.9.8",         duplicate = false },
+        { name = "Player9",  version = "1.0.0",         duplicate = false },
+        { name = "Player10", version = "Note Missing",  duplicate = false },
+        { name = "Player11", version = "1.0.0",         duplicate = false },
+        { name = "Player12", version = "0.9.9",         duplicate = true },
+        { name = "Player13", version = "1.0.0",         duplicate = false },
+        { name = "Player14", version = "WA Missing",    duplicate = false },
+        { name = "Player15", version = "1.0.0",         duplicate = false },
+        { name = "Player16", version = "0.9.7",         duplicate = false },
+        { name = "Player17", version = "1.0.0",         duplicate = true },
+        { name = "Player18", version = "Addon Missing", duplicate = false },
+        { name = "Player19", version = "1.0.0",         duplicate = false },
+        { name = "Player20", version = "0.9.9",         duplicate = false }
+    }
+    local version_check_scrollbox = DF:CreateScrollBox(parent, "VersionCheckScrollBox", refresh, {},
+        window_width - 40,
+        window_height - 200, scrollLines, 20, createLineFunc)
     DF:ReskinSlider(version_check_scrollbox)
     version_check_scrollbox.ReajustNumFrames = true
-    version_check_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -150)
+    version_check_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -170)
     for i = 1, scrollLines do
         version_check_scrollbox:CreateLine(createLineFunc)
     end
@@ -950,17 +986,6 @@ function NSUI:Init()
             get = function() return NSRT.Settings["Debug"] end,
             set = function(self, fixedparam, value)
                 NSRT.Settings["Debug"] = value
-            end,
-        },
-
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Hide Version Check Responses",
-            desc = "Hides Version Check Responses of Users that are on the correct version and do not have any duplicates",
-            get = function() return NSRT.Settings["VersionCheckRemoveResponse"] end,
-            set = function(self, fixedparam, value)
-                NSRT.Settings["VersionCheckRemoveResponse"] = value
             end,
         },
 
