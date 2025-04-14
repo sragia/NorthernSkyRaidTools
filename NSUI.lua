@@ -569,6 +569,15 @@ function NSUI:Init()
     local versions_tab = tabContainer:GetTabFrameByName("Versions")
     local weakaura_tab = tabContainer:GetTabFrameByName("WeakAuras")
 
+    -- generic text display
+    local generic_display = CreateFrame("Frame", "NSUIGenericDisplay", UIParent, "BackdropTemplate")
+    generic_display:SetPoint("CENTER", UIParent, "CENTER", 0, 350)
+    generic_display:SetSize(300, 100)
+    generic_display.text = DF:CreateLabel(generic_display, "Generic Text Display",
+        20, "white", nil, "NSUIGenericDisplayText", "OVERLAY")
+    generic_display.text:SetPoint("CENTER", generic_display, "CENTER", 0, 0)
+    generic_display:Hide()
+    NSUI.generic_display = generic_display
     -- externals anchor frame
     local externals_anchor_panel_options = {
         NoCloseButton = true,
@@ -1464,7 +1473,7 @@ Press 'Enter' to hear the TTS]],
 
     -- Build version check UI
     NSUI.version_scrollbox = BuildVersionCheckUI(versions_tab)
-    NSUI.nickname_frame = BuildNicknameEditUI(NSUI)
+    NSUI.nickname_frame = BuildNicknameEditUI()
 end
 
 function NSI:DisplayExternal(spellId, unit)
@@ -1557,6 +1566,13 @@ function NSI:NickNamesSyncPopup(unit, nicknametable)
     return popup
 end
 
+function NSAPI:DisplayText(text, duration)
+    if NSUI and NSUI.generic_display then
+        NSUI.generic_display.text:SetText(text)
+        NSUI.generic_display:Show()
+        C_Timer.After(duration or 4, function() NSUI.generic_display:Hide() end)
+    end
+end
 NSI.NSUI = NSUI
 
 SLASH_NSUI1 = "/ns"
@@ -1574,6 +1590,8 @@ SlashCmdList["NSUI"] = function(msg)
         ReloadUI()
     elseif msg == "sync" then
         NSI:NickNamesSyncPopup(GetUnitName("player"), "yayayaya")
+    elseif msg == "display" then
+        NSAPI:DisplayText("Display text", 8)
     else
         NSUI:ToggleOptions()
     end
