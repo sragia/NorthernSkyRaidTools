@@ -112,6 +112,8 @@ local function build_checkable_components_options()
     return t
 end
 
+
+
 local component_name = ""
 local function BuildVersionCheckUI(parent)
 
@@ -155,7 +157,7 @@ local function BuildVersionCheckUI(parent)
         NSI:Print("Version check button clicked") -- replace with actual callback
     end, 120, 18, "Check Versions")
     version_check_button:SetTemplate(options_button_template)
-    version_check_button:SetPoint("LEFT", component_name_entry, "RIGHT", 20, 0)
+    version_check_button:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -30, -130)
     version_check_button:SetHook("OnShow", function(self)
         if (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")) then
             self:Enable()
@@ -353,6 +355,159 @@ local function BuildVersionCheckUI(parent)
         end
     end)
 
+    -- version check presets
+    local preset_label = DF:CreateLabel(parent, "Preset:", 9.5, "white")
+
+    local sample_presets = {
+        { "WA: Northern Sky Liberation of Undermine", { "WA", "Northern Sky Liberation of Undermine" } },
+        { "Addon: Plater",                            { "Addon", "Plater" } }
+    }
+
+    local function build_version_check_presets_options()
+        NSRT.Settings["VersionCheckPresets"] = NSRT.Settings["VersionCheckPresets"] or
+            {} -- structure will be {{label, {type, name}}}
+        local t = {}
+        for i = 1, #NSRT.Settings["VersionCheckPresets"] do
+            local v = NSRT.Settings["VersionCheckPresets"][i]
+            tinsert(t, {
+                label = v[1], -- label
+                value = v[2], -- {type, name}
+                onclick = function(_, _, value)
+                    component_type_dropdown:Select(value[1])
+                    component_name_entry:SetText(value[2])
+                end
+            })
+        end
+        return t
+    end
+    local version_check_preset_dropdown = DF:CreateDropDown(parent,
+        function() return build_version_check_presets_options() end)
+    version_check_preset_dropdown:SetTemplate(options_dropdown_template)
+
+    local version_presets_edit_frame = DF:CreateSimplePanel(parent, 400, window_height / 2, "Version Preset Management",
+        "VersionPresetsEditFrame", {
+            DontRightClickClose = true,
+            NoScripts = true
+        })
+    version_presets_edit_frame:ClearAllPoints()
+    version_presets_edit_frame:SetPoint("TOPLEFT", parent, "TOPRIGHT", 2, 2)
+    version_presets_edit_frame:Hide()
+
+    local version_presets_edit_button = DF:CreateButton(parent, function()
+        if version_presets_edit_frame:IsShown() then
+            version_presets_edit_frame:Hide()
+        else
+            version_presets_edit_frame:Show()
+        end
+    end, 120, 18, "Edit Version Presets")
+    version_presets_edit_button:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -30, -100)
+    version_presets_edit_button:SetTemplate(options_button_template)
+    version_check_preset_dropdown:SetPoint("RIGHT", version_presets_edit_button, "LEFT", -10, 0)
+    preset_label:SetPoint("RIGHT", version_check_preset_dropdown, "LEFT", -5, 0)
+
+    local function refreshPresets(self, data, offset, totalLines)
+        for i = 1, totalLines do
+            local index = i + offset
+            local presetData = data[index]
+            if presetData then
+                local line = self:GetLine(i)
+
+                local label = presetData[1]
+                local value = presetData[2]
+                local component_type = value[1]
+                local component_name = value[2]
+
+                line.index = index
+
+                line.value = value
+                line.component_type = component_type
+                line.component_name = component_name
+
+                line.type:SetText(component_type)
+                line.name:SetText(component_name)
+            end
+        end
+    end
+
+    local function createPresetLineFunc(self, index)
+        local parent = self
+        local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
+        line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * (self.LineHeight)) - 1)
+        line:SetSize(self:GetWidth() - 2, self.LineHeight)
+        DF:ApplyStandardBackdrop(line)
+
+        -- Type Dropdown
+        line.type = DF:CreateLabel(line, "", 9.5, "white")
+        line.type:SetPoint("LEFT", line, "LEFT", 5, 0)
+        line.type:SetTemplate(options_text_template)
+
+        -- Name text
+        line.name = DF:CreateLabel(line, "", 9.5, "white")
+        line.name:SetTemplate(options_text_template)
+        line.name:SetPoint("LEFT", line, "LEFT", 50, 0)
+
+        -- Delete button
+        line.deleteButton = DF:CreateButton(line, function()
+            tremove(NSRT.Settings["VersionCheckPresets"], line.index)
+            self:SetData(NSRT.Settings["VersionCheckPresets"])
+            self:Refresh()
+            version_check_preset_dropdown:Refresh()
+        end, 12, 12)
+        line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:SetPushedTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+
+        line.deleteButton:GetNormalTexture():SetDesaturated(true)
+        line.deleteButton:GetHighlightTexture():SetDesaturated(true)
+        line.deleteButton:GetPushedTexture():SetDesaturated(true)
+        -- line.deleteButton:SetFontFace(expressway)
+        line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
+
+        return line
+    end
+
+    local presetScrollLines = 9
+    local version_presets_edit_scrollbox = DF:CreateScrollBox(version_presets_edit_frame,
+        "$parentVersionPresetsEditScrollBox", refreshPresets, NSRT.Settings["VersionCheckPresets"], 360,
+        window_height / 2 - 75, presetScrollLines, 20, createPresetLineFunc)
+    version_presets_edit_scrollbox:SetPoint("TOPLEFT", version_presets_edit_frame, "TOPLEFT", 10, -30)
+    -- version_presets_edit_scrollbox:SetPoint("BOTTOMRIGHT", version_presets_edit_frame, "BOTTOMRIGHT", -25, 30)
+    DF:ReskinSlider(version_presets_edit_scrollbox)
+
+    for i = 1, presetScrollLines do
+        version_presets_edit_scrollbox:CreateLine(createPresetLineFunc)
+    end
+
+    version_presets_edit_scrollbox:Refresh()
+
+    -- Add new preset
+    local new_preset_type_label = DF:CreateLabel(version_presets_edit_frame, "Type:", 11)
+    new_preset_type_label:SetPoint("TOPLEFT", version_presets_edit_scrollbox, "BOTTOMLEFT", 0, -20)
+
+    local new_preset_type_dropdown = DF:CreateDropDown(version_presets_edit_frame,
+        function() return build_checkable_components_options() end, checkable_components[1], 65)
+    new_preset_type_dropdown:SetPoint("LEFT", new_preset_type_label, "RIGHT", 5, 0)
+    new_preset_type_dropdown:SetTemplate(options_dropdown_template)
+
+    local new_preset_name_label = DF:CreateLabel(version_presets_edit_frame, "Name:", 11)
+    new_preset_name_label:SetPoint("LEFT", new_preset_type_dropdown, "RIGHT", 10, 0)
+
+    local new_preset_name_entry = DF:CreateTextEntry(version_presets_edit_frame, function() end, 165, 20)
+    new_preset_name_entry:SetPoint("LEFT", new_preset_name_label, "RIGHT", 5, 0)
+    new_preset_name_entry:SetTemplate(options_dropdown_template)
+
+    local add_button = DF:CreateButton(version_presets_edit_frame, function()
+        local name = new_preset_name_entry:GetText()
+        local type = new_preset_type_dropdown:GetValue()
+        tinsert(NSRT.Settings["VersionCheckPresets"], { type .. ": " .. name, { type, name } })
+        version_presets_edit_scrollbox:SetData(NSRT.Settings["VersionCheckPresets"])
+        version_presets_edit_scrollbox:Refresh()
+        version_check_preset_dropdown:Refresh()
+        new_preset_name_entry:SetText("")
+        new_preset_type_dropdown:Select(checkable_components[1])
+    end, 60, 20, "New")
+    add_button:SetPoint("LEFT", new_preset_name_entry, "RIGHT", 10, 0)
+    add_button:SetTemplate(options_button_template)
     return version_check_scrollbox
 end
 
@@ -573,8 +728,8 @@ function NSUI:Init()
     local generic_display = CreateFrame("Frame", "NSUIGenericDisplay", UIParent, "BackdropTemplate")
     generic_display:SetPoint("CENTER", UIParent, "CENTER", 0, 350)
     generic_display:SetSize(300, 100)
-    generic_display.text = DF:CreateLabel(generic_display, "Generic Text Display",
-        20, "white", nil, "NSUIGenericDisplayText", "OVERLAY")
+    generic_display.text = generic_display:CreateFontString(nil, "OVERLAY")
+    generic_display.text:SetFont(expressway, 20, "OUTLINE")
     generic_display.text:SetPoint("CENTER", generic_display, "CENTER", 0, 0)
     generic_display:Hide()
     NSUI.generic_display = generic_display
