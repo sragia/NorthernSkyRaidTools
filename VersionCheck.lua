@@ -7,7 +7,8 @@ function NSI:RequestVersionNumber(type, name) -- type == "Addon" or "WA" or "Not
         NSI:Broadcast("NSI_VERSION_REQUEST", "RAID", type, name)
         for unit in NSI:IterateGroupMembers() do
             if not UnitIsUnit("player", unit) then
-                NSI:VersionResponse({name = UnitName(unit), version = "No Response", duplicate = false})
+                local response = UnitIsConnected(unit) and "No Reponse" or "Offline"
+                NSI:VersionResponse({name = UnitName(unit), version = response, duplicate = false})
             end
         end
         return {name = UnitName("player"), version = ver, duplicate = duplicate}, url

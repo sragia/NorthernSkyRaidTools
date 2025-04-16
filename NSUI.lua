@@ -194,8 +194,10 @@ local function BuildVersionCheckUI(parent)
                 line.version:SetText(version)
                 line.duplicates:SetText(duplicate and "Yes" or "No")
 
-                -- version number color
-                if version and data[1] and data[1].version and version == data[1].version then
+                -- version number color                
+                if version and version == "Offline" then
+                    line.version:SetTextColor(0.5, 0.5, 0.5, 1)
+                elseif version and data[1] and data[1].version and version == data[1].version then
                     line.version:SetTextColor(0, 1, 0, 1)
                 else
                     line.version:SetTextColor(1, 0, 0, 1)
