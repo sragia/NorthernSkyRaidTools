@@ -342,15 +342,17 @@ local function BuildVersionCheckUI(parent)
             tinsert(NSRT.NSUI.AutoComplete[component_type], text)
         end
 
+        NSI:Print("component_type " .. component_type)
+        NSI:Print("component name " .. text)
         if not text or text == "" and component_type ~= "Note" then return end
         
         local now = GetTime()
         if NSI.LastVersionCheck and NSI.LastVersionCheck > now-2 then return end -- don't let user spam requests
         NSI.LastVersionCheck = now
         version_check_scrollbox:WipeData()
-        local userData, url = NSI:RequestVersionNumber(component_type, component_name)
+        local userData, url = NSI:RequestVersionNumber(component_type, text)
         if userData then
-            NSI.VersionCheckData = {version = userData.version, type = component_type, name = component_name, url = url, lastclick = {}}
+            NSI.VersionCheckData = { version = userData.version, type = component_type, name = text, url = url, lastclick = {} }
             version_check_scrollbox:AddData(userData, url)
         end
     end)
