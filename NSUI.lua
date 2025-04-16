@@ -1521,6 +1521,28 @@ Press 'Enter' to hear the TTS]],
             id = "MACRO NS Ext Macro",
         },
         
+        
+        {
+            type = "blank",
+        },
+
+        {
+        type = "label",
+        get = function() return "Innervate Request Keybind:" end,
+        },
+        
+        {
+            type = "button",
+            name = getMacroKeybind("MACRO NS Innervate"),
+            desc = "Set the keybind for the Innervate Request macro",
+            param1 = "MACRO NS Innervate",
+            param2 = "Innervate Request Macro Keybind",
+            func = function(self, _, param1, param2) -- this only ever registers leftclick need to manually set right click
+                registerKeybinding(self, param1, param2)
+            end,
+            id = "MACRO NS Innervate",
+        },
+
         {
             type = "breakline"
         },
@@ -1633,7 +1655,11 @@ end
 
 function NSI:DisplayExternal(spellId, unit)
     local text = ""
-    if spellId then
+    if spellId == "NoInnervate" then        
+        local spellIcon = C_Spell.GetSpellInfo(29166).iconID
+        NSUI.external_frame.texture:SetTexture(spellIcon)
+        text = "|cffff0000NO INNERVATE|r"
+    elseif spellId then
         local spellIcon = C_Spell.GetSpellInfo(spellId).iconID
         NSUI.external_frame.texture:SetTexture(spellIcon)
         local giver = NSAPI:Shorten(unit, 8)

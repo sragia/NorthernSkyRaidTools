@@ -404,7 +404,7 @@ function NSI:NewNickName(unit, nickname, name, realm, channel)
         if channel == "GUILD" and NSRT.Settings["AcceptNickNames"] ~= 2 then return end
         if channel == "RAID" and NSRT.Settings["AcceptNickNames"] ~= 1 then return end
     end
-    NSI:Print("new nickanme:", unit, nickname, name, realm)
+    NSI:Print("new nickname:", unit, nickname, name, realm)
     if not nickname or not name or not realm then return end   
     local oldnick = NSRT.NickNames[name.."-"..realm]      
     if oldnick and oldnick == nickname then return end -- stop early if we already have this exact nickname  

@@ -62,6 +62,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "PLAYER_LOGIN" and wowevent then
         local pafound = false
         local extfound = false
+        local innervatefound = false
         local macrocount = 0    
         for i=1, 120 do
             local macroname = C_Macro.GetMacroName(i)
@@ -81,8 +82,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI:ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI:ExternalRequest();"
                 EditMacro(i, "NS Ext Macro", 135966, macrotext, false)
                 extfound = true
+            elseif macroname == "NS Innervate" then
+                EditMacro(i, "NS Innervate", 136048, "/run NSAPI:InnervateRequest();", false)
+                innervatefound = true
             end
-            if pafound and extfound then break end
+            if pafound and extfound and innervatefound then break end
         end
         if macrocount >= 120 and not pafound then
             print("You reached the global Macro cap so the Private Aura Macro could not be created")
@@ -103,6 +107,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             macrocount = macrocount+1
             local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI:ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI:ExternalRequest();"
             CreateMacro("NS Ext Macro", 135966, macrotext, false)
+        end
+        if macrocount >= 120 and not inenrvatefound then
+            print("You reached the global Macro cap so the Innervate Macro could not be created")
+        elseif not innervatefound then
+            macrocount = macrocount+1
+            CreateMacro("NS Innervate", 136048, "/run NSAPI:InnervateRequest();", false)
         end
         if NSRT.MyNickName then NSI:SendNickName("Any") end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
         if NSRT.Settings["GlobalNickNames"] then -- add own nickname if not already in database (for new characters)
@@ -132,11 +142,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
 
     elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and (internal or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
-        local hashed = ...        
+        local _, hashed = ...     
         if hashed ~= "" then
             local note = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""    
             if note ~= "" and note ~= hashed then
-                -- Display text that tells the user the MRT note is different
+                NSAPI:DisplayText("MRT Note Mismatch detected", 5)
             end
         end
     elseif e == "COMBAT_LOG_EVENT_UNFILTERED" and (wowevent or NSRT.Settings["Debug"]) then
@@ -216,13 +226,24 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             return
         end
         NSI.Externals:Request(unitID, key, num, req, range)
+    elseif e == "NS_INNERVATE_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
+        local unitID, key, num, req, range = ...
+        local diff = select(3, GetInstanceInfo()) or 0
+        if UnitIsDead(unitID) or C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(27827).name) or not (diff == 14 or diff == 15 or diff == 16 or NSRT.Settings["Debug"]) then  -- block incoming requests from dead people
+            return
+        end
+        NSI:Print("NS_INNERVATE_REQ", unitID, key, num, req, range)
+        NSI.Externals:Request(unitID, "", 1, true, range, true)
     elseif e == "NS_EXTERNAL_YES" and ...then
-        NSI.Externals.lastrequest = GetTime()
         local _, unit, spellID = ...
         NSI:DisplayExternal(spellID, unit)
-    elseif e == "NS_EXTERNAL_NO" then
-        NSI.Externals.lastrequest = GetTime()
-        NSI:DisplayExternal(nil, ...)
+    elseif e == "NS_EXTERNAL_NO" then        
+        local unit, innervate = ...      
+        if innervate == "Innervate" then
+            NSI:DisplayExternal("NoInnervate")
+        else
+            NSI:DisplayExternal()
+        end
     elseif e == "NS_EXTERNAL_GIVE" and ... then
         local _, unit, spellID = ...
         NSI:Print("external give", unit, spellID)
