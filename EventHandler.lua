@@ -60,6 +60,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSI:InitNickNames()
         end
     elseif e == "PLAYER_LOGIN" and wowevent then
+        NSI:Print("Login Event")
         local pafound = false
         local extfound = false
         local innervatefound = false
@@ -114,7 +115,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             macrocount = macrocount+1
             CreateMacro("NS Innervate", 136048, "/run NSAPI:InnervateRequest();", false)
         end
-        if NSRT.MyNickName then NSI:SendNickName("Any") end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
+        if NSRT.Settings["MyNickName"] then NSI:SendNickName("Any") end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
         if NSRT.Settings["GlobalNickNames"] then -- add own nickname if not already in database (for new characters)
             local name, realm = UnitName("player")
             if not realm then
@@ -138,7 +139,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "GROUP_FORMED" and (wowevent or NSRT.Settings["Debug"]) then 
         if WeakAuras.CurrentEncounter then return end
-        if NSRT.MyNickName then NSI:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
+        if NSRT.Settings["MyNickName"] then NSI:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
 
     elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and (internal or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
