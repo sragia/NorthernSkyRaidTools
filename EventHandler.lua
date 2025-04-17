@@ -60,7 +60,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSI:InitNickNames()
         end
     elseif e == "PLAYER_LOGIN" and wowevent then
-        NSI:Print("Login Event")
         local pafound = false
         local extfound = false
         local innervatefound = false
