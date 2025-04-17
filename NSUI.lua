@@ -986,7 +986,7 @@ function NSUI:Init()
         return t
     end
 
-    local nickname_syncsend_options = { "Raid", "Guild"}
+    local nickname_syncsend_options = { "Raid", "Guild", "None"}
     local build_nickname_syncsend_options = function()
         local t = {}
         for i = 1, #nickname_syncsend_options do
