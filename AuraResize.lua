@@ -120,7 +120,6 @@ function NSAPI:AuraResize(type, positions, regions)
         elseif region.regionType == "aurabar" then
             region:SetRegionWidth(auraData.width)
             region:SetRegionHeight(auraData.height)
-            DevTools_Dump(region)
             region.texture = auraData.texture
             region.textureInput = auraData.textureInput
             region.textureSource = auraData.textureSource
