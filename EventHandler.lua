@@ -138,7 +138,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "GROUP_FORMED" and (wowevent or NSRT.Settings["Debug"]) then 
         if WeakAuras.CurrentEncounter then return end
-        if NSRT.Settings["MyNickName"] then NSI:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
+        if NSRT.Settings["MyNickName"] then NSI:SendNickName("RAID", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
 
     elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and (internal or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
@@ -222,6 +222,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
         local unitID, key, num, req, range = ...
         local diff = select(3, GetInstanceInfo()) or 0
+        NSI:Print("NS_External_REQ", unitID, key, num, req, range)
         if UnitIsDead(unitID) or C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(27827).name) or not (diff == 14 or diff == 15 or diff == 16 or NSRT.Settings["Debug"]) then  -- block incoming requests from dead people
             return
         end
