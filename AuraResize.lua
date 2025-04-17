@@ -86,20 +86,23 @@ function NSAPI:AuraResize(type, positions, regions)
         if region.regionType == "icon"  then     
             region:SetRegionWidth(auraData.width)
             region:SetRegionHeight(auraData.height)
-            for i, subRegion in ipairs(region.subRegions) do                
+            region:SetZoom(auraData.zoom)
+            for i, subRegion in ipairs(region.subRegions) do       
                 if subRegion.type == "subborder" then
                     local data = auraData.subRegions[i]
-                    local backdrop = subRegion:GetBackdrop()
-                    local colors = data.border_color
-                    if backdrop then
-                        backdrop.edgeSize = data.border_size
-                        local offset = data.border_offset
-                        subRegion:SetBackdrop(backdrop)
+                    if data.type == "subborder" then
+                        local backdrop = subRegion:GetBackdrop()
+                        local colors = data.border_color
+                        if backdrop then
+                            backdrop.edgeSize = data.border_size
+                            local offset = data.border_offset
+                            subRegion:SetBackdrop(backdrop)
+                        end
+                        if colors then
+                            subRegion:SetBorderColor(unpack(colors))
+                        end
+                        subRegion:SetVisible(data.border_visible)
                     end
-                    if colors then
-                        subRegion:SetBorderColor(unpack(colors))
-                    end
-                    subRegion:SetVisible(data.border_visible)
                 end
                 if subRegion.type == "subtext" then
                     local data = auraData.subRegions[i]
@@ -117,6 +120,7 @@ function NSAPI:AuraResize(type, positions, regions)
         elseif region.regionType == "aurabar" then
             region:SetRegionWidth(auraData.width)
             region:SetRegionHeight(auraData.height)
+            DevTools_Dump(region)
             region.texture = auraData.texture
             region.textureInput = auraData.textureInput
             region.textureSource = auraData.textureSource
@@ -124,17 +128,19 @@ function NSAPI:AuraResize(type, positions, regions)
             for i, subRegion in ipairs(region.subRegions) do
                 if subRegion.type == "subborder" then
                     local data = auraData.subRegions[i]
-                    local backdrop = subRegion:GetBackdrop()
-                    local colors = data.border_color
-                    if backdrop then
-                        backdrop.edgeSize = data.border_size
-                        local offset = data.border_offset
-                        subRegion:SetBackdrop(backdrop)
+                    if data.type == "subborder" then
+                        local backdrop = subRegion:GetBackdrop()
+                        local colors = data.border_color
+                        if backdrop then
+                            backdrop.edgeSize = data.border_size
+                            local offset = data.border_offset
+                            subRegion:SetBackdrop(backdrop)
+                        end
+                        if colors then
+                            subRegion:SetBorderColor(unpack(colors))
+                        end
+                        subRegion:SetVisible(data.border_visible)
                     end
-                    if colors then
-                        subRegion:SetBorderColor(unpack(colors))
-                    end
-                    subRegion:SetVisible(data.border_visible)
                 end
                 if subRegion.type == "subtext" then
                     local data = auraData.subRegions[i]
