@@ -10,7 +10,7 @@
 ## Category: Northern Sky
 
 # Libraries
-libs.xml
+Libs\libs.xml
 
 # Main Files
 NorthernSkyRaidTools.lua
