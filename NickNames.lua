@@ -453,7 +453,7 @@ end
 
 function NSI:SyncNickNames()
     local now = GetTime()
-    if NSI.LastNickNameSync and NSI.LastNickNameSync > now-4 then return end -- don't let user spam syncs
+    if (NSI.LastNickNameSync and NSI.LastNickNameSync > now-4) or (NSRT.Settings["NickNamesSyncSend"] == 3) then return end -- don't let user spam syncs / end early if set to none
     NSI.LastNickNameSync = now
     local channel = NSRT.Settings["NickNamesSyncSend"] == 1 and "RAID" or "GUILD"
     NSI:Broadcast("NSI_NICKNAMES_SYNC", channel, NSRT.NickNames, channel) -- channel is either GUILD or RAID
