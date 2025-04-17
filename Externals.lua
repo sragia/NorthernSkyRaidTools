@@ -381,6 +381,7 @@ function NSI.Externals:Request(unitID, key, num, req, range, innervate)
     local count = 0
     NSI.Externals.assigned = {}
     if innervate then
+        NSI:Print("trying to find an innervate for", unitID)
         for unit, _ in pairs(NSI.Externals.known[Innervate]) do
             if num > count then                
                 local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, Innervate, sender, 0)
@@ -404,6 +405,7 @@ function NSI.Externals:Request(unitID, key, num, req, range, innervate)
     if key == "default" then
         key = NSI.Externals:getprio(unitID)
     end
+    NSI:Print("trying to find an external for", unitID, key)
     if NSI.Externals.check[key] then -- see if an immunity or other assigned self cd's are available first
         for i, spellID in ipairs(NSI.Externals.check[key]) do
             if (spellID ~= 1022 and spellID ~= 204018 and spellID ~= 633 and spellID ~= 204018) or not C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(25771).name) then -- check forebearance

@@ -222,7 +222,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
         local unitID, key, num, req, range = ...
         local diff = select(3, GetInstanceInfo()) or 0
-        NSI:Print("NS_External_REQ", unitID, key, num, req, range)
+        NSI:Print("NS_External_REQ", unitID, key, num, req, range, diff)
         if UnitIsDead(unitID) or C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(27827).name) or not (diff == 14 or diff == 15 or diff == 16 or NSRT.Settings["Debug"]) then  -- block incoming requests from dead people
             return
         end
@@ -230,10 +230,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "NS_INNERVATE_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
         local unitID, key, num, req, range = ...
         local diff = select(3, GetInstanceInfo()) or 0
+        NSI:Print("NS_INNERVATE_REQ", unitID, key, num, req, range, diff)
         if UnitIsDead(unitID) or C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(27827).name) or not (diff == 14 or diff == 15 or diff == 16 or NSRT.Settings["Debug"]) then  -- block incoming requests from dead people
             return
         end
-        NSI:Print("NS_INNERVATE_REQ", unitID, key, num, req, range)
         NSI.Externals:Request(unitID, "", 1, true, range, true)
     elseif e == "NS_EXTERNAL_YES" and ...then
         local _, unit, spellID = ...
