@@ -38,7 +38,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["ShareNickNames"] = NSRT.Settings["ShareNickNames"] or 4 -- none default
             NSRT.Settings["AcceptNickNames"] = NSRT.Settings["AcceptNickNames"] or 4 -- none default
             NSRT.Settings["NickNamesSyncAccept"] = NSRT.Settings["NickNamesSyncAccept"] or 2 -- guild default
-            NSRT.Settings["NickNamesSyncSend"] = NSRT.Settings["NickNamesSyncSend"] or 2 -- guild default
+            NSRT.Settings["NickNamesSyncSend"] = NSRT.Settings["NickNamesSyncSend"] or 3 -- guild default
             NSRT.Settings["PAExtraAction"] = NSRT.Settings["PAExtraAction"] or false
             NSRT.Settings["PASelfPing"] = NSRT.Settings["PASelfPing"] or false
             NSRT.Settings["ExternalSelfPing"] = NSRT.Settings["ExternalSelfPing"] or false
@@ -187,7 +187,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
 
     elseif e == "NSI_NICKNAMES_SYNC" and (internal or NSRT.Settings["Debug"]) then
         local unit, nicknametable, channel = ...
-        if NSRT.Settings["NickNamesSyncAccept"] == 3 or (NSRT.Settings["NickNamesSyncAccept"] == 2 and channel == "GUILD") or (NSRT.Settings["NickNamesSyncAccept"] == 1 and channel == "RAID") then 
+        if (NSRT.Settings["NickNamesSyncAccept"] == 3 or (NSRT.Settings["NickNamesSyncAccept"] == 2 and channel == "GUILD") or (NSRT.Settings["NickNamesSyncAccept"] == 1 and channel == "RAID") and (not C_ChallengeMode.IsChallengeModeActive())) then 
             if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't accept sync requests from yourself
             if UnitAffectingCombat("player") then
                 NSI.SyncNickNamesStore = {unit = unit, nicknametable = nicknametable}
