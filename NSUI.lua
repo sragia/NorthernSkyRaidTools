@@ -867,7 +867,8 @@ function NSUI:Init()
             return
         end
 
-        local keybindingFrame = DF:CreateSimplePanel(NSUI, 300, 75, "Keybinding: " .. macroName, "KeybindingFrame", {
+        local displayName = (macroName == "MACRO NS Ext Macro" and "External Macro") or (macroName == "MACRO NS PA Macro" and "Private Aura Macro") or (macroName == "MACRO NS Innervate" and "Innervate Macro") or "Macro"
+        local keybindingFrame = DF:CreateSimplePanel(NSUI, 300, 75, "Keybinding: " .. displayName, "KeybindingFrame", {
             DontRightClickClose = true
         })
         keybindingFrame:SetPoint("CENTER", NSUI, "CENTER", 0, 0)
@@ -875,7 +876,7 @@ function NSUI:Init()
         local keybindingFrame_text = keybindingFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         keybindingFrame_text:SetPoint("CENTER", keybindingFrame, "CENTER", 0, 0)
         keybindingFrame_text:SetText([[Press a key or click here
-    (with optional modifiers) to bind...]])
+    (with optional modifiers) to bind the]].."\n"..displayName)
 
 
         local function OnKeyDown(self, key)
@@ -1643,13 +1644,17 @@ Press 'Enter' to hear the TTS]],
         weakaura_callback)
 
     -- Set right click functions for clearing keybinding on keybind buttons
-    PAMacroButton = general_tab:GetWidgetById("MACRO NS PA Macro")
-    ExternalMacroButton = externals_tab:GetWidgetById("MACRO NS Ext Macro")
+    local PAMacroButton = general_tab:GetWidgetById("MACRO NS PA Macro")
+    local ExternalMacroButton = externals_tab:GetWidgetById("MACRO NS Ext Macro")
+    local InnervateMacroButton = externals_tab:GetWidgetById("MACRO NS Innervate")
     if PAMacroButton then
         PAMacroButton:SetClickFunction(clearKeybinding, PAMacroButton.param1, PAMacroButton.param2, "RightButton")
     end
     if ExternalMacroButton then
         ExternalMacroButton:SetClickFunction(clearKeybinding, ExternalMacroButton.param1, ExternalMacroButton.param2, "RightButton")
+    end
+    if InnervateMacroButton then
+        InnervateMacroButton:SetClickFunction(clearKeybinding, InnervateMacroButton.param1, InnervateMacroButton.param2, "RightButton")
     end
 
     -- Build version check UI
