@@ -203,19 +203,20 @@ end
 
 
 function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender, allowCD) -- unitID = requester, unit = unit that shall give the external
+    if spellID == Innervate then
+        if UnitGroupRolesAssigned(unitID) ~= "HEALER" or UnitGroupRolesAssigned(unit) == "HEALER" then -- don't assign Innervate if requester is not a healer or the person we are checking is a healer
+            NSI:Print("not assignign Innervate because not a healer", unitID, unit, UnitGroupRolesAssigned(unitID), UnitGroupRolesAssigned(unit))
+            return false
+        end        
+    end
     local now = GetTime()
     local k = unit..spellID
     local rangecheck = range == "skip" or (range and range[UnitInRaid(unit)] and NSI.Externals.range[spellID] >= range[UnitInRaid(unit)])
     local giver, realm = UnitName(unit)
     local blocked = NSI.Externals.block[key] and NSI.Externals.block[key][spellID] and NSI.Externals.block[key][spellID][giver]
     local self = UnitIsUnit(unit, unitID)
-    NSI:Print("trying to assign external for", unitID, unit, spellID, key, NSI.Externals.ready[k], rangecheck, NSI.Externals.Cooldown[k])
-    if spellID == Innervate then
-        if UnitGroupRolesAssigned(unitID) ~= "HEALER" or UnitGroupRolesAssigned(unit) == "HEALER" then -- don't assign Innervate if requester is not a healer or the person we are checking is a healer
-            return false
-        end        
-    end
     local ready = NSI.Externals.ready[k] or (allowCD ~= 0 and NSI.Externals.Cooldown[k] and now+allowCD > NSI.Externals.Cooldown[k]) -- allow precalling spells that are still on CD
+    NSI:Print("trying to assign external for", unitID, unit, spellID, key, NSI.Externals.ready[k], rangecheck, NSI.Externals.Cooldown[k], ready)
     if
     UnitIsVisible(unit) -- in same instance
             and (ready or (NSI.Externals.ignorecd[key] and NSI.Externals.ignorecd[key][spellID])) -- spell is ready or we are ignoring its cd
