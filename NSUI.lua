@@ -817,6 +817,8 @@ function NSUI:Init()
         keyCombo = keyCombo:gsub("LeftButton", "BUTTON1")
             :gsub("RightButton", "BUTTON2")
             :gsub("MiddleButton", "BUTTON3")
+            :gsub("Button4", "BUTTON4")
+            :gsub("Button5", "BUTTON5")
 
         local existingBinding = GetBindingAction(keyCombo)
         NSI:Print("existingBinding" .. existingBinding)
@@ -836,7 +838,7 @@ function NSUI:Init()
             SaveBindings(GetCurrentBindingSet())
             return true
         else
-            NSI:Print("Failed to set keybind.")
+            NSI:Print("Failed to set keybind.", keyCombo)
             return false
         end
     end
