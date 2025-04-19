@@ -131,8 +131,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "READY_CHECK" and (wowevent or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
-        local difficultyID = select(3, GetInstanceInfo())
-        if difficultyID == 15 or difficultyID == 16 or NSRT.Settings["Debug"] then -- only care about note comparison in heroic&mythic raid
+        if NSI:Difficultycheck() or NSRT.Settings["Debug"] then -- only care about note comparison in normal, heroic&mythic raid
             local hashed = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""     
             NSI:Broadcast("MRT_NOTE", "RAID", hashed)   
         end
@@ -199,12 +198,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local unit, spec = ...
         NSI.specs = NSI.specs or {}
         NSI.specs[unit] = tonumber(spec)
-    elseif (e == "NSAPI_SPEC_REQUEST") or (e == "ENCOUNTER_START" and (wowevent or NSRT.Settings["Debug"])) then -- allow sending fake encounter_start if in debug mode  
-        local _, _, difficultyID = ...     
-        NSI:Print(difficultyID, NSRT.Settings["Debug"])
-        if e == "ENCOUNTER_START" and difficultyID ~= 15 and difficultyID ~= 16 and difficultyID ~= 14 and not NSRT.Settings["Debug"] then return end -- only send spec info in mythic and heroic raids
+    elseif (e == "ENCOUNTER_START" and ((wowevent and NSI:Difficultycheck()) or NSRT.Settings["Debug"])) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         NSI.specs = {}
-
         for u in NSI:IterateGroupMembers() do
             if UnitIsVisible(u) then
                 NSI.specs[u] = WeakAuras.SpecForUnit(u)
@@ -213,28 +208,24 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         -- broadcast spec info
         local specid = GetSpecializationInfo(GetSpecialization())
         NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)
-        if e == "ENCOUNTER_START" then
-            C_Timer.After(0.5, function()
-                WeakAuras.ScanEvents("NSAPI_ENCOUNTER_START", true)
-            end)
-            NSI.Externals:Init()
-        end
+        C_Timer.After(0.5, function()
+            WeakAuras.ScanEvents("NSAPI_ENCOUNTER_START", true)
+        end)
+        NSI.Externals:Init()
     elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
         local unitID, key, num, req, range = ...
-        local diff = select(3, GetInstanceInfo()) or 0
-        NSI:Print("NS_External_REQ", unitID, key, num, req, range, diff)
-        if UnitIsDead(unitID) or C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(27827).name) or not (diff == 14 or diff == 15 or diff == 16 or NSRT.Settings["Debug"]) then  -- block incoming requests from dead people
-            return
+        NSI:Print("NS_External_REQ", unitID, key, num, req, range)
+        if (NSI:Difficultycheck() or NSRT.Settings["Debug"]) and not (UnitIsDead(unitID) or C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(27827).name)) then -- block incoming requests from dead people
+            NSI:Print("Past Difficulty/Dead Check", unitID, key, num, req, range)
+            NSI.Externals:Request(unitID, key, num, req, range)
         end
-        NSI.Externals:Request(unitID, key, num, req, range)
     elseif e == "NS_INNERVATE_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
         local unitID, key, num, req, range = ...
-        local diff = select(3, GetInstanceInfo()) or 0
-        NSI:Print("NS_INNERVATE_REQ", unitID, key, num, req, range, diff)
-        if UnitIsDead(unitID) or C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(27827).name) or not (diff == 14 or diff == 15 or diff == 16 or NSRT.Settings["Debug"]) then  -- block incoming requests from dead people
-            return
+        NSI:Print("NS_INNERVATE_REQ", unitID, key, num, req, range)
+        if (NSI:Difficultycheck() or NSRT.Settings["Debug"]) and not (UnitIsDead(unitID) or C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(27827).name)) then -- block incoming requests from dead people
+            NSI:Print("Past Difficulty/Dead Check", unitID, key, num, req, range)
+            NSI.Externals:Request(unitID, "", 1, true, range, true)
         end
-        NSI.Externals:Request(unitID, "", 1, true, range, true)
     elseif e == "NS_EXTERNAL_YES" and ...then
         local _, unit, spellID = ...
         NSI:DisplayExternal(spellID, unit)
