@@ -115,6 +115,10 @@ function NSAPI:GetNote() -- Get rid of extra spaces and color coding. Also conve
     return NSI.Note
 end
 
+function NSI:Difficultycheck()    
+    local difficultyID = select(3, GetInstanceInfo()) or 0
+    return difficultyID == 14 or difficultyID == 15 or difficultyID == 16 -- Normal/Heroic/Mythic Raid
+end
 
 function NSAPI:GetHash(text)
     local counter = 1
