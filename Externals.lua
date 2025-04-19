@@ -137,9 +137,9 @@ end
 function NSI.Externals:extracheck(unit, unitID, key, spellID) -- additional check if the person can actually give the external, like checking if they are in range / on the same side / stunned
     -- unit = giver, unitID = receiver, key = prioname
     local enc = WeakAuras.CurrentEncounter and WeakAuras.CurrentEncounter.id
-    if key == "Kyveza" and spellID == Bop and C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(437343).name) then -- do not assign BoP if the person already has queensbane because at that point it was requested too late
+    if key == "Kyveza" and spellID == Bop and NSI:UnitAura(unitID, 437343) then -- do not assign BoP if the person already has queensbane because at that point it was requested too late
         return false
-    elseif key == "Condemnation" and spellID == sac and C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(438974).name) then -- do not assign sac if that pally also has the mechanic
+    elseif key == "Condemnation" and spellID == sac and NSI:UnitAura(unitID, 438974) then -- do not assign sac if that pally also has the mechanic
         return false
     else
         return true -- need to return false if it should not be assigned
@@ -224,9 +224,9 @@ function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellI
             and rangecheck
             and ((not NSI.Externals.requested[k]) or now > NSI.Externals.requested[k]+10) -- spell isn't already requested and the request hasn't timed out
             and not (spellID == sac and self) -- no self sac
-            and not (UnitIsDead(unit))
+            and not (UnitIsDead(unit)) -- only doing normal death check instead of also checking for angel form because angel form can still give the external
             and not (self and req) -- don't assign own external if it was specifically requested, only on automation
-            and not (C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(25771).name) and (spellID == Bop or spellID == Spellbop or spellID == LoH)) --Forebearance check
+            and not (NSI:UnitAura(unitID, 25771) and (spellID == Bop or spellID == Spellbop or spellID == LoH)) --Forebearance check
             and not blocked -- spell isn't specifically blocked for this key
             and not NSI.Externals.assigned[spellID] -- same spellid isn't already assigned unless it stacks
     then
@@ -246,11 +246,7 @@ end
 -- /run NSAPI:ExternalRequest()
 function NSAPI:ExternalRequest(key, num) -- optional arguments
     local now = GetTime()
-    if UnitIsDead("player") or C_UnitAuras.GetAuraDataBySpellName("player", C_Spell.GetSpellInfo(27827).name) then  -- block incoming requests from dead people
-        return
-    end
-    if not (WeakAuras.CurrentEncounter or NSRT.Settings["Debug"]) then return end
-    if ((not NSI.Externals.lastrequest) or (NSI.Externals.lastrequest < now - 4)) then
+    if NSI:EncounterCheck(true) and ((not NSI.Externals.lastrequest) or (NSI.Externals.lastrequest < now - 4)) and not NSAPI:DeathCheck("player") then -- spam, encounter and death protection
         NSI.Externals.lastrequest = now
         key = key or "default"
         num = num or 1
@@ -262,17 +258,13 @@ function NSAPI:ExternalRequest(key, num) -- optional arguments
         end
         NSI:Print("broadcasting to", NSI.Externals.target)
         NSAPI:Broadcast("NS_EXTERNAL_REQ", "WHISPER", NSI.Externals.target, key, num, true, range)    -- request external
-    end
+        end
 end
 
 -- /run NSAPI:Innervate:Request()
 function NSAPI:InnervateRequest()    
     local now = GetTime()
-    if UnitIsDead("player") or C_UnitAuras.GetAuraDataBySpellName("player", C_Spell.GetSpellInfo(27827).name) then  -- block incoming requests from dead people
-        return
-    end
-    if not (WeakAuras.CurrentEncounter or NSRT.Settings["Debug"]) then return end
-    if ((not NSI.Externals.lastrequest2) or (NSI.Externals.lastrequest2 < now - 4)) then
+    if NSI:EncounterCheck(true) and ((not NSI.Externals.lastrequest2) or (NSI.Externals.lastrequest2 < now - 4)) and not NSAPI:DeatCheck("player") then -- spam, encounter and death protection
         NSI.Externals.lastrequest2 = now
         local range = {}
         for u in NSI:IterateGroupMembers() do
@@ -409,7 +401,7 @@ function NSI.Externals:Request(unitID, key, num, req, range, innervate)
     NSI:Print("trying to find an external for", unitID, key)
     if NSI.Externals.check[key] then -- see if an immunity or other assigned self cd's are available first
         for i, spellID in ipairs(NSI.Externals.check[key]) do
-            if (spellID ~= 1022 and spellID ~= 204018 and spellID ~= 633 and spellID ~= 204018) or not C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(25771).name) then -- check forebearance
+            if (spellID ~= 1022 and spellID ~= 204018 and spellID ~= 633 and spellID ~= 204018) or not NSI:UnitAura(unitID, 25771) then -- check forebearance
                 local check = unitID..spellID
                 if NSI.Externals.ready[check] then return end
             end
