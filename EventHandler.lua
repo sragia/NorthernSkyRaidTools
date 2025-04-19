@@ -215,14 +215,14 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
         local unitID, key, num, req, range = ...
         NSI:Print("NS_External_REQ", unitID, key, num, req, range)
-        if (NSI:Difficultycheck() or NSRT.Settings["Debug"]) and not (UnitIsDead(unitID) or C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(27827).name)) then -- block incoming requests from dead people
+        if NSI:Difficultycheck(true) and not NSAPI:DeathCheck(unitID) then -- block incoming requests from dead people
             NSI:Print("Past Difficulty/Dead Check", unitID, key, num, req, range)
             NSI.Externals:Request(unitID, key, num, req, range)
         end
     elseif e == "NS_INNERVATE_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
         local unitID, key, num, req, range = ...
         NSI:Print("NS_INNERVATE_REQ", unitID, key, num, req, range)
-        if (NSI:Difficultycheck() or NSRT.Settings["Debug"]) and not (UnitIsDead(unitID) or C_UnitAuras.GetAuraDataBySpellName(unitID, C_Spell.GetSpellInfo(27827).name)) then -- block incoming requests from dead people
+        if NSI:Difficultycheck(true) and not NSAPI:DeathCheck(unitID) then -- block incoming requests from dead people
             NSI:Print("Past Difficulty/Dead Check", unitID, key, num, req, range)
             NSI.Externals:Request(unitID, "", 1, true, range, true)
         end
