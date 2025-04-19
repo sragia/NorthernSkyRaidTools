@@ -131,12 +131,14 @@ function NSI:EncounterCheck(debugcheck)
     return WeakAuras.CurrentEncounter or (debugcheck and NSRT.Settings["Debug"])
 end
 
+-- this one is public as I want to use it in WeakAuras as well
 function NSAPI:DeathCheck(unit)
     if unit and UnitExists(unit) then
         return (UnitIsDead(unit) and not UnitIsFeignDeath(unit)) or NSI:UnitAura(unit, 27827)
     end
 end
 
+-- technically don't need this to be public but it's good for backwards compatibility for a while
 function NSAPI:GetHash(text)
     local counter = 1
     local len = string.len(text)
