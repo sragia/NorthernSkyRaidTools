@@ -115,9 +115,26 @@ function NSAPI:GetNote() -- Get rid of extra spaces and color coding. Also conve
     return NSI.Note
 end
 
-function NSI:Difficultycheck()    
+function NSI:UnitAura(unit, spellID) -- simplify aura checking for myself
+    if unit and UnitExists(unit) and spellID then
+        local spell = C_Spell.GetSpellInfo(spellID)
+        return spell and C_UnitAuras.GetAuraDataBySpellName(unit, spell.name)
+    end
+end
+
+function NSI:Difficultycheck(encountercheck) -- check if current difficulty is a Normal/Heroic/Mythic raid and also allow checking if we are currently in an encounter
     local difficultyID = select(3, GetInstanceInfo()) or 0
-    return difficultyID == 14 or difficultyID == 15 or difficultyID == 16 -- Normal/Heroic/Mythic Raid
+    return (difficultyID == 14 or difficultyID == 15 or difficultyID == 16) and (NSI:EncounterCheck(true) or not encountercheck)
+end
+
+function NSI:EncounterCheck(debugcheck)
+    return WeakAuras.CurrentEncounter or (debugcheck and NSRT.Settings["Debug"])
+end
+
+function NSAPI:DeathCheck(unit)
+    if unit and UnitExists(unit) then
+        return (UnitIsDead(unit) and not UnitIsFeignDeath(unit)) or NSI:UnitAura(unit, 27827)
+    end
 end
 
 function NSAPI:GetHash(text)
