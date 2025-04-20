@@ -22,7 +22,7 @@ function NSAPI:Version() -- old version check function from the database WA, for
 end
 
 function NSI:Print(...)
-    if NSRT.Settings["Debug"] then
+    if NSRT.Settings["DebugLogs"] then
         if DevTool then
             DevTool:AddData({...})
         end
@@ -127,11 +127,11 @@ end
 
 function NSI:Difficultycheck(encountercheck) -- check if current difficulty is a Normal/Heroic/Mythic raid and also allow checking if we are currently in an encounter
     local difficultyID = select(3, GetInstanceInfo()) or 0
-    return (difficultyID == 14 or difficultyID == 15 or difficultyID == 16) and (NSI:EncounterCheck(true) or not encountercheck)
+    return NSRT.Settings["Debug"] or ((difficultyID == 14 or difficultyID == 15 or difficultyID == 16) and ((not encountercheck) or NSI:EncounterCheck()))
 end
 
-function NSI:EncounterCheck(debugcheck)
-    return WeakAuras.CurrentEncounter or (debugcheck and NSRT.Settings["Debug"])
+function NSI:EncounterCheck()
+    return WeakAuras.CurrentEncounter or NSRT.Settings["Debug"]
 end
 
 -- this one is public as I want to use it in WeakAuras as well
