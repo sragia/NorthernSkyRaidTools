@@ -176,9 +176,6 @@ local function BuildVersionCheckUI(parent)
     duplicate_header:SetPoint("LEFT", version_number_header, "RIGHT", 50, 0)
 
     local function refresh(self, data, offset, totalLines)
-        NSI:Print("ThisData")
-        if NSRT.Settings["Debug"] then DevTools_Dump(data) end
-        NSI:Print("--------------------------------")
         for i = 1, totalLines do
             local index = i + offset
             local thisData = data[index] -- thisData = {{name = "Ravxd", version = 1.0, duplicate = true}}
@@ -1043,69 +1040,44 @@ function NSUI:Init()
     end
     -- when any setting is changed, call these respective callback function
     local general_callback = function()
-        NSI:Print("General callback")
-        if NSRT.Settings["Debug"] then DevTools_Dump(NSUI.OptionsChanged.general) end
-
-        if NSUI.OptionsChanged.general["TTS_ENABLED"] then
-            NSI:Print("TTS enabled")
-        end
-
-        if NSUI.OptionsChanged.general["TTS_VOICE"] then
-            NSI:Print("TTS voice")
-        end
 
         if NSUI.OptionsChanged.general["PA_MACRO"] then
             PASelfPingChanged()
         end
-
-        if NSUI.OptionsChanged.general["MRT_NOTE_COMPARISON"] then
-            NSI:Print("MRT note comparison")
-        end
         wipe(NSUI.OptionsChanged["general"])
-        if NSRT.Settings["Debug"] then DevTools_Dump(NSUI.OptionsChanged.general) end
     end
     local nicknames_callback = function()
-        NSI:Print("Nicknames callback")
-        if NSRT.Settings["Debug"] then DevTools_Dump(NSUI.OptionsChanged.nicknames) end
 
         if NSUI.OptionsChanged.nicknames["NICKNAME"] then
-            NSI:Print("Nickname")
             NSI:NickNameUpdated(NSRT.Settings["MyNickName"])
         end
 
         if NSUI.OptionsChanged.nicknames["GLOBAL_NICKNAMES"] then
-            NSI:Print("Global nicknames")
             NSI:GlobalNickNameUpdate()
         end
 
         if NSUI.OptionsChanged.nicknames["TRANSLIT"] then
-            NSI:Print("Translit nicknames")
             NSI:UpdateNickNameDisplay(true)
         end
 
         if NSUI.OptionsChanged.nicknames["BLIZZARD_NICKNAMES"] then
-            NSI:Print("Blizzard nicknames")
             NSI:BlizzardNickNameUpdated()
         end
 
         if NSUI.OptionsChanged.nicknames["CELL_NICKNAMES"] then
-            NSI:Print("Cell nicknames")
             NSI:CellNickNameUpdated(true)
         end
 
         if NSUI.OptionsChanged.nicknames["ELVUI_NICKNAMES"] then
-            NSI:Print("Elvui nicknames")
             NSI:ElvUINickNameUpdated()
         end
 
         if NSUI.OptionsChanged.nicknames["GRID2_NICKNAMES"] then
-            NSI:Print("Grid2 nicknames")
             NSI:Grid2NickNameUpdated()
         end
         -- no need for WA function
 
         if NSUI.OptionsChanged.nicknames["UNHALTED_NICKNAMES"] then
-            NSI:Print("Unhalted nicknames")
             NSI:UnhaltedNickNameUpdated()
         end
 
@@ -1113,11 +1085,7 @@ function NSUI:Init()
     end
 
     local externals_callback = function()
-        NSI:Print("Externals callback")
-        if NSRT.Settings["Debug"] then DevTools_Dump(NSUI.OptionsChanged.externals) end
-
         if NSUI.OptionsChanged.externals["EXTERNAL_MACRO"] then
-            NSI:Print("External macro")
             ExternalSelfPingChanged()
         end
 
@@ -1125,12 +1093,10 @@ function NSUI:Init()
     end
 
     local versions_callback = function()
-        NSI:Print("Versions callback")
         wipe(NSUI.OptionsChanged["versions"])
     end
 
     local weakauras_callback = function()
-        NSI:Print("WeakAuras callback")
         wipe(NSUI.OptionsChanged["WeakAuras"])
     end
 
@@ -1715,7 +1681,6 @@ function NSUI:SaveExternalsAnchorPosition()
         height = height
     }
     NSI:Print("Saving externals anchor position")
-    if NSRT.Settings["Debug"] then DevTools_Dump(NSRT.NSUI.externals_anchor.settings) end
 end
 
 function NSUI:ResetExternalsAnchorPosition()
