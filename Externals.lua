@@ -246,7 +246,7 @@ end
 -- /run NSAPI:ExternalRequest()
 function NSAPI:ExternalRequest(key, num) -- optional arguments
     local now = GetTime()
-    if NSI:EncounterCheck(true) and ((not NSI.Externals.lastrequest) or (NSI.Externals.lastrequest < now - 4)) and not NSAPI:DeathCheck("player") then -- spam, encounter and death protection
+    if NSI:EncounterCheck() and ((not NSI.Externals.lastrequest) or (NSI.Externals.lastrequest < now - 4)) and not NSAPI:DeathCheck("player") then -- spam, encounter and death protection
         NSI.Externals.lastrequest = now
         key = key or "default"
         num = num or 1
@@ -264,7 +264,7 @@ end
 -- /run NSAPI:Innervate:Request()
 function NSAPI:InnervateRequest()    
     local now = GetTime()
-    if NSI:EncounterCheck(true) and ((not NSI.Externals.lastrequest2) or (NSI.Externals.lastrequest2 < now - 4)) and not NSAPI:DeatCheck("player") then -- spam, encounter and death protection
+    if NSI:EncounterCheck() and ((not NSI.Externals.lastrequest2) or (NSI.Externals.lastrequest2 < now - 4)) and not NSAPI:DeatCheck("player") then -- spam, encounter and death protection
         NSI.Externals.lastrequest2 = now
         local range = {}
         for u in NSI:IterateGroupMembers() do
