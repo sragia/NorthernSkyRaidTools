@@ -129,6 +129,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if WeakAuras.GetData("Northern Sky Externals") then
             print("Please uninstall the Northern Sky Externals Weakaura to prevent conflicts with the Northern Sky Raid Tools Addon.")
         end
+        if C_AddOns.IsAddOnLoaded("NorthernSkyMedia") then
+            print("Please uninstall the Northern Sky Media Addon as this new Addon takes over all its functionality")
+        end
     elseif e == "READY_CHECK" and (wowevent or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
         if NSI:Difficultycheck() or NSRT.Settings["Debug"] then -- only care about note comparison in normal, heroic&mythic raid
