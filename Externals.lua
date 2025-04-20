@@ -285,7 +285,7 @@ function NSI.Externals:Init()
             break
         end
     end
-    NSI:Print(NSI.Externals.target)
+    NSI:Print("external target", NSI.Externals.target)
     if UnitIsUnit("player", NSI.Externals.target) then
         NSI.Externals:UpdateExternals()
         local note = NSAPI:GetNote()
