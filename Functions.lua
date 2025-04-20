@@ -23,6 +23,9 @@ end
 
 function NSI:Print(...)
     if NSRT.Settings["Debug"] then
+        if DevTool then
+            DevTool:AddData({...})
+        end
         print(...)
     end
 end
