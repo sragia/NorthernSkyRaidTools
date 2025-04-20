@@ -432,6 +432,7 @@ end
 
 function NSI:ImportNickNames(string) -- string format is charactername-realm:nickname;charactername-realm:nickname;...
     if string ~= "" then
+        string = string.gsub(string, "%s+", "") -- remove all whitespaces
         for _, str in pairs({strsplit(";", string)}) do
             if str ~= "" then
                 local namewithrealm, nickname = strsplit(":", str)
