@@ -819,7 +819,7 @@ function NSUI:Init()
 
         local existingBinding = GetBindingAction(keyCombo)
         NSI:Print("existingBinding" .. existingBinding)
-        if existingBinding and existingBinding ~= macroName then
+        if existingBinding and existingBinding ~= macroName and existingBinding ~= "" then
             SetBinding(keyCombo, nil)
             print("|cFF00FFFFNSRT:|r Overriding existing binding for " .. existingBinding .. " to " .. macroName)
         end
