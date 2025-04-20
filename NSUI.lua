@@ -1119,10 +1119,21 @@ function NSUI:Init()
             type = "toggle",
             boxfirst = true,
             name = "Enable Debug Mode",
-            desc = "Enables Debug Mode, which allows to call internal functions that are usually only available through the addon itself. Also enables debug prints in chat",
+            desc = "Enables Debug Mode, which bypasses certain restrictions like checking for active encounter / combat / being in a raid",
             get = function() return NSRT.Settings["Debug"] end,
             set = function(self, fixedparam, value)
                 NSRT.Settings["Debug"] = value
+            end,
+        },
+
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enable Debug Logging",
+            desc = "Enables Debug Logging, which prints a bunch of information and adds it to DevTool",
+            get = function() return NSRT.Settings["DebugLogs"] end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings["DebugLogs"] = value
             end,
         },
 
