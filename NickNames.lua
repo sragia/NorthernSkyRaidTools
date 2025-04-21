@@ -388,7 +388,6 @@ function NSI:SendNickName(channel, requestback)
     if not realm then
         realm = GetNormalizedRealmName()
     end
-    NSI:Print("Own Nickname data:", nickname, name, realm)
     if nickname then
         if UnitInRaid("player") and (NSRT.Settings["ShareNickNames"] == 1 or NSRT.Settings["ShareNickNames"] == 3) and (channel == "Any" or channel == "RAID") then
             NSI:Print("Sending nickname to raid")
