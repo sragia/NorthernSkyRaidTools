@@ -42,7 +42,7 @@ local function PASelfPingChanged()
         macrocount = i
         if macroname == "NS PA Macro" then
             pafound = true
-            local macrotext = "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
+            local macrotext = "/run NSAPI:PrivateAura();"
             if NSRT.Settings["PASelfPing"] then
                  macrotext = macrotext.."\n/ping [@player] Warning;"
              end
@@ -57,7 +57,7 @@ local function PASelfPingChanged()
         print("You reached the global Macro cap so the Private Aura Macro could not be created")
     elseif not pafound then
         macrocount = macrocount+1
-        local macrotext = "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
+        local macrotext = "/run NSAPI:PrivateAura();"
         if NSRT.Settings["PASelfPing"] then
              macrotext = macrotext.."\n/ping [@player] Warning;"
          end
