@@ -7,6 +7,7 @@ local lib = LibStub:GetLibrary("LibOpenRaid-1.0")
 NSI.Externals = {}
 NSI.Externals.ready = {}
 NSI.Externals.known = {}
+NSI.Externals.pull = 0
 NSI.Externals.requested = {}
 NSI.Externals.Automated = {}
 NSI.Externals.Amount = {}
@@ -14,6 +15,7 @@ NSI.Externals.target = ""
 NSI.Externals.customprio = {}
 NSI.Externals.customspellprio = {}
 NSI.Externals.Cooldown = {}
+NSI.AssignedExternals = {}
 local Sac = 6940
 local Bop = 1022
 local Spellbop = 204018
@@ -205,7 +207,7 @@ end
 function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender, allowCD) -- unitID = requester, unit = unit that shall give the external
     if spellID == Innervate then
         if UnitGroupRolesAssigned(unitID) ~= "HEALER" or UnitGroupRolesAssigned(unit) == "HEALER" then -- don't assign Innervate if requester is not a healer or the person we are checking is a healer
-            NSI:Print("not assignign Innervate because not a healer", unitID, unit, UnitGroupRolesAssigned(unitID), UnitGroupRolesAssigned(unit))
+            NSI:Print("not assigning Innervate because not a healer", unitID, unit, UnitGroupRolesAssigned(unitID), UnitGroupRolesAssigned(unit))
             return false
         end        
     end
@@ -214,23 +216,22 @@ function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellI
     local rangecheck = range == "skip" or (range and range[UnitInRaid(unit)] and NSI.Externals.range[spellID] >= range[UnitInRaid(unit)])
     local giver, realm = UnitName(unit)
     local blocked = NSI.Externals.block[key] and NSI.Externals.block[key][spellID] and NSI.Externals.block[key][spellID][giver]
-    local self = UnitIsUnit(unit, unitID)
+    local yourself = UnitIsUnit(unit, unitID)
     local ready = NSI.Externals.ready[k] or (allowCD ~= 0 and NSI.Externals.Cooldown[k] and now+allowCD > NSI.Externals.Cooldown[k]) -- allow precalling spells that are still on CD
-    NSI:Print("trying to assign external for", unitID, unit, spellID, key, NSI.Externals.ready[k], rangecheck, NSI.Externals.Cooldown[k], ready)
     if
     UnitIsVisible(unit) -- in same instance
             and (ready or (NSI.Externals.ignorecd[key] and NSI.Externals.ignorecd[key][spellID])) -- spell is ready or we are ignoring its cd
             and NSI.Externals:extracheck(unit, unitID, key, spellID) -- special case checks, hardcoded into the addon
             and rangecheck
             and ((not NSI.Externals.requested[k]) or now > NSI.Externals.requested[k]+10) -- spell isn't already requested and the request hasn't timed out
-            and not (spellID == sac and self) -- no self sac
+            and not (spellID == sac and yourself) -- no self sac
             and not (UnitIsDead(unit)) -- only doing normal death check instead of also checking for angel form because angel form can still give the external
-            and not (self and req) -- don't assign own external if it was specifically requested, only on automation
+            and not (yourself and req) -- don't assign own external if it was specifically requested, only on automation
             and not (NSI:UnitAura(unitID, 25771) and (spellID == Bop or spellID == Spellbop or spellID == LoH)) --Forebearance check
             and not blocked -- spell isn't specifically blocked for this key
             and not NSI.Externals.assigned[spellID] -- same spellid isn't already assigned unless it stacks
     then
-        NSI:Print("assigning external", unitID, unit, spellID, key)
+        table.insert(NSI.AssignedExternals, {automated = not req, receiver = NSAPI:Shorten(unitID), giver = NSAPI:Shorten(unit), spellID = spellID, key = key, time = Round(now-NSI.Externals.pull)}) -- for debug printing later
         NSI.Externals.requested[k] = now -- set spell to requested
         NSAPI:Broadcast("NS_EXTERNAL_LIST", "RAID", unit, sender, spellID) -- send List Data
         NSAPI:Broadcast("NS_EXTERNAL_GIVE", "WHISPER", unit, sender, spellID) -- send External Alert
@@ -256,7 +257,6 @@ function NSAPI:ExternalRequest(key, num) -- optional arguments
             local _, r = WeakAuras.GetRange(u)
             table.insert(range, r)
         end
-        NSI:Print("broadcasting to", NSI.Externals.target)
         NSAPI:Broadcast("NS_EXTERNAL_REQ", "WHISPER", NSI.Externals.target, key, num, true, range)    -- request external
         end
 end
@@ -264,14 +264,13 @@ end
 -- /run NSAPI:Innervate:Request()
 function NSAPI:InnervateRequest()    
     local now = GetTime()
-    if NSI:EncounterCheck() and ((not NSI.Externals.lastrequest2) or (NSI.Externals.lastrequest2 < now - 4)) and not NSAPI:DeatCheck("player") then -- spam, encounter and death protection
+    if NSI:EncounterCheck() and ((not NSI.Externals.lastrequest2) or (NSI.Externals.lastrequest2 < now - 4)) and not NSAPI:DeathCheck("player") then -- spam, encounter and death protection
         NSI.Externals.lastrequest2 = now
         local range = {}
         for u in NSI:IterateGroupMembers() do
             local _, r = WeakAuras.GetRange(u)
             table.insert(range, r)
         end
-        NSI:Print("broadcasting to", NSI.Externals.target)
         NSI:Broadcast("NS_INNERVATE_REQ", "WHISPER", NSI.Externals.target, key, num, true, range)    -- request external
     end
 end
@@ -285,7 +284,6 @@ function NSI.Externals:Init()
             break
         end
     end
-    NSI:Print("external target", NSI.Externals.target)
     if UnitIsUnit("player", NSI.Externals.target) then
         NSI.Externals:UpdateExternals()
         local note = NSAPI:GetNote()
@@ -297,6 +295,7 @@ function NSI.Externals:Init()
         NSI.Externals.Automated = {}
         NSI.Externals.Amount = {}
         NSI.Externals.ignorecd = {}
+        NSI.AssignedExternals = {}
         NSI.Externals.block = {}
         NSI.Externals.SkipDefault = {}
         NSI.Externals.assigned = {}
@@ -374,7 +373,6 @@ function NSI.Externals:Request(unitID, key, num, req, range, innervate)
     local count = 0
     NSI.Externals.assigned = {}
     if innervate then
-        NSI:Print("trying to find an innervate for", unitID)
         for unit, _ in pairs(NSI.Externals.known[Innervate]) do
             if num > count then                
                 local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, Innervate, sender, 0)
@@ -391,14 +389,12 @@ function NSI.Externals:Request(unitID, key, num, req, range, innervate)
                 if count >= num then return end
             end
         end        
-        NSI:Print("No Innervate found for", unitID)
         NSAPI:Broadcast("NS_EXTERNAL_NO", "WHISPER", unitID, "Innervate")   
         return
     end
     if key == "default" then
         key = NSI.Externals:getprio(unitID)
     end
-    NSI:Print("trying to find an external for", unitID, key)
     if NSI.Externals.check[key] then -- see if an immunity or other assigned self cd's are available first
         for i, spellID in ipairs(NSI.Externals.check[key]) do
             if (spellID ~= 1022 and spellID ~= 204018 and spellID ~= 633 and spellID ~= 204018) or not NSI:UnitAura(unitID, 25771) then -- check forebearance
@@ -475,6 +471,5 @@ function NSI.Externals:Request(unitID, key, num, req, range, innervate)
         end
     end
     -- No External Left
-        NSI:Print("No External found for", unitID)
     NSAPI:Broadcast("NS_EXTERNAL_NO", "WHISPER", unitID, "nilcheck")   
 end
