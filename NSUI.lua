@@ -1044,6 +1044,14 @@ function NSUI:Init()
         if NSUI.OptionsChanged.general["PA_MACRO"] then
             PASelfPingChanged()
         end
+        if NSUI.OptionsChanged.general["DEBUGLOGS"] then
+            if NSRT.Settings["DebugLogs"] then -- Add this data if enables this after a wipe as the data exists anyway
+                DevTool:AddData(NSI.MacroPresses, "Macro Data")
+                DevTool:AddData(NSI.AssignedExternals, "Assigned Externals")
+                NSI.AssignedExternals = {}
+                NSI.MacroPresses = {}
+            end
+        end
         wipe(NSUI.OptionsChanged["general"])
     end
     local nicknames_callback = function()
@@ -1130,9 +1138,10 @@ function NSUI:Init()
             type = "toggle",
             boxfirst = true,
             name = "Enable Debug Logging",
-            desc = "Enables Debug Logging, which prints a bunch of information and adds it to DevTool",
+            desc = "Enables Debug Logging, which prints a bunch of information and adds it to DevTool. This might Error if you do not have the DevTool Addon installed.\nIf enabled after a wipe, it will still add External and Macro data to DevTool",
             get = function() return NSRT.Settings["DebugLogs"] end,
             set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.general["DEBUGLOGS"] = true
                 NSRT.Settings["DebugLogs"] = value
             end,
         },
