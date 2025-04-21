@@ -24,7 +24,10 @@ end
 function NSI:Print(...)
     if NSRT.Settings["DebugLogs"] then
         if DevTool then
-            DevTool:AddData({...})
+            local t = {...}
+            local name = t[1]
+            table.remove(t, 1)
+            DevTool:AddData(t, name)
         end
         print(...)
     end
@@ -155,7 +158,7 @@ function NSAPI:GetHash(text)
 end
 
 
-function NSAPI:TTS(sound, voice)
+function NSAPI:TTS(sound, voice) -- NSAPI:TTS("Bait Frontal", NSRT.TTSVoice)
   if NSRT.Settings["TTS"] then
       local num = voice or NSRT.Settings["TTSVoice"]
         C_VoiceChat.SpeakText(
@@ -167,4 +170,12 @@ function NSAPI:TTS(sound, voice)
         )
      end
 end
--- NSAPI:TTS("Bait Frontal", NSRT.TTSVoice)
+
+function NSAPI:PrivateAura()
+    local now = GetTime()
+    if (not NSAPI.LastPAMacro) or NSAPI.LastPAMacro < now-4 then -- putting this into global NSAPI namespace to allow auras to reset it if ever required
+        NSAPI.LastPAMacro = now
+        WeakAuras.ScanEvents("NS_PA_MACRO", true) -- this is for backwards compatibility
+        NSI:Broadcast("NSPAMACRO", "RAID", "nilcheck") -- this will be used going forward
+    end
+end
