@@ -1,6 +1,7 @@
 local _, NSI = ... -- Internal namespace
 local f = CreateFrame("Frame")
 f:RegisterEvent("ENCOUNTER_START")
+f:RegisterEvent("ENCOUNTER_END")
 f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 f:RegisterEvent("READY_CHECK")
 f:RegisterEvent("GROUP_FORMED")
@@ -70,7 +71,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not macroname then break end
             macrocount = i
             if macroname == "NS PA Macro" then
-                local macrotext = "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
+                local macrotext = "/run NSAPI:PrivateAura();"
                 if NSRT.Settings["PASelfPing"] then
                     macrotext = macrotext.."\n/ping [@player] Warning;"
                 end
@@ -93,7 +94,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             print("You reached the global Macro cap so the Private Aura Macro could not be created")
         elseif not pafound then
             macrocount = macrocount+1            
-            local macrotext = "/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true);"
+            local macrotext = "/run NSAPI:PrivateAura();"
             if NSRT.Settings["PASelfPing"] then
                 macrotext = macrotext.."\n/ping [@player] Warning;"
             end
@@ -202,7 +203,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local unit, spec = ...
         NSI.specs = NSI.specs or {}
         NSI.specs[unit] = tonumber(spec)
-    elseif (e == "ENCOUNTER_START" and ((wowevent and NSI:Difficultycheck()) or NSRT.Settings["Debug"])) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
+    elseif e == "ENCOUNTER_START" and ((wowevent and NSI:Difficultycheck()) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         NSI.specs = {}
         for u in NSI:IterateGroupMembers() do
             if UnitIsVisible(u) then
@@ -215,22 +216,34 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         C_Timer.After(0.5, function()
             WeakAuras.ScanEvents("NSAPI_ENCOUNTER_START", true)
         end)
+        NSI.MacroPresses = {}
         NSI.Externals:Init()
+    elseif e == "ENCOUNTER_END" and ((wowevent and NSI:Difficultycheck()) or NSRT.Settings["Debug"]) then
+        if NSRT.Settings["DebugLogs"] then
+            DevTool:AddData(NSI.MacroPresses, "Macro Data")
+            DevTool:AddData(NSI.AssignedExternals, "Assigned Externals")
+            NSI.AssignedExternals = {}
+            NSI.MacroPresses = {}
+        end
     elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
         local unitID, key, num, req, range = ...
-        NSI:Print("NS_External_REQ", unitID, key, num, req, range)
-        if NSI:Difficultycheck(true) and not NSAPI:DeathCheck(unitID) then -- block incoming requests from dead people
-            NSI:Print("Past Difficulty/Dead Check", unitID, key, num, req, range)
+        local dead = NSAPI:DeathCheck(unitID)        
+        NSI.MacroPresses = NSI.MacroPresses or {}
+        NSI.MacroPresses["Externals"] = NSI.MacroPresses["Externals"] or {}
+        table.insert(NSI.MacroPresses["Externals"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-NSI.Externals.pull), dead = dead, key = key, num = num, range = range})
+        if NSI:Difficultycheck(true) and not dead then -- block incoming requests from dead people
             NSI.Externals:Request(unitID, key, num, req, range)
         end
     elseif e == "NS_INNERVATE_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
         local unitID, key, num, req, range = ...
-        NSI:Print("NS_INNERVATE_REQ", unitID, key, num, req, range)
-        if NSI:Difficultycheck(true) and not NSAPI:DeathCheck(unitID) then -- block incoming requests from dead people
-            NSI:Print("Past Difficulty/Dead Check", unitID, key, num, req, range)
+        local dead = NSAPI:DeathCheck(unitID)      
+        NSI.MacroPresses = NSI.MacroPresses or {}
+        NSI.MacroPresses["Innervate"] = NSI.MacroPresses["Innervate"] or {}
+        table.insert(NSI.MacroPresses["Innervate"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-NSI.Externals.pull), dead = dead, key = key, num = num, range = range})
+        if NSI:Difficultycheck(true) and not dead then -- block incoming requests from dead people
             NSI.Externals:Request(unitID, "", 1, true, range, true)
         end
-    elseif e == "NS_EXTERNAL_YES" and ...then
+    elseif e == "NS_EXTERNAL_YES" and ... then
         local _, unit, spellID = ...
         NSI:DisplayExternal(spellID, unit)
     elseif e == "NS_EXTERNAL_NO" then        
@@ -242,10 +255,16 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "NS_EXTERNAL_GIVE" and ... then
         local _, unit, spellID = ...
-        NSI:Print("external give", unit, spellID)
         local hyperlink = C_Spell.GetSpellLink(spellID)
         WeakAuras.ScanEvents("CHAT_MSG_WHISPER", hyperlink, unit)
-    end  
+    elseif e == "NSPAMACRO" and (internal or NSRT.Settings["Debug"]) then
+        local unitID = ...
+        if unitID and UnitExists(unitID) and NSRT.Settings["DebugLogs"] then
+            NSI.MacroPresses = NSI.MacroPresses or {}
+            NSI.MacroPresses["Private Aura"] = NSI.MacroPresses["Private Aura"] or {}
+            table.insert(NSI.MacroPresses["Private Aura"], {name = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-NSI.Externals.pull)})
+        end
+    end
 end
 
 
