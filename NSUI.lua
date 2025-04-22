@@ -1459,7 +1459,7 @@ Press 'Enter' to hear the TTS]],
                 NSRT.Settings["MRT"] = value
             end,
             name = "Enable MRT Nicknames",
-            desc = "Enable Nicknames to be used with MRT. This only affects the Cooldown Tracking",
+            desc = "Enable Nicknames to be used with MRT. This affects the Cooldown Tracking and Note Display",
             nocombat = true
         },
         {
