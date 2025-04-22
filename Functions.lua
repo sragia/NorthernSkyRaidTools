@@ -176,6 +176,12 @@ function NSAPI:PrivateAura()
     if (not NSAPI.LastPAMacro) or NSAPI.LastPAMacro < now-4 then -- putting this into global NSAPI namespace to allow auras to reset it if ever required
         NSAPI.LastPAMacro = now
         WeakAuras.ScanEvents("NS_PA_MACRO", true) -- this is for backwards compatibility
-        NSI:Broadcast("NSPAMACRO", "RAID", "nilcheck") -- this will be used going forward
+        NSI:Broadcast("NS_PAMACRO", "RAID", "nilcheck") -- this will be used going forward, slightly different wording to prevent issues with old auras
+    end
+end
+
+function NSI:SendWAString(str)
+    if str and str ~= "" and type(str) == "string" then
+        NSI:Broadcast("NSI_WA_SYNC", "RAID", str)
     end
 end
