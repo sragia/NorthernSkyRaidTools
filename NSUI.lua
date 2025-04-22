@@ -8,6 +8,8 @@ local window_width = 800
 local window_height = 515
 local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 
+local authorsString = "By Reloe & Rav"
+
 local options_text_template = DF:GetTemplate("font", "OPTIONS_FONT_TEMPLATE")
 local options_dropdown_template = DF:GetTemplate("dropdown", "OPTIONS_DROPDOWN_TEMPLATE")
 local options_switch_template = DF:GetTemplate("switch", "OPTIONS_CHECKBOX_TEMPLATE")
@@ -21,9 +23,10 @@ local NSUI = DF:CreateSimplePanel(UIParent, window_width, window_height, "|cFF00
     NSUI_panel_options)
 NSUI:SetPoint("CENTER")
 NSUI:SetFrameStrata("HIGH")
-local statusbar_text = DF:CreateLabel(NSUI.StatusBar, "Northern Sky x |cFF00FFFFbird|r")
-statusbar_text:SetPoint("left", NSUI.StatusBar, "left", 2, 0)
--- DF:BuildStatusbarAuthorInfo(NSUI.StatusBar, _, "Reloe & Rav :)")
+-- local statusbar_text = DF:CreateLabel(NSUI.StatusBar, "Northern Sky x |cFF00FFFFbird|r")
+-- statusbar_text:SetPoint("left", NSUI.StatusBar, "left", 2, 0)
+DF:BuildStatusbarAuthorInfo(NSUI.StatusBar, _, "x |cFF00FFFFbird|r")
+NSUI.StatusBar.discordTextEntry:SetText("https://discord.gg/3B6QHURmBy")
 
 NSUI.OptionsChanged = {
     ["general"] = {},
@@ -708,7 +711,7 @@ function NSUI:Init()
         { name = "Nicknames", text = "Nicknames" },
         { name = "Externals", text = "Externals" },
         { name = "Versions",  text = "Versions" },
-        { name = "WeakAuras",   text = "WeakAuras Imports" },
+        { name = "WeakAuras",   text = "WeakAuras" },
     }, {
         width = window_width,
         height = window_height - 5,
@@ -1051,6 +1054,34 @@ function NSUI:Init()
             print("Error:WeakAuras not found")
         end
     end
+
+    local function SendWeakAuras()
+        local popup = DF:CreateSimplePanel(NSUI, 300, 150, "Send WeakAura", "NSUISendWeakAurasPopup", {
+            DontRightClickClose = true
+        })
+        popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        popup:SetFrameLevel(100)
+
+        popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "SendWATextEdit", true, false, true)
+        popup.test_string_text_box:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
+        popup.test_string_text_box:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 40)
+        DF:ApplyStandardBackdrop(popup.test_string_text_box)
+        DF:ReskinSlider(popup.test_string_text_box.scroll)
+        popup.test_string_text_box:SetFocus()
+
+        popup.import_confirm_button = DF:CreateButton(popup, function()
+            local import_string = popup.test_string_text_box:GetText()
+            NSI:SendWAString(import_string)
+            popup.test_string_text_box:SetText("")
+            print(import_string)
+            popup:Hide()
+        end, 280, 20, "Send")
+        popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
+        popup.import_confirm_button:SetTemplate(options_button_template)
+
+        return popup
+    end
+
     -- when any setting is changed, call these respective callback function
     local general_callback = function()
 
@@ -1631,6 +1662,24 @@ Press 'Enter' to hear the TTS]],
             nocombat = true,
             spacement = true
         },
+        {
+            type = "blank",
+        },
+        {
+            type = "label",
+            get = function() return "WeakAuras Sharing" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "button",
+            name = "Send WeakAura",
+            desc = "Send an individual WeakAura string to the raid.",
+            func = function(self)
+                SendWeakAuras()
+            end,
+            nocombat = true,
+            spacement = true
+        },
 
         {
             type = "breakline"
@@ -1644,7 +1693,6 @@ Press 'Enter' to hear the TTS]],
             desc = "Choose who you are accepting WeakAuras imports to come from. Note that even if guild is selected here this still only works when in the same raid as them",
             nocombat = true
         },
-
     }
 
     -- Build options menu for each tab
@@ -1678,6 +1726,12 @@ Press 'Enter' to hear the TTS]],
     -- Build version check UI
     NSUI.version_scrollbox = BuildVersionCheckUI(versions_tab)
     NSUI.nickname_frame = BuildNicknameEditUI()
+
+    -- Version Number in status bar
+    local versionTitle = C_AddOns.GetAddOnMetadata("NorthernSkyRaidTools", "Title")
+    local verisonNumber = C_AddOns.GetAddOnMetadata("NorthernSkyRaidTools", "Version")
+    local statusBarText = versionTitle .. " v" .. verisonNumber .. " | |cFFFFFFFF" .. (authorsString) .. "|r"
+    NSUI.StatusBar.authorName:SetText(statusBarText)
 end
 
 function NSI:DisplayExternal(spellId, unit)
@@ -1806,26 +1860,5 @@ function NSAPI:DisplayText(text, duration)
         C_Timer.After(duration or 4, function() NSUI.generic_display:Hide() end)
     end
 end
-NSI.NSUI = NSUI
 
-SLASH_NSUI1 = "/ns"
-SlashCmdList["NSUI"] = function(msg)
-    if msg == "anchor" then
-        if NSUI.externals_anchor:IsShown() then
-            NSUI.externals_anchor:Hide()
-        else
-            NSUI.externals_anchor:Show()
-        end
-    elseif msg == "test" then
-        NSI:DisplayExternal(nil, GetUnitName("player"))
-    elseif msg == "wipe" then
-        wipe(NSRT)
-        ReloadUI()
-    elseif msg == "sync" then
-        NSI:NickNamesSyncPopup(GetUnitName("player"), "yayayaya")
-    elseif msg == "display" then
-        NSAPI:DisplayText("Display text", 8)
-    else
-        NSUI:ToggleOptions()
-    end
-end
+NSI.NSUI = NSUI

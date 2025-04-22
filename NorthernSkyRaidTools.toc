@@ -1,6 +1,6 @@
 ## Interface: 110100
 
-## Title: Northern Sky Raid Tools
+## Title: |cFF00FFFFNorthern Sky Raid Tools|r
 ## Version: 0.0.2
 ## IconTexture: Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo.blp
 ## Author: Reloe
@@ -24,4 +24,6 @@ Externals.lua
 VersionCheck.lua
 WeakAuras/Imports.lua
 
+# UI
 NSUI.lua
+SlashCommands.lua
