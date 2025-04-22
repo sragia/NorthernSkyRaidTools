@@ -1,4 +1,4 @@
-## Interface: 110100
+## Interface: 110150
 
 ## Title: |cFF00FFFFNorthern Sky Raid Tools|r
 ## Version: 0.0.2
