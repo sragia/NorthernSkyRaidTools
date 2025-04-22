@@ -942,7 +942,6 @@ function NSUI:Init()
                 label = nickname_share_options[i],
                 value = i,
                 onclick = function(_, _, value)
-                    NSUI.OptionsChanged.nicknames["NICKNAME_SHARE"] = true
                     NSRT.Settings["ShareNickNames"] = value
                 end
 
@@ -959,7 +958,6 @@ function NSUI:Init()
                 label = nickname_accept_options[i],
                 value = i,
                 onclick = function(_, _, value)
-                    NSUI.OptionsChanged.nicknames["NICKNAME_ACCEPT"] = true
                     NSRT.Settings["AcceptNickNames"] = value
                 end
 
@@ -977,7 +975,6 @@ function NSUI:Init()
                 label = nickname_syncaccept_options[i],
                 value = i,
                 onclick = function(_, _, value)
-                    NSUI.OptionsChanged.nicknames["NICKNAME_SYNCACCEPT"] = true
                     NSRT.Settings["NickNamesSyncAccept"] = value
                 end
 
@@ -994,8 +991,24 @@ function NSUI:Init()
                 label = nickname_syncsend_options[i],
                 value = i,
                 onclick = function(_, _, value)
-                    NSUI.OptionsChanged.nicknames["NICKNAME_SYNCSEND"] = true
                     NSRT.Settings["NickNamesSyncSend"] = value
+                end
+
+            })
+        end
+        return t
+    end
+
+    
+    local weakauras_importaccept_options = {"Guild only", "Anyone", "None"}    
+    local build_weakauras_importaccept_options = function()
+        local t = {}
+        for i = 1, #weakauras_importaccept_options do
+            tinsert(t, {
+                label = weakauras_importaccept_options[i],
+                value = i,
+                onclick = function(_, _, value)
+                    NSRT.Settings["WeakAurasImportAccept"] = value
                 end
 
             })
@@ -1316,11 +1329,14 @@ Press 'Enter' to hear the TTS]],
             end,
             nocombat = true
         },
+
+        
+        { type = "label", get = function() return "Automated Nickname Share Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
         {
             type = "select",
             get = function() return NSRT.Settings["ShareNickNames"] end,
             values = function() return build_nickname_share_options() end,
-            name = "Nickname Share",
+            name = "Nickname Sharing",
             desc = "Choose who you share your nickname with.",
             nocombat = true
         },        
@@ -1333,7 +1349,7 @@ Press 'Enter' to hear the TTS]],
             nocombat = true
         },        
         
-        { type = "label", get = function() return "Nicknames Sync Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
+        { type = "label", get = function() return "Manual Nickname Sync Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
 
         {
             type = "select",
@@ -1350,7 +1366,7 @@ Press 'Enter' to hear the TTS]],
             get = function() return NSRT.Settings["NickNamesSyncAccept"] end,
             values = function() return build_nickname_syncaccept_options() end,
             name = "Nickname Sync Accept",
-            desc = "Choose you who are accepting Nicknames sync requests to come from",
+            desc = "Choose who you are accepting Nicknames sync requests to come from",
             nocombat = true
         },
 
@@ -1615,6 +1631,20 @@ Press 'Enter' to hear the TTS]],
             nocombat = true,
             spacement = true
         },
+
+        {
+            type = "breakline"
+        },
+
+        {
+            type = "select",
+            get = function() return NSRT.Settings["WeakAurasImportAccept"] end,
+            values = function() return build_weakauras_importaccept_options() end,
+            name = "WeakAuras Import Accept",
+            desc = "Choose who you are accepting WeakAuras imports to come from. Note that even if guild is selected here this still only works when in the same raid as them",
+            nocombat = true
+        },
+
     }
 
     -- Build options menu for each tab
