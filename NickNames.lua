@@ -59,10 +59,10 @@ function NSAPI:GetChar(name, nick) -- Returns Char in Raid from Nickname or Char
     local chars = NSAPI:GetCharacters(name)
     if chars then
         for k, _ in pairs(chars) do
-            local name = strsplit("-", k)
+            local name, realm = strsplit("-", k)
             local i = UnitInRaid(k)
             if UnitIsVisible(name) or (i and select(3, GetRaidRosterInfo(i)) <= 4)  then
-                return k
+                return name, realm
             end
         end
     end
@@ -149,6 +149,32 @@ function NSI:MRTNickNameUpdated()
                     data.name = NSAPI:GetName(data.name, "MRT")
                 end
             end
+        )
+        GMRT.F:RegisterCallback(
+            "Note_UpdateText", 
+            function(event, noteFrame)
+                local note = noteFrame.text:GetText()
+                if not note then return end
+                local namelist = {}
+                local colorlist = {}
+                for name in note:gmatch("%S+") do -- finding all strings
+                    local charname = NSAPI:Shorten(NSAPI:GetChar(name), false, false, "MRT") -- getting color coded nickname for this character
+                    if charname ~= name then         
+                        namelist[name] = {name = charname, color = false}
+                    end
+                end                
+                for colorcode, name in note:gmatch(("|c(%x%x%x%x%x%x%x%x)(.-)|r")) do -- do the same for color coded strings again
+                    local charname =  NSAPI:Shorten(NSAPI:GetChar(name), false, false, "MRT") -- getting color coded nickname for this character
+                    namelist[name] = {name = charname, color = true}
+                end
+                for notename, v in pairs(namelist) do
+                    note = note:gsub("(%f[%w])"..notename.."(%f[%W])", "%1"..v.name.."%2")
+                    if v.color then -- if initial name already had a colorcode, need to do different replacement
+                        note = note:gsub("|c%x%x%x%x%x%x%x%x"..notename.."|r", v.name)
+                    end
+                end
+                noteFrame.text:SetText(note)
+            end    
         )
     end
 end
