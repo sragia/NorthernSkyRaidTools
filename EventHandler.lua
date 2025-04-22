@@ -7,7 +7,7 @@ f:RegisterEvent("READY_CHECK")
 f:RegisterEvent("GROUP_FORMED")
 f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_LOGIN")
-f:RegisterEvent("PLAYER_LEAVE_COMBAT")
+f:RegisterEvent("PLAYER_REGEN_ENABLED")
 
 f:SetScript("OnEvent", function(self, e, ...)
     NSI:EventHandler(e, true, false, ...)
@@ -40,6 +40,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["AcceptNickNames"] = NSRT.Settings["AcceptNickNames"] or 4 -- none default
             NSRT.Settings["NickNamesSyncAccept"] = NSRT.Settings["NickNamesSyncAccept"] or 2 -- guild default
             NSRT.Settings["NickNamesSyncSend"] = NSRT.Settings["NickNamesSyncSend"] or 3 -- guild default
+            NSRT.Settings["WeakAurasImportAccept"] = NSRT.Settings["WeakAurasImportAccept"] or 1 -- guild default
             NSRT.Settings["PAExtraAction"] = NSRT.Settings["PAExtraAction"] or false
             NSRT.Settings["PASelfPing"] = NSRT.Settings["PASelfPing"] or false
             NSRT.Settings["ExternalSelfPing"] = NSRT.Settings["ExternalSelfPing"] or false
@@ -183,22 +184,42 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if requestback then NSI:SendNickName(channel, false) end -- send nickname back to the person who requested it
         NSI:NewNickName(unit, nickname, name, realm, channel)
 
-    elseif e == "PLAYER_LEAVE_COMBAT" and (wowevent or NSRT.Settings["Debug"]) then
-        if NSI.SyncNickNamesStore then
-            NSI:NickNamesSyncPopup(NSI.SyncNickNamesStore.unit, NSI.SyncNickNamesStore.nicknametable)    
-            NSI.SyncNickNamesStore = nil
-        end
-
+    elseif e == "PLAYER_REGEN_ENABLED" and (wowevent or NSRT.Settings["Debug"]) then
+        C_Timer.After(1, function()
+            if NSI.SyncNickNamesStore then
+                NSI:EventHandler("NSI_NICKNAMES_SYNC", false, true, NSI.SyncNickNamesStore.unit, NSI.SyncNickNamesStore.nicknametable, NSI.SyncNickNamesStore.channel)
+                NSI.SyncNickNamesStore = nil
+            end
+            if NSI.WAString and NSI.WAString.unit and NSI.WAString.string then
+                NSI:EventHandler("NSI_WA_SYNC", false, true, NSI.WAString.unit, NSI.WAString.string)
+                NSI.WAString = nil
+            end
+        end)
     elseif e == "NSI_NICKNAMES_SYNC" and (internal or NSRT.Settings["Debug"]) then
         local unit, nicknametable, channel = ...
-        if (NSRT.Settings["NickNamesSyncAccept"] == 3 or (NSRT.Settings["NickNamesSyncAccept"] == 2 and channel == "GUILD") or (NSRT.Settings["NickNamesSyncAccept"] == 1 and channel == "RAID") and (not C_ChallengeMode.IsChallengeModeActive())) then 
+        local setting = NSRT.Settings["NickNamesSyncAccept"]
+        if (setting == 3 or (setting == 2 and channel == "GUILD") or (setting == 1 and channel == "RAID") and (not C_ChallengeMode.IsChallengeModeActive())) then 
             if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't accept sync requests from yourself
-            if UnitAffectingCombat("player") then
-                NSI.SyncNickNamesStore = {unit = unit, nicknametable = nicknametable}
+            if UnitAffectingCombat("player") or WeakAuras.CurrentEncounter then
+                NSI.SyncNickNamesStore = {unit = unit, nicknametable = nicknametable, channel = channel}
             else
                 NSI:NickNamesSyncPopup(unit, nicknametable)    
             end
         end
+    elseif e == "NSI_WA_SYNC" and (internal or NSRT.Settings["Debug"]) then
+        local unit, str = ...
+        local setting = NSRT.Settings["WeakAurasImportAccept"]
+        if setting == 3 then return end
+        if UnitExists(unit) and not UnitIsUnit("player", unit) then
+            if setting == 2 or (GetGuildInfo(unit) == GetGuildInfo("player")) then -- only accept this from same guild to prevent abuse
+                if UnitAffectingCombat("player") or WeakAuras.CurrentEncounter then
+                    NSI.WAString = {unit = unit, string = str}
+                else
+                    NSI:WAImportPopup(unit, str)
+                end
+            end
+        end
+
     elseif e == "NSAPI_SPEC" then -- Should technically rename to "NSI_SPEC" but need to keep this open for the global broadcast to be compatible with the database WA
         local unit, spec = ...
         NSI.specs = NSI.specs or {}
@@ -224,7 +245,16 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             DevTool:AddData(NSI.AssignedExternals, "Assigned Externals")
             NSI.AssignedExternals = {}
             NSI.MacroPresses = {}
-        end
+        end        
+        C_Timer.After(1, function()
+            if NSI.SyncNickNamesStore then
+                NSI:EventHandler("NSI_NICKNAMES_SYNC", false, true, NSI.SyncNickNamesStore.unit, NSI.SyncNickNamesStore.nicknametable, NSI.SyncNickNamesStore.channel)
+                NSI.SyncNickNamesStore = nil
+            end
+            if NSI.WAString and NSI.WAString.unit and NSI.WAString.string then
+                NSI:EventHandler("NSI_WA_SYNC", false, true, NSI.WAString.unit, NSI.WAString.string)
+            end
+        end)
     elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
         local unitID, key, num, req, range = ...
         local dead = NSAPI:DeathCheck(unitID)        
@@ -257,7 +287,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local _, unit, spellID = ...
         local hyperlink = C_Spell.GetSpellLink(spellID)
         WeakAuras.ScanEvents("CHAT_MSG_WHISPER", hyperlink, unit)
-    elseif e == "NSPAMACRO" and (internal or NSRT.Settings["Debug"]) then
+    elseif e == "NS_PAMACRO" and (internal or NSRT.Settings["Debug"]) then
         local unitID = ...
         if unitID and UnitExists(unitID) and NSRT.Settings["DebugLogs"] then
             NSI.MacroPresses = NSI.MacroPresses or {}
