@@ -92,17 +92,17 @@ local function ReceiveComm(text, chan, sender, whisper, internal)
             table.remove(argTable, 2)
         end
 
-        local tonext = ""
+        local tonext
         for i, functionArg in ipairs(argTable) do
             local argValue, argType = functionArg:match("(.*)%((%a+)%)")
+            if tonext and argValue then argValue = tonext..argValue end
             if argType == "number" then
                 argValue = tonumber(argValue)
-                tonext = ""
+                tonext = nil
             elseif argType == "boolean" then
                 argValue = argValue == "true"
-                tonext = ""
+                tonext = nil
             elseif argType == "table" then
-                argValue = tonext..argValue
                 argValue = LibDeflate:DecodeForWoWAddonChannel(argValue)
                 argValue = LibDeflate:DecompressDeflate(argValue)
                 local success, table = LibSerialize:Deserialize(argValue)
@@ -111,14 +111,18 @@ local function ReceiveComm(text, chan, sender, whisper, internal)
                 else
                     argValue = ""
                 end
-                tonext = ""
+                tonext = nil
             end
-            if argValue == "" then
-                table.insert(formattedArgTable, false)
-            else
-                table.insert(formattedArgTable, argValue)
+            if argValue and argType then
+                if argValue == "" then
+                    table.insert(formattedArgTable, false)
+                else
+                    table.insert(formattedArgTable, argValue)
+                end
+                tonext = nil
             end
             if not argType then
+                tonext = tonext or ""
                 tonext = tonext..functionArg..del -- if argtype wasn't given then this is part of a table that was falsely split by the delimeter so we're stitching it back together
             end
         end
