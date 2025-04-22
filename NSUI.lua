@@ -97,6 +97,38 @@ local function ExternalSelfPingChanged()
     end
 end
 
+-- suf setup guide popup
+local function BuildSUFSetupGuidePopup()
+    local popup = DF:CreateSimplePanel(UIParent, 300, 130, "SUF Setup Guide", "SUFSetupGuidePopup", {
+        DontRightClickClose = true
+    })
+    popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    popup:SetFrameLevel(100)
+
+    popup.text_entry_label = DF:CreateLabel(popup, "Copy this code and create a new SUF tag with it:", 9.5, "white")
+    popup.text_entry_label:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
+    
+    popup.text_entry = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "$parentTextEntry", true, true, false)
+    popup.text_entry:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -45)
+    popup.text_entry:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 10)
+    DF:ApplyStandardBackdrop(popup.text_entry)
+    DF:ReskinSlider(popup.text_entry.scroll)
+    -- popup.text_entry.editbox:SelectAll()
+
+    
+    popup.text_entry:SetText([[function(unit)
+    local name = UnitName(unit)
+    return name and NSAPI and NSAPI:GetName(name, "SuF") or name
+end]])
+
+    popup:SetScript("OnShow", function(self)
+        popup.text_entry.editbox:HighlightText()
+        popup.text_entry:SetFocus()
+    end)
+
+    return popup
+end
+
 -- version check ui
 local component_type = "WA"
 local checkable_components = { "WA", "Addon", "Note" }
@@ -1466,7 +1498,8 @@ Press 'Enter' to hear the TTS]],
             end,
             name = "Enable SUF Nicknames",
             desc = "Enable Nicknames to be used with SUF unit frames. This requires adding your own Tag to the addon here: https://i.imgur.com/SRGaWaJ.png",
-            nocombat = true
+            nocombat = true,
+            id = "SUF-Toggle"
         },
         {
             type = "toggle",
@@ -1707,6 +1740,22 @@ Press 'Enter' to hear the TTS]],
     DF:BuildMenu(weakaura_tab, weakaura_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         weakaura_callback)
+
+    -- Add SUF Setup guide tooltip button thingy
+
+    NSUI.suf_setup_guide_popup = BuildSUFSetupGuidePopup()
+
+    local help_i_texture = [[Interface\common\help-i]]
+    local SUF_Toggle = nicknames_tab:GetWidgetById("SUF-Toggle")
+    local suf_help_button = DF:CreateButton(nicknames_tab, function()
+        if NSUI.suf_setup_guide_popup and not NSUI.suf_setup_guide_popup:IsShown() then
+            NSUI.suf_setup_guide_popup:Show()
+        else
+            NSUI.suf_setup_guide_popup:Hide()
+        end
+    end, 20, 20, "")
+    suf_help_button:SetIcon(help_i_texture)
+    suf_help_button:SetPoint("LEFT", SUF_Toggle.hasLabel, "RIGHT", 0, 0)
 
     -- Set right click functions for clearing keybinding on keybind buttons
     local PAMacroButton = general_tab:GetWidgetById("MACRO NS PA Macro")
