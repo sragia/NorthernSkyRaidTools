@@ -1743,6 +1743,32 @@ function NSI:NickNamesSyncPopup(unit, nicknametable)
     return popup
 end
 
+function NSI:WAImportPopup(unit, str) 
+    local popup = DF:CreateSimplePanel(UIParent, 300, 120, "WA Import", "WAImportPopup", {
+        DontRightClickClose = true
+    })
+    popup:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
+
+    local label = DF:CreateLabel(popup, NSAPI:Shorten(unit) .. " is attempting to send you a WeakAura.", 11)
+
+    label:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
+    label:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -10, 40)
+    label:SetJustifyH("CENTER")
+
+    local cancel_button = DF:CreateButton(popup, function() popup:Hide() end, 130, 20, "Cancel")
+    cancel_button:SetPoint("BOTTOMLEFT", popup, "BOTTOMLEFT", 10, 10)
+    cancel_button:SetTemplate(options_button_template)
+
+    local accept_button = DF:CreateButton(popup, function() 
+        WA.Import(str)
+        popup:Hide() 
+    end, 130, 20, "Accept")
+    accept_button:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -10, 10)
+    accept_button:SetTemplate(options_button_template)
+
+    return popup
+end
+
 function NSAPI:DisplayText(text, duration)
     if NSUI and NSUI.generic_display then
         NSUI.generic_display.text:SetText(text)
