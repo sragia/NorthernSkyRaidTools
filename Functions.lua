@@ -105,16 +105,16 @@ function NSAPI:GetNote() -- Get rid of extra spaces and color coding. Also conve
         note = strtrim(note) --trim whitespace
         note = note:gsub("||r", "") -- clean colorcode
         note = note:gsub("||c%x%x%x%x%x%x%x%x", "") -- clean colorcode
-            local namelist = {}
-            for name in note:gmatch("%S+") do -- finding all strings
-                local charname = (UnitIsVisible(name) and name) or NSAPI:GetChar(name, true)
-                if name ~= charname and not namelist[name] then
-                    namelist[name] = charname
-                end
+        local namelist = {}
+        for name in note:gmatch("%S+") do -- finding all strings
+            local charname = (UnitIsVisible(name) and name) or NSAPI:GetChar(name, true)
+            if name ~= charname and not namelist[name] then
+                namelist[name] = charname
             end
-            for nickname, charname in pairs(namelist) do
-                note = note:gsub("(%f[%w])"..nickname.."(%f[%W])", "%1"..charname.."%2")
-            end
+        end
+        for nickname, charname in pairs(namelist) do
+            note = note:gsub("(%f[%w])"..nickname.."(%f[%W])", "%1"..charname.."%2")
+        end
         NSI.Note = note
     end
     NSI.Note = NSI.Note or ""
