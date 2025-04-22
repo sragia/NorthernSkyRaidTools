@@ -99,9 +99,7 @@ end
 
 -- suf setup guide popup
 local function BuildSUFSetupGuidePopup()
-    local popup = DF:CreateSimplePanel(UIParent, 300, 130, "SUF Setup Guide", "SUFSetupGuidePopup", {
-        DontRightClickClose = true
-    })
+    local popup = DF:CreateSimplePanel(UIParent, 300, 130, "SUF Setup Guide", "SUFSetupGuidePopup")
     popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     popup:SetFrameLevel(100)
 
@@ -113,15 +111,13 @@ local function BuildSUFSetupGuidePopup()
     popup.text_entry:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 10)
     DF:ApplyStandardBackdrop(popup.text_entry)
     DF:ReskinSlider(popup.text_entry.scroll)
-    -- popup.text_entry.editbox:SelectAll()
-
     
-    popup.text_entry:SetText([[function(unit)
+    local tag_code = [[function(unit)
     local name = UnitName(unit)
     return name and NSAPI and NSAPI:GetName(name, "SuF") or name
-end]])
-
+end]]
     popup:SetScript("OnShow", function(self)
+        popup.text_entry:SetText(tag_code)
         popup.text_entry.editbox:HighlightText()
         popup.text_entry:SetFocus()
     end)
