@@ -1100,7 +1100,6 @@ function NSUI:Init()
             local import_string = popup.test_string_text_box:GetText()
             NSI:SendWAString(import_string)
             popup.test_string_text_box:SetText("")
-            print(import_string)
             popup:Hide()
         end, 280, 20, "Send")
         popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
@@ -1114,7 +1113,7 @@ function NSUI:Init()
 
         if NSUI.OptionsChanged.general["PA_MACRO"] then
             PASelfPingChanged()
-        end
+        end        
         if NSUI.OptionsChanged.general["DEBUGLOGS"] then
             if NSRT.Settings["DebugLogs"] then -- Add this data if enables this after a wipe as the data exists anyway
                 DevTool:AddData(NSI.MacroPresses, "Macro Data")
@@ -1154,10 +1153,13 @@ function NSUI:Init()
         if NSUI.OptionsChanged.nicknames["GRID2_NICKNAMES"] then
             NSI:Grid2NickNameUpdated()
         end
-        -- no need for WA function
 
         if NSUI.OptionsChanged.nicknames["UNHALTED_NICKNAMES"] then
             NSI:UnhaltedNickNameUpdated()
+        end
+
+        if NSUI.OptionsChanged.nicknames["MRT_NICKNAMES"] then
+            NSI:MRTNickNameUpdated()
         end
 
         wipe(NSUI.OptionsChanged["nicknames"])
@@ -1690,14 +1692,17 @@ Press 'Enter' to hear the TTS]],
             nocombat = true,
             spacement = true
         },
+
         {
-            type = "blank",
+            type = "breakline"
         },
+
         {
             type = "label",
             get = function() return "WeakAuras Sharing" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
+
         {
             type = "button",
             name = "Send WeakAura",
@@ -1710,14 +1715,10 @@ Press 'Enter' to hear the TTS]],
         },
 
         {
-            type = "breakline"
-        },
-
-        {
             type = "select",
             get = function() return NSRT.Settings["WeakAurasImportAccept"] end,
             values = function() return build_weakauras_importaccept_options() end,
-            name = "WeakAuras Import Accept",
+            name = "Import Accept",
             desc = "Choose who you are accepting WeakAuras imports to come from. Note that even if guild is selected here this still only works when in the same raid as them",
             nocombat = true
         },
