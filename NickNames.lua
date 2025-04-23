@@ -139,8 +139,33 @@ function NSI:BlizzardNickNameUpdated()
     end
 end
 
+function NSI:MRTUpdateNoteDisplay(noteFrame)
+    local note = noteFrame.text and noteFrame.text:GetText()
+    if not note then return end
+    local namelist = {}
+    local colorlist = {}
+    for name in note:gmatch("%S+") do -- finding all strings
+        local charname = NSAPI:Shorten(NSAPI:GetChar(name), false, false, "MRT") -- getting color coded nickname for this character
+        if charname ~= name then         
+            namelist[name] = {name = charname, color = false}
+        end
+    end                
+    for colorcode, name in note:gmatch(("|c(%x%x%x%x%x%x%x%x)(.-)|r")) do -- do the same for color coded strings again
+        local charname =  NSAPI:Shorten(NSAPI:GetChar(name), false, false, "MRT") -- getting color coded nickname for this character
+        namelist[name] = {name = charname, color = true}
+    end
+    for notename, v in pairs(namelist) do
+        note = note:gsub("(%f[%w])"..notename.."(%f[%W])", "%1"..v.name.."%2")
+        if v.color then -- if initial name already had a colorcode, need to do different replacement
+            note = note:gsub("|c%x%x%x%x%x%x%x%x"..notename.."|r", v.name)
+        end
+    end
+    noteFrame.text:SetText(note)
+end
+
 function NSI:MRTNickNameUpdated()
-    if NSRT.Settings["MRT"] and C_AddOns.IsAddOnLoaded("MRT") and GMRT and GMRT.F and not NSI.MRTNickNamesHook then
+    NSI:MRTUpdateNoteDisplay(MRTNote)
+    if NSRT.Settings["MRT"] and C_AddOns.IsAddOnLoaded("MRT") and GMRT and GMRT.F and not NSI.MRTNickNamesHook then        
         NSI.MRTNickNamesHook = true
         GMRT.F:RegisterCallback(
             "RaidCooldowns_Bar_TextName",
@@ -153,27 +178,7 @@ function NSI:MRTNickNameUpdated()
         GMRT.F:RegisterCallback(
             "Note_UpdateText", 
             function(event, noteFrame)
-                local note = noteFrame.text:GetText()
-                if not note then return end
-                local namelist = {}
-                local colorlist = {}
-                for name in note:gmatch("%S+") do -- finding all strings
-                    local charname = NSAPI:Shorten(NSAPI:GetChar(name), false, false, "MRT") -- getting color coded nickname for this character
-                    if charname ~= name then         
-                        namelist[name] = {name = charname, color = false}
-                    end
-                end                
-                for colorcode, name in note:gmatch(("|c(%x%x%x%x%x%x%x%x)(.-)|r")) do -- do the same for color coded strings again
-                    local charname =  NSAPI:Shorten(NSAPI:GetChar(name), false, false, "MRT") -- getting color coded nickname for this character
-                    namelist[name] = {name = charname, color = true}
-                end
-                for notename, v in pairs(namelist) do
-                    note = note:gsub("(%f[%w])"..notename.."(%f[%W])", "%1"..v.name.."%2")
-                    if v.color then -- if initial name already had a colorcode, need to do different replacement
-                        note = note:gsub("|c%x%x%x%x%x%x%x%x"..notename.."|r", v.name)
-                    end
-                end
-                noteFrame.text:SetText(note)
+                NSI:MRTUpdateNoteDisplay(noteFrame)
             end    
         )
     end
