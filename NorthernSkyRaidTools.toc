@@ -22,6 +22,7 @@ NickNames.lua
 EventHandler.lua
 Externals.lua
 VersionCheck.lua
+SetupManager.lua
 WeakAuras/Imports.lua
 
 # UI
