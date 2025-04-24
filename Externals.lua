@@ -213,7 +213,7 @@ function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellI
     end
     local now = GetTime()
     local k = unit..spellID
-    local rangecheck = range == "skip" or (range and range[UnitInRaid(unit)] and NSI.Externals.range[spellID] >= range[UnitInRaid(unit)])
+    local rangecheck = range == "skip" or (range and range[UnitInRaid(unit)] and NSI.Externals.range[spellID] >= range[UnitInRaid(unit)]) -- change to UnitGUID(unit) for next tier
     local giver, realm = UnitName(unit)
     local blocked = NSI.Externals.block[key] and NSI.Externals.block[key][spellID] and NSI.Externals.block[key][spellID][giver]
     local yourself = UnitIsUnit(unit, unitID)
@@ -255,10 +255,10 @@ function NSAPI:ExternalRequest(key, num) -- optional arguments
 
         for u in NSI:IterateGroupMembers() do
             local _, r = WeakAuras.GetRange(u)
-            table.insert(range, r)
+            table.insert(range, r) -- change to range[UnitGUID(u)] = r for next tier, keeping this now for backwards compatibility
         end
         NSAPI:Broadcast("NS_EXTERNAL_REQ", "WHISPER", NSI.Externals.target, key, num, true, range)    -- request external
-        end
+    end
 end
 
 -- /run NSAPI:Innervate:Request()
@@ -269,7 +269,7 @@ function NSAPI:InnervateRequest()
         local range = {}
         for u in NSI:IterateGroupMembers() do
             local _, r = WeakAuras.GetRange(u)
-            table.insert(range, r)
+            table.insert(range, r) -- change to range[UnitGUID(u)] = r for next tier, keeping this now for backwards compatibility
         end
         NSI:Broadcast("NS_INNERVATE_REQ", "WHISPER", NSI.Externals.target, key, num, true, range)    -- request external
     end
