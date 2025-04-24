@@ -224,6 +224,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local unit, spec = ...
         NSI.specs = NSI.specs or {}
         NSI.specs[unit] = tonumber(spec)
+    elseif e == "NSAPI_SPEC_REQUEST" then
+        local specid = GetSpecializationInfo(GetSpecialization())
+        NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)    
     elseif e == "ENCOUNTER_START" and ((wowevent and NSI:Difficultycheck()) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         NSI.specs = {}
         for u in NSI:IterateGroupMembers() do
