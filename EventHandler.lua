@@ -2,7 +2,7 @@ local _, NSI = ... -- Internal namespace
 local f = CreateFrame("Frame")
 f:RegisterEvent("ENCOUNTER_START")
 f:RegisterEvent("ENCOUNTER_END")
-f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+f:RegisterEvent("UNIT_AURA")
 f:RegisterEvent("READY_CHECK")
 f:RegisterEvent("GROUP_FORMED")
 f:RegisterEvent("ADDON_LOADED")
@@ -154,15 +154,17 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSAPI:DisplayText("MRT Note Mismatch detected", 5)
             end
         end
-    elseif e == "COMBAT_LOG_EVENT_UNFILTERED" and (wowevent or NSRT.Settings["Debug"]) then
-        local _, subevent, _, _, _, _, _, _, destName, _, _, spellID = CombatLogGetCurrentEventInfo()
-        if subevent == "SPELL_AURA_APPLIED" and NSI.Externals and NSI.Externals.Automated[spellID] then
-            local unit = destName
-            if unit and UnitExists(unit) and UnitInRaid(unit) then
-                unit = "raid"..UnitInRaid(unit)
-                local key = NSI.Externals.Automated[spellID]
-                local num = (key and NSI.Externals.Amount[key..spellID]) or 1
-                NSI:EventHandler("NS_EXTERNAL_REQ", false, true, unit, key, num, false, "skip")
+    elseif e == "UNIT_AURA" and ((NSI.Externals and NSI.Externals.target and UnitIsUnit(NSI.Externals.target, "player") and wowevent) or NSRT.Settings["Debug"]) then
+        local unit, info = ...
+        if not NSI.Externals.AllowedUnits[unit] then return end
+        if unit and UnitExists(unit) and UnitInRaid(unit) and info.addedAuras then
+            for _, v in pairs(info.addedAuras) do
+                if NSI.Externals and NSI.Externals.Automated and NSI.Externals.Automated[v.spellId] then
+                    unit = "raid"..UnitInRaid(unit)
+                    local key = NSI.Externals.Automated[v.spellId]
+                    local num = (key and NSI.Externals.Amount[key..v.spellId])
+                    NSI:EventHandler("NS_EXTERNAL_REQ", false, true, unit, key, num, false, "skip")
+                end
             end
         end
     elseif e == "NSI_VERSION_CHECK" and (internal or NSRT.Settings["Debug"]) then
@@ -244,8 +246,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         NSI.Externals:Init()
     elseif e == "ENCOUNTER_END" and ((wowevent and NSI:Difficultycheck()) or NSRT.Settings["Debug"]) then
         if NSRT.Settings["DebugLogs"] then
-            DevTool:AddData(NSI.MacroPresses, "Macro Data")
-            DevTool:AddData(NSI.AssignedExternals, "Assigned Externals")
+            if next(NSI.MacroPresses) then DevTool:AddData(NSI.MacroPresses, "Macro Data") end
+            if next(NSI.AssignedExternals) then DevTool:AddData(NSI.AssignedExternals, "Assigned Externals") end
             NSI.AssignedExternals = {}
             NSI.MacroPresses = {}
         end        
