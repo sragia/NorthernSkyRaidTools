@@ -154,13 +154,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSAPI:DisplayText("MRT Note Mismatch detected", 5)
             end
         end
-    elseif e == "UNIT_AURA" and ((NSI.Externals and NSI.Externals.target and UnitIsUnit(NSI.Externals.target, "player") and wowevent) or NSRT.Settings["Debug"]) then
+    elseif e == "UNIT_AURA" and (NSI.Externals and NSI.Externals.target) and ((UnitIsUnit(NSI.Externals.target, "player") and wowevent) or NSRT.Settings["Debug"]) then
         local unit, info = ...
         if not NSI.Externals.AllowedUnits[unit] then return end
-        if unit and UnitExists(unit) and UnitInRaid(unit) and info.addedAuras then
-            for _, v in pairs(info.addedAuras) do
-                if NSI.Externals and NSI.Externals.Automated and NSI.Externals.Automated[v.spellId] then
-                    unit = "raid"..UnitInRaid(unit)
+        if info and info.addedAuras then
+            for _, v in ipairs(info.addedAuras) do
+                if NSI.Externals.Automated[v.spellId] then
                     local key = NSI.Externals.Automated[v.spellId]
                     local num = (key and NSI.Externals.Amount[key..v.spellId])
                     NSI:EventHandler("NS_EXTERNAL_REQ", false, true, unit, key, num, false, "skip")
