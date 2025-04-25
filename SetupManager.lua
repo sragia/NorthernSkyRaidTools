@@ -108,9 +108,9 @@ local spectable = {
 
 -- for testing default: /run NSAPI:SplitGroupInit(false, true, false)
 -- for testing split: /run NSAPI:SplitGroupInit(false, false, false)
-function NSI:SortGroup(Heroic, default, odds) -- default == tank, melee, ranged, healer
+function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, healer
     local units = {}
-    local lastgroup = Heroic and 6 or 4
+    local lastgroup = Flex and 6 or 4
     local total = {["ALL"] = 0, ["TANK"] = 0, ["HEALER"] = 0, ["DAMAGER"] = 0}
     local poscount = {0, 0, 0, 0, 0}
     local groupSize = {}
@@ -326,7 +326,7 @@ function NSI:ArrangeGroups(firstcall)
 end
 
 -- Change to NSI once integrated into the UI
-function NSAPI:SplitGroupInit(Heroic, default, odds)
+function NSAPI:SplitGroupInit(Flex, default, odds)
     NSI:Broadcast("NSAPI_SPEC_REQUEST", "RAID", "nilcheck")
-    C_Timer.After(2, function() NSI:SortGroup(Heroic, default, odds) end)
+    C_Timer.After(2, function() NSI:SortGroup(Flex, default, odds) end)
 end
