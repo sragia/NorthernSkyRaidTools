@@ -1495,7 +1495,7 @@ Press 'Enter' to hear the TTS]],
                 NSRT.Settings["SuF"] = value
             end,
             name = "Enable SUF Nicknames",
-            desc = "Enable Nicknames to be used with SUF unit frames. This requires adding your own Tag to the addon here: https://i.imgur.com/SRGaWaJ.png",
+            desc = "Enable Nicknames to be used with SUF unit frames. This requires adding your own Tag to the addon. You can copy the required code by clicking on the small 'i'",
             nocombat = true,
             id = "SUF-Toggle"
         },
