@@ -273,11 +273,8 @@ function NSI:ArrangeGroups(firstcall)
             local position = ((group-1)*5)+subgroupposition
             local index = UnitInRaid(v.name)
             NSI:Print(v.name, "belongs into group", group, "at position", subgroupposition, "index:", index)
-            NSI:Print(postoindex[position], index)
             if postoindex[position] ~= index then -- check if player is already in correct spot
-                print("past one", groupSize[group], subgroupposition, indextosubgroup[index], group)
                 if groupSize[group] < subgroupposition and indextosubgroup[index] ~= group then
-                    print("past two")
                     if groupSize[group]+1 == subgroupposition then -- next free spot is in the correct position
                         NSI:Print("putting", v.name, "into group", group)
                         SetRaidSubgroup(index, group)
