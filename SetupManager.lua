@@ -256,14 +256,12 @@ function NSI:ArrangeGroups(firstcall)
     local groupSize = {0, 0, 0, 0, 0, 0, 0, 0}
     local postoindex = {}
     local indextosubgroup = {}
-    local indextosubgroupposition = {}
     for i=1, 40 do
-        local subgroup = select(3, GetRaidRosterInfo(i))
-        if not subgroup then break end
+        local name, _, subgroup = GetRaidRosterInfo(i)
+        if not name then break end
         groupSize[subgroup] = groupSize[subgroup]+1
         postoindex[((subgroup-1)*5)+groupSize[subgroup]] = i 
         indextosubgroup[i] = subgroup
-        indextosubgroupposition[i] = groupSize[subgroup]
     end
 
     for i=1, 40 do -- position in table is where the player should end up in, v.index is their current position.
@@ -275,52 +273,65 @@ function NSI:ArrangeGroups(firstcall)
             local position = ((group-1)*5)+subgroupposition
             local index = UnitInRaid(v.name)
             NSI:Print(v.name, "belongs into group", group, "at position", subgroupposition, "index:", index)
-            if position ~= ((indextosubgroup[index]-1)*5)+indextosubgroupposition[index] then -- check if player is already in correct spot
+            NSI:Print(postoindex[position], index)
+            if postoindex[position] ~= index then -- check if player is already in correct spot
+                print("past one", groupSize[group], subgroupposition, indextosubgroup[index], group)
                 if groupSize[group] < subgroupposition and indextosubgroup[index] ~= group then
-                    NSI:Print("putting", v.name, "into group", group)
-                    SetRaidSubgroup(index, group)
-                    v.processed = true
-                    NSI.Groups.Processed = NSI.Groups.Processed+1
-                    break
-            
-                elseif postoindex[position] ~= index then
-                    if indextosubgroup[index] ~= indextosubgroup[postoindex[position]]  then
-                        NSI:Print("swapping position", postoindex[position], "and", v.name)
-                        SwapRaidSubgroup(postoindex[position], index)
+                    print("past two")
+                    if groupSize[group]+1 == subgroupposition then -- next free spot is in the correct position
+                        NSI:Print("putting", v.name, "into group", group)
+                        SetRaidSubgroup(index, group)
                         v.processed = true
                         NSI.Groups.Processed = NSI.Groups.Processed+1
                         break
-                    else -- the 2 players to swap are in the same group so we instead swap with someone random that hasn't been processed yet
-                        local found = false
+                    else -- if not enough players are in the group to move this player to the desired spot we need to put someone who is not in the correct position yet there.
                         for j=1, 40 do
-                            local u = NSI.Groups.units[j]
-                            if u and not u.processed and not UnitIsUnit(v.name, u.name) then
-                                if group ~= Round((j+4)/5) then
-                                    NSI:Print("backup swap", u.name, "with", v.name)
-                                    SwapRaidSubgroup(UnitInRaid(u.name), index)
-                                    found = true
-                                    break
-                                end
-                            end
-                        end             
-                        if not found then -- if we were somehow unable to find anyone we can swap this person with, try to put him into an empty group at the end instead                    
-                            for j = 8, 1, -1 do
-                                if groupSize[j] < 5 then
-                                    NSI:Print("backup group", v.name, "into", j)
-                                    SetRaidSubgroup(index, j)
+                            if i ~= j then
+                                local u = NSI.Groups.units[j]  
+                                if u and (not u.processed) and indextosubgroup[index] ~= indextosubgroup[UnitInRaid(u.name)] then
+                                    NSI:Print("putting", u.name, "into group", group, "to fill the group")
+                                    SetRaidSubgroup(UnitInRaid(u.name), group)
                                     break
                                 end
                             end
                         end
+                        break
+                    end
+                elseif indextosubgroup[index] ~= indextosubgroup[postoindex[position]]  then -- check if the player we need to swap with is in a different subgroup
+                    NSI:Print("swapping position", postoindex[position], "and", v.name)
+                    SwapRaidSubgroup(postoindex[position], index)
+                    v.processed = true
+                    NSI.Groups.Processed = NSI.Groups.Processed+1
+                    break
+                else -- the 2 players to swap are in the same group so we instead swap with someone random that hasn't been processed yet
+                    local found = false
+                    for j=1, 40 do
+                        local u = NSI.Groups.units[j]
+                        if u and (not u.processed) and (not UnitIsUnit(v.name, u.name)) and indextosubgroup[index] ~= indextosubgroup[UnitInRaid(u.name)] then
+                            NSI:Print("backup swap", u.name, "with", v.name)
+                            SwapRaidSubgroup(UnitInRaid(u.name), index)
+                            found = true
+                            break
+                        end
+                    end             
+                    if not found then -- if we were somehow unable to find anyone we can swap this person with, try to put him into an empty group at the end instead                    
+                        for j = 8, 1, -1 do
+                            if groupSize[j] < 5 then
+                                NSI:Print("backup group", v.name, "into", j)
+                                SetRaidSubgroup(index, j)
+                                break                                
+                            end
+                        end
                     end  
+                    break
                 end
             else -- character is already in the correct position
                 NSI:Print(v.name, "already in correct position")
                 v.processed = true
                 NSI.Groups.Processed = NSI.Groups.Processed+1
                 NSI:ArrangeGroups()
+                break
             end
-                
         end        
     end
 end
