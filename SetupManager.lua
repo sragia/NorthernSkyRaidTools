@@ -179,12 +179,12 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
                     end
 
                     if side ~= "" then
-                        table.isnert(sides[side], v)
+                        table.insert(sides[side], v)
                         classes[side][v.class] = true
                         pos[side][v.pos] = pos[side][v.pos]+1
                         if v.canlust then lust[side] = true end
                         if v.canress then bress[side] = bress[side]+1 end
-                        specs[side][v.speci] = (specs[side][v.specid] and specs[side][v.specid]+1) or 1
+                        specs[side][v.specid] = (specs[side][v.specid] and specs[side][v.specid]+1) or 1
                         roles[side].role = (roles[side].role and roles[side].role+1) or 1
                     end
                 end
