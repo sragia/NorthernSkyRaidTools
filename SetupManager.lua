@@ -144,54 +144,53 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
         NSI.Groups.units = units
         NSI:ArrangeGroups(true)
     else
-        local sides = {left = {}, right = {}}
-        local classes = {left = {}, right = {}}
-        local specs = {left = {}, right = {}}
-        local pos = {left = {0, 0, 0, 0, 0}, right = {0, 0, 0, 0, 0}}
-        local roles = {left = {}, right = {}}
-        local lust = {left = false, right = false}
-        local bress = {left = 0, right = 0}
+        local sides = {["left"] = {}, ["right"] = {}}
+        local classes = {["left"] = {}, ["right"] = {}}
+        local specs = {["left"] = {}, ["right"] = {}}
+        local pos = {["left"] = {0, 0, 0, 0, 0}, ["right"] = {0, 0, 0, 0, 0}}
+        local roles = {["left"] = {}, ["right"] = {}}
+        local lust = {["left"] = false, ["right"] = false}
+        local bress = {["left"] = 0, ["right"] = 0}
         for i=1, 3 do
             local role = i == 1 and "TANK" or i == 2 and "DAMAGER" or i == 3 and "HEALER"
-            roles.left.role = 0
-            roles.right.role = 0
+            roles["left"].role = 0
+            roles["right"].role = 0
             for _, v in ipairs(units) do
                 if v.role == role then
                     local side = ""
-                    if role == "TANK" then side = roles.left.role <= roles.right.role and "left" or "right" -- for tanks doing a simple left/right split not caring about specs
-                    elseif #sides.left >= total["ALL"]/2 then side = "right" -- if left side is already filled, everyone else goes to the right side
-                    elseif roles.left.role >= total[role]/2 then side = "right" -- if left side already has half of the total players of that role, rest goes to right side
-                    elseif pos.left[v.pos] >= poscount[v.pos]/2 then side = "right" -- if one side already has enough melee, insert to the other side
-                    elseif pos.right[v.pos]  >= poscount[v.pos]/2 then side = "left" -- same as last                       
-                    elseif not classes.left[v.class] then side = "left" -- if one side doesn't have this class yet, insert to that side
-                    elseif not classes.right[v.class] then side = "right" -- same as last
-                    elseif v.canress and (bress.left <= 1 or bress.right <= 1) then side = (bress.left <= 1 and bress.left <= bress.right and "left") or "right" -- give each side up to 2 bresses
-                    elseif v.canlust and ((not lust.left) or (not lust.right)) then side = ((not lust.left) and "left") or "right" -- give each side a lust
-                    elseif (not specs.left[v.specid]) or (specs.right[v.specid] and specs.left[v.specid] <= specs.right[v.specid]) then side = "left" -- evenly split specs
-                    else side = "right"
+                    if role == "TANK" then side = roles["left"].role <= roles["right"].role and "left" or "right" -- for tanks doing a simple left/right split not caring about specs
+                    elseif #sides["left"] >= total["ALL"]+0.5/2 then side = "right" -- if left side is already filled, everyone else goes to the right side
+                    elseif #sides["right"] >= total["right"]/2 then side = "right" -- if right side is already filled, everyone else goes to the left side
+                    elseif roles["left"].role >= total[role]/2 then side = "right" -- if left side already has half of the total players of that role, rest goes to right side
+                    elseif roles["right"].role >= total[role]/2 then side = "left" -- if right side already has half of the total players of that role, rest goes to left side
+                    elseif pos["left"][v.pos] >= poscount[v.pos]/2 then side = "right" -- if one side already has enough melee, insert to the other side
+                    elseif pos["right"][v.pos]  >= poscount[v.pos]/2 then side = "left" -- same as last               
+                    elseif classes["right"][v.class] and not classes["left"][v.class] then side = "left" -- if one side has this class already but the other doesn't
+                    elseif classes["left"][v.class] and not classes["right"][v.class] then side = "right" -- if one side has this class already but the other doesn't
+                    elseif (not classes["left"][v.class]) and (not classes["right"][v.class]) then -- if neither side has this class yet
+                        return (pos["left"][v.pos] > pos["right"][v.pos] and "right") or "left" -- insert right if left has more of this positoin than right, if those are also equal insert left
+                    elseif v.canress and (bress["left"] <= 1 or bress["right"] <= 1) then side = (bress["left"] <= 1 and bress["left"] <= bress["right"] and "left") or "right" -- give each side up to 2 bresses
+                    elseif v.canlust and ((not lust["left"]) or (not lust["right"])) then side = ((not lust["left"]) and "left") or "right" -- give each side a lust
+                    elseif specs["left"][v.specid] and not specs["right"][v.specid] then side = "right" -- if one side has this spec already but the other doesn't
+                    elseif specs["right"][v.specid] and not specs["left"][v.specid] then side = "left" -- if one side has this spec already but the other doesn't
+                    elseif (not specs["left"][v.specid]) and (not specs["right"][v.specid]) then -- if neither side has this spec yet
+                        return (pos["left"][v.pos] > pos["right"][v.pos] and "right") or "left" -- insert right if left has more of this positoin than right, if those are also equal insert left
+                    else return (#sides["left"] > #sides["right"] and "right") or "left" -- should never come to this I think
                     end
 
-                    if side == "left" then
-                        table.insert(sides.left, v) 
-                        classes.left[v.class] = true 
-                        pos.left[v.pos] = pos.left[v.pos]+1
-                        if v.canlust then lust.left = lust.left+1 end
-                        if v.canress then bress.left = bress.left+1 end
-                        specs.left[v.specid] = (specs.left[v.specid] and specs.left[v.specid]+1) or 1
-                        roles.left.role = roles.left.role+1
-                    else 
-                        table.insert(sides.right, v) 
-                        classes.right[v.class] = true 
-                        pos.right[v.pos] = pos.right[v.pos]+1
-                        if v.canlust then lust.right = lust.right+1 end
-                        if v.canress then bress.right = bress.right+1 end
-                        specs.right[v.specid] = (specs.right[v.specid] and specs.right[v.specid]+1) or 1
-                        roles.right.role = roles.right.role+1
+                    if side ~= "" then
+                        table.isnert(sides[side], v)
+                        classes[side][v.class] = true
+                        pos[side][v.pos] = pos[side][v.pos]+1
+                        if v.canlust then lust[side] = true end
+                        if v.canress then bress[side] = bress[side]+1 end
+                        specs[side][v.speci] = (specs[side][v.specid] and specs[side][v.specid]+1) or 1
+                        roles[side].role = (roles[side].role and roles[side].role+1) or 1
                     end
                 end
             end
         end       
-        table.sort(sides.left, -- sort again within each table with tanks - melee - ranged - healer
+        table.sort(sides["left"], -- sort again within each table with tanks - melee - ranged - healer
         function(a, b)
             if a.specid == b.specid then
                 return a.GUID < b.GUID
@@ -199,7 +198,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
                 return spectable[a.specid] < spectable[b.specid]
             end
         end) -- a < b low first, a > b high first        
-        table.sort(sides.right, -- sort again within each table with tanks - melee - ranged - healer
+        table.sort(sides["right"], -- sort again within each table with tanks - melee - ranged - healer
         function(a, b)
             if a.specid == b.specid then
                 return a.GUID < b.GUID
@@ -210,14 +209,14 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
         if NSI.Groups.Odds then
             units = {}
             local count = 1
-            for i, v in ipairs(sides.left) do
+            for i, v in ipairs(sides["left"]) do
                 units[count] = v
                 count = count+1
                 if count > 5 then count = 11 end
                 if count > 15 then count = 21 end
             end
             count = 6            
-            for i, v in ipairs(sides.right) do
+            for i, v in ipairs(sides["right"]) do
                 units[count] = v
                 count = count+1
                 if count > 10 then count = 16 end
@@ -228,7 +227,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
         else            
             units = {}
             local count = 1
-            for i, v in ipairs(sides.left) do
+            for i, v in ipairs(sides["left"]) do
                 units[count] = v
                 count = count+1
             end
@@ -236,7 +235,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
             elseif total["ALL"] > 10 then count = 11
             else count = 6
             end
-            for i, v in ipairs(sides.right) do
+            for i, v in ipairs(sides["right"]) do
                 units[count] = v
                 count = count+1
             end
@@ -250,9 +249,13 @@ end
 function NSI:ArrangeGroups(firstcall)
     if not firstcall and not NSI.Groups.Processing then return end
     local now = GetTime()
-    if firstcall then NSI.Groups.Processing = true NSI.Groups.Processed = 0 NSI.Groups.ProcessStart = now end
+    if firstcall then 
+        DevTool:AddData(NSI.Groups.units, "Split Table Data:") 
+        NSI.Groups.Processing = true 
+        NSI.Groups.Processed = 0 
+        NSI.Groups.ProcessStart = now 
+    end
     if NSI.Groups.ProcessStart and now > NSI.Groups.ProcessStart+10 then NSI.Groups.Processing = false return end -- backup stop if it takes super long we're probably in a loop somehow
-    DevTool:AddData(NSI.Groups.units, "Split Table Data:")
     local groupSize = {0, 0, 0, 0, 0, 0, 0, 0}
     local postoindex = {}
     local indextosubgroup = {}
