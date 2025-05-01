@@ -411,7 +411,7 @@ end
 
 function NSI:SendNickName(channel, requestback)
     local now = GetTime()
-    if (NSI.LastNickNameSend and NSI.LastNickNameSend > now-4) or NSRT.Settings["ShareNickNames"] == 4 then return end -- don't let user spam nicknames
+    if (NSI.LastNickNameSend and NSI.LastNickNameSend > now-0.25) or NSRT.Settings["ShareNickNames"] == 4 then return end -- don't let user spam nicknames
     NSI.LastNickNameSend = now
     local nickname = NSRT.Settings["MyNickName"]
     if (not nickname) or WeakAuras.CurrentEncounter then return end
