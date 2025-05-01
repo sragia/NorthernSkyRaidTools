@@ -26,6 +26,7 @@ LSM:Register("sound","|cFF4BAAC8Gate|r", [[Interface\Addons\NorthernSkyRaidTools
 LSM:Register("sound","|cFF4BAAC8Soak|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Soak.ogg]])
 LSM:Register("sound","|cFF4BAAC8Fixate|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Fixate.ogg]])
 LSM:Register("sound","|cFF4BAAC8Next|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Next.ogg]])
+LSM:Register("sound","|cFF4BAAC8Interrupt|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Interrupt.ogg]])
 --Fonts
 LSM:Register("font","Expressway", [[Interface\Addons\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]])
 --StatusBars
