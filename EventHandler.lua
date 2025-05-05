@@ -143,7 +143,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "GROUP_FORMED" and (wowevent or NSRT.Settings["Debug"]) then 
         if WeakAuras.CurrentEncounter then return end
-        if NSRT.Settings["MyNickName"] then NSI:SendNickName("RAID", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
+        if NSRT.Settings["MyNickName"] then NSI:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
 
     elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and (internal or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
