@@ -265,8 +265,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         NSI.MacroPresses = NSI.MacroPresses or {}
         NSI.MacroPresses["Externals"] = NSI.MacroPresses["Externals"] or {}
         local formattedrange = {}
-        for k, v in pairs(range) do
-            if type(v) == "table" then formattedrange[v.name] = v.range end
+        if type(range) == "table" then
+            for k, v in pairs(range) do
+                formattedrange[v.name] = v.range 
+            end
+        else
+            formattedrange = range
         end
         table.insert(NSI.MacroPresses["Externals"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-NSI.Externals.pull), dead = dead, key = key, num = num, rangetable = formattedrange})
         if NSI:Difficultycheck(true) and not dead then -- block incoming requests from dead people
@@ -278,8 +282,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         NSI.MacroPresses = NSI.MacroPresses or {}
         NSI.MacroPresses["Innervate"] = NSI.MacroPresses["Innervate"] or {}
         local formattedrange = {}
-        for k, v in pairs(range) do
-            if type(v) == "table" then formattedrange[v.name] = v.range end
+        if type(range) == "table" then
+            for k, v in pairs(range) do
+                formattedrange[v.name] = v.range 
+            end
+        else
+            formattedrange = range
         end
         table.insert(NSI.MacroPresses["Innervate"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-NSI.Externals.pull), dead = dead, key = key, num = num, rangetable = formattedrange})
         if NSI:Difficultycheck(true) and not dead then -- block incoming requests from dead people
