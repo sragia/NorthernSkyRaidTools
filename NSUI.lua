@@ -135,7 +135,6 @@ local function build_checkable_components_options()
             label = checkable_components[i],
             value = checkable_components[i],
             onclick = function(_, _, value)
-                NSI:Print("Checkable type selected: " .. value)
                 component_type = value
             end
         })
@@ -185,7 +184,6 @@ local function BuildVersionCheckUI(parent)
     end)
 
     local version_check_button = DF:CreateButton(parent, function()
-        NSI:Print("Version check button clicked") -- replace with actual callback
     end, 120, 18, "Check Versions")
     version_check_button:SetTemplate(options_button_template)
     version_check_button:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -30, -130)
@@ -372,8 +370,6 @@ local function BuildVersionCheckUI(parent)
             tinsert(NSRT.NSUI.AutoComplete[component_type], text)
         end
 
-        NSI:Print("component_type " .. component_type)
-        NSI:Print("component name " .. text)
         if not text or text == "" and component_type ~= "Note" then return end
         
         local now = GetTime()
@@ -848,7 +844,6 @@ function NSUI:Init()
             :gsub("Button5", "BUTTON5")
 
         local existingBinding = GetBindingAction(keyCombo)
-        NSI:Print("existingBinding" .. existingBinding)
         if existingBinding and existingBinding ~= macroName and existingBinding ~= "" then
             SetBinding(keyCombo, nil)
             print("|cFF00FFFFNSRT:|r Overriding existing binding for " .. existingBinding .. " to " .. macroName)
@@ -861,11 +856,9 @@ function NSUI:Init()
 
         local ok = SetBinding(keyCombo, macroName)
         if ok then
-            NSI:Print("Keybind " .. macroName .. " set to: " .. keyCombo)
             SaveBindings(GetCurrentBindingSet())
             return true
         else
-            NSI:Print("Failed to set keybind.", keyCombo)
             return false
         end
     end
@@ -890,7 +883,6 @@ function NSUI:Init()
 
     local registerKeybinding = function(self, macroName, keybindName)
         if not listening then
-            NSI:Print("Press a key (with optional modifiers) to bind...")
             listening = true
         else
             return
@@ -911,7 +903,6 @@ function NSUI:Init()
         local function OnKeyDown(self, key)
             if listening then
                 if key == "ESCAPE" then
-                    NSI:Print("Keybind aborted")
                     listening = false
                     self:SetScript("OnKeyDown", nil)
                     self:SetPropagateKeyboardInput(false)
@@ -931,12 +922,9 @@ function NSUI:Init()
                     return nil -- Don't register this as a full keybind yet
                 end
                 local keyCombo = GetModifiedKeyString(key)
-                NSI:Print("keyCombo" .. keyCombo)
                 if keyCombo == "LeftButton" or keyCombo == "RightButton" then
-                    NSI:Print("keyCombo is a pure mouse button ABORTING KEYBIND")
                     return nil -- dont register pure mouse buttons as keybinds, only with modifier
                 end
-                NSI:Print("Key bound to:", keyCombo)
 
                 -- Bind keybind
                 bindKeybind(keyCombo, macroName)
@@ -1829,7 +1817,6 @@ function NSUI:SaveExternalsAnchorPosition()
         width = width,
         height = height
     }
-    NSI:Print("Saving externals anchor position")
 end
 
 function NSUI:ResetExternalsAnchorPosition()
