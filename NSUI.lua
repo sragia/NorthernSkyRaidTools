@@ -51,6 +51,9 @@ local function PASelfPingChanged()
              end
             if NSRT.Settings["PAExtraAction"] then
                 macrotext = macrotext.."\n/click ExtraActionButton1"
+            end            
+            if NSRT.Settings["LIQUID_MACRO"] then
+                macrotext = macrotext.."\n/run WeakAuras.ScanEvents(\"LIQUID_PRIVATE_AURA_MACRO\", true)"
             end
              EditMacro(i, "NS PA Macro", 132288, macrotext, false)
             return
@@ -1312,6 +1315,18 @@ Press 'Enter' to hear the TTS]],
             set = function(self, fixedparam, value) 
                 NSUI.OptionsChanged.general["PA_MACRO"] = true
                 NSRT.Settings["PAExtraAction"] = value 
+            end,
+            nocombat = true
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Add Liquid Private Aura Macro",
+            desc = "Add Scan Event for Liquid Private Aura Macro",
+            get = function() return NSRT.Settings["LIQUID_MACRO"] end,
+            set = function(self, fixedparam, value) 
+                NSUI.OptionsChanged.general["PA_MACRO"] = true
+                NSRT.Settings["LIQUID_MACRO"] = value 
             end,
             nocombat = true
         },

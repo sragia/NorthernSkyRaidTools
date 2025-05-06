@@ -42,6 +42,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["NickNamesSyncSend"] = NSRT.Settings["NickNamesSyncSend"] or 3 -- guild default
             NSRT.Settings["WeakAurasImportAccept"] = NSRT.Settings["WeakAurasImportAccept"] or 1 -- guild default
             NSRT.Settings["PAExtraAction"] = NSRT.Settings["PAExtraAction"] or false
+            NSRT.Settings["LIQUID_MACRO"] = NSRT.Settings["LIQUID_MACRO"] or false
             NSRT.Settings["PASelfPing"] = NSRT.Settings["PASelfPing"] or false
             NSRT.Settings["ExternalSelfPing"] = NSRT.Settings["ExternalSelfPing"] or false
             NSRT.Settings["MRTNoteComparison"] = NSRT.Settings["MRTNoteComparison"] or false
@@ -101,6 +102,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
             if NSRT.Settings["PAExtraAction"] then
                 macrotext = macrotext.."\n/click ExtraActionButton1"
+            end
+            if NSRT.Settings["LIQUID_MACRO"] then
+                macrotext = macrotext.."\n/run WeakAuras.ScanEvents(\"LIQUID_PRIVATE_AURA_MACRO\", true)"
             end
             CreateMacro("NS PA Macro", 132288, macrotext, false)
         end
