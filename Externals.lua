@@ -211,7 +211,6 @@ end
 function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender, allowCD) -- unitID = requester, unit = unit that shall give the external
     if spellID == Innervate then
         if UnitGroupRolesAssigned(unitID) ~= "HEALER" or UnitGroupRolesAssigned(unit) == "HEALER" then -- don't assign Innervate if requester is not a healer or the person we are checking is a healer
-            NSI:Print("not assigning Innervate because not a healer", unitID, unit, UnitGroupRolesAssigned(unitID), UnitGroupRolesAssigned(unit))
             return false
         end        
     end
@@ -440,22 +439,18 @@ function NSI.Externals:Request(unitID, key, num, req, range, innervate)
         for i, spellID in ipairs(NSI.Externals.customspellprio[key]) do -- go through spellid's in prio order
             if NSI.Externals.known[spellID] then
                 for unit, _ in pairs(NSI.Externals.known[spellID]) do -- check each person who knows that spell if it's available and not already requested
-                    if num > count then
-                        local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender, 0)
-                        if assigned then count = count+1 end
-                        if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
-                    end
+                    local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender, 0)
+                    if assigned then count = count+1 end
+                    if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
                 end
             end
         end        
         for i, spellID in ipairs(NSI.Externals.customspellprio[key]) do -- go through spellid's in prio order
             if NSI.Externals.known[spellID] then
                 for unit, _ in pairs(NSI.Externals.known[spellID]) do -- check each person who knows that spell if it's available and not already requested
-                    if num > count then
-                        local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender, 3)
-                        if assigned then count = count+1 end
-                        if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
-                    end
+                    local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender, 3)
+                    if assigned then count = count+1 end
+                    if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
                 end
             end
         end
@@ -463,11 +458,9 @@ function NSI.Externals:Request(unitID, key, num, req, range, innervate)
         for i, spellID in ipairs(NSI.Externals.customspellprio[key]) do -- go through spellid's in prio order
             if NSI.Externals.known[spellID] then
                 for unit, _ in pairs(NSI.Externals.known[spellID]) do -- check each person who knows that spell if it's available and not already requested
-                    if num > count then
-                        local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, "skip", unit, spellID, sender, 3)
-                        if assigned then count = count+1 end
-                        if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
-                    end
+                    local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, "skip", unit, spellID, sender, 3)
+                    if assigned then count = count+1 end
+                    if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
                 end
             end
         end
@@ -475,39 +468,34 @@ function NSI.Externals:Request(unitID, key, num, req, range, innervate)
 
     -- continue with default prio if nothing was found yet
     if not NSI.Externals.prio[key] then key = "default" end -- if no specific prio was found, use default prio
-    if NSI.Externals.SkipDefault[key] then return 
+    if NSI.Externals.SkipDefault[key] then
         NSAPI:Broadcast("NS_EXTERNAL_NO", "WHISPER", unitID, "nilcheck")      
+        return
     end
     for i, spellID in ipairs(NSI.Externals.prio[key]) do -- go through spellid's in prio order
         if NSI.Externals.known[spellID] then
             for unit, _ in pairs(NSI.Externals.known[spellID]) do -- check each person who knows that spell if it's available and not already requested
-                if num > count then
-                    local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender, 0)
-                    if assigned then count = count+1 end
-                    if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
-                end
+                local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender, 0)
+                if assigned then count = count+1 end
+                if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
             end
         end
     end
     for i, spellID in ipairs(NSI.Externals.prio[key]) do -- go through spellid's in prio order
         if NSI.Externals.known[spellID] then
             for unit, _ in pairs(NSI.Externals.known[spellID]) do -- check each person who knows that spell if it's available and not already requested
-                if num > count then
-                    local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender, 3)
-                    if assigned then count = count+1 end
-                    if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
-                end
+                local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender, 3)
+                if assigned then count = count+1 end
+                if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
             end
         end
     end
     for i, spellID in ipairs(NSI.Externals.prio[key]) do -- go through spellid's in prio order
         if NSI.Externals.known[spellID] then
-            for unit, _ in pairs(NSI.Externals.known[spellID]) do -- check each person who knows that spell if it's available and not already requested
-                if num > count then
-                    local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, "skip", unit, spellID, sender, 3)
-                    if assigned then count = count+1 end
-                    if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
-                end
+            for unit, _ in pairs(NSI.Externals.known[spellID]) do -- check each person who knows that spell if it's available and not already reques
+                local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, "skip", unit, spellID, sender, 3)
+                if assigned then count = count+1 end
+                if count >= num or NSI.Externals.AllSpells[assigned] == 1 then return end -- end loop if we found enough externals or found an immunity
             end
         end
     end
