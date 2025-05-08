@@ -437,8 +437,8 @@ function NSI:NewNickName(unit, nickname, name, realm, channel)
     end
     if not nickname or not name or not realm then return end   
     local oldnick = NSRT.NickNames[name.."-"..realm]      
-    if oldnick and oldnick == nickname then NSI:Print("nickname already exists:", unit, nickname, name, realm) return end -- stop early if we already have this exact nickname  
-    NSI:Print("new nickname:", unit, nickname, name, realm)
+    if oldnick and oldnick == nickname then NSI:Print("nickname already exists:", "nickname:", nickname, "name:", name, "realm:", realm) return end -- stop early if we already have this exact nickname  
+    NSI:Print("new nickname:", nickname, "name:", name, "realm:", realm)
     if nickname == "" then
         NSI:UpdateNickNameDisplay(false, unit, name, realm, oldnick, nickname)
         return
