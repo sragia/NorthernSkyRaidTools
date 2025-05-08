@@ -248,9 +248,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         NSI.MacroPresses = {}
         NSI.Externals:Init()
     elseif e == "ENCOUNTER_END" and ((wowevent and NSI:Difficultycheck()) or NSRT.Settings["Debug"]) then
+        local _, encounterName = ...
         if NSRT.Settings["DebugLogs"] then
-            if NSI.MacroPresses and next(NSI.MacroPresses) then DevTool:AddData(NSI.MacroPresses, "Macro Data") end
-            if NSI.AssignedExternals and next(NSI.AssignedExternals) then DevTool:AddData(NSI.AssignedExternals, "Assigned Externals") end
+            if NSI.MacroPresses and next(NSI.MacroPresses) then DevTool:AddData(NSI.MacroPresses, "Macro Data, Encounter: "..encounterName) end
+            if NSI.AssignedExternals and next(NSI.AssignedExternals) then DevTool:AddData(NSI.AssignedExternals, "Assigned Externals, Encounter: "..encounterName) end
             NSI.AssignedExternals = {}
             NSI.MacroPresses = {}
         end        
