@@ -186,7 +186,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if WeakAuras.CurrentEncounter then return end
         local unit, nickname, name, realm, requestback, channel = ...
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't add new nickname if it's yourself because already adding it to the database when you edit it
-        if requestback then NSI:SendNickName(channel, false) end -- send nickname back to the person who requested it
+        if requestback and (UnitInRaid(unit) or UnitInParty(unit)) then NSI:SendNickName(channel, false) end -- send nickname back to the person who requested it
         NSI:NewNickName(unit, nickname, name, realm, channel)
 
     elseif e == "PLAYER_REGEN_ENABLED" and (wowevent or NSRT.Settings["Debug"]) then
