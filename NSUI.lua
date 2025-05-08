@@ -345,6 +345,11 @@ local function BuildVersionCheckUI(parent)
         if self.name_map[data.name] then
             if NSRT.Settings["VersionCheckRemoveResponse"] and currentData[1] and currentData[1].version and data.version and data.version == currentData[1].version and data.version ~= "WA Missing" and data.version ~= "Addon Missing" and data.version ~= "Note Missing" and not data.duplicate then
                 table.remove(currentData, self.name_map[data.name])
+                for k, v in pairs(self.name_map) do
+                    if v > self.name_map[data.name] then
+                        self.name_map[k] = v - 1
+                    end
+                end
             else
                 currentData[self.name_map[data.name]] = data
             end
@@ -352,7 +357,6 @@ local function BuildVersionCheckUI(parent)
             self.name_map[data.name] = #currentData + 1
             tinsert(currentData, data)
         end
-        self:SetData(currentData)
         self:Refresh()
     end
 
