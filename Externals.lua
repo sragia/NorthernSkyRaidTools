@@ -248,6 +248,7 @@ function NSI.Externals:Request(unitID, key, num, req, range, innervate)
     local found = 0
     local count = 0
     NSI.Externals.assigned = {}
+    NSI:Print("searching for externals for", NSAPI:Shorten(unitID), "amount:", num)
     if innervate then
         for unit, _ in pairs(NSI.Externals.known[Innervate]) do
             local assigned = NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, Innervate, sender, 0)
@@ -383,6 +384,7 @@ function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellI
     local blocked = NSI.Externals.block[key] and NSI.Externals.block[key][spellID] and NSI.Externals.block[key][spellID][giver]
     local yourself = UnitIsUnit(unit, unitID)
     local ready = NSI.Externals.ready[k] or (allowCD ~= 0 and NSI.Externals.Cooldown[k] and now+allowCD > NSI.Externals.Cooldown[k]) -- allow precalling spells that are still on CD
+    NSI:Print("trying to assign from", NSAPI:Shorten(unit), "to", NSAPI:Shorten(unitID), "spell:", spellID)
     if
     UnitIsVisible(unit) -- in same instance
             and (ready or (NSI.Externals.ignorecd[key] and NSI.Externals.ignorecd[key][spellID])) -- spell is ready or we are ignoring its cd
@@ -398,6 +400,7 @@ function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellI
     then
         table.insert(NSI.AssignedExternals, {automated = not req, receiver = NSAPI:Shorten(unitID), giver = NSAPI:Shorten(unit), spellID = spellID, key = key, time = Round(now-NSI.Externals.pull)}) -- for debug printing later
         NSI.Externals.requested[k] = now -- set spell to requested
+        NSI:Print("assigning", NSAPI:Shorten(unit), "to", NSAPI:Shorten(unitID), "spell:", spellID)
         NSAPI:Broadcast("NS_EXTERNAL_LIST", "RAID", unit, sender, spellID) -- send List Data
         NSAPI:Broadcast("NS_EXTERNAL_GIVE", "WHISPER", unit, sender, spellID) -- send External Alert
         NSAPI:Broadcast("NS_EXTERNAL_YES", "WHISPER", unitID, giver, spellID) -- send Confirmation
