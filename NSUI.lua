@@ -1659,7 +1659,7 @@ Press 'Enter' to hear the TTS]],
 
         {
             type = "button",
-            name = "Import Raid WA",
+            name = "Liberation Raid WA",
             desc = "Import Liberation of Undermine Raid WeakAuras",
             func = function(self)
                 ImportWeakAura("raid_weakaura")
@@ -1670,7 +1670,7 @@ Press 'Enter' to hear the TTS]],
 
         {
             type = "button",
-            name = "Import Anchors",
+            name = "Anchors Auras",
             desc = "Import WeakAura Anchors required for all Northern Sky WeakAuras.",
             func = function(self)
                 ImportWeakAura("anchor_weakaura")
@@ -1680,7 +1680,7 @@ Press 'Enter' to hear the TTS]],
         },
         {
             type = "button",
-            name = "Import External Alert",
+            name = "External Alert",
             desc = "Import WeakAura External Alert required for the external macro.",
             func = function(self)
                 ImportWeakAura("external_weakaura")
@@ -1691,7 +1691,7 @@ Press 'Enter' to hear the TTS]],
         
         {
             type = "button",
-            name = "Import Interrupt WA",
+            name = "Interrupt WA",
             desc = "Import Interrupt Anchor WeakAura",
             func = function(self)
                 ImportWeakAura("interrupt_weakaura")
