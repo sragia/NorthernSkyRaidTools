@@ -674,7 +674,7 @@ local function BuildNicknameEditUI()
         if player ~= "" and nickname ~= "" then
             local player, realm = strsplit("-", name)
             if not realm then
-                realm = GetRealmName()
+                realm = GetNormalizedRealmName()
             end
             NSI:AddNickName(player, realm, nickname)
             new_player_entry:SetText("")
@@ -1111,8 +1111,8 @@ function NSUI:Init()
         end        
         if NSUI.OptionsChanged.general["DEBUGLOGS"] then
             if NSRT.Settings["DebugLogs"] then -- Add this data if enables this after a wipe as the data exists anyway
-                DevTool:AddData(NSI.MacroPresses, "Macro Data")
-                DevTool:AddData(NSI.AssignedExternals, "Assigned Externals")
+                NSI:Print("Macro Data", NSI.MacroPresses)
+                NSI:Print("Assigned Externals", NSI.AssignedExternals)
                 NSI.AssignedExternals = {}
                 NSI.MacroPresses = {}
             end
