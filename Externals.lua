@@ -445,8 +445,8 @@ function NSI.Externals:Init()
                 key = ""
             elseif strlower(line) == "nsexternalend" then
                 list = false
-                NSI.Externals.Amount[key] = NSI.Externals.Amount[key] or 1
                 key = ""
+                NSI:Print("Externals Table", NSI.Externals)
             end
             if list then
                 for k in line:gmatch("key:(%S+)") do
@@ -460,6 +460,7 @@ function NSI.Externals:Init()
                     for spellID in line:gmatch("automated:(%d+)") do -- automated assigning external for that spell
                         spell = tonumber(spellID)
                         NSI.Externals.Automated[spell] = key
+                        NSI.Externals.Amount[key..spell] = NSI.Externals.Amount[key..spell] or 1
                     end
                     if spell ~= 0 then
                         for num in line:gmatch("amount:(%d+)") do -- amount of externals for this spell
