@@ -26,10 +26,12 @@ function NSI:Print(...)
         if DevTool then
             local t = {...}
             local name = t[1]
+            print("added", name, "to DevTool Logs")
             table.remove(t, 1)
             DevTool:AddData(t, name)
+        else
+            print(...)
         end
-        print(...)
     end
 end
 
