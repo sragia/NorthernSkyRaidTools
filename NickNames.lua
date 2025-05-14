@@ -410,6 +410,7 @@ function NSI:InitNickNames()
 end
 
 function NSI:SendNickName(channel, requestback)
+    requestback = requestback or false
     local now = GetTime()
     if (NSI.LastNickNameSend and NSI.LastNickNameSend > now-0.25) or NSRT.Settings["ShareNickNames"] == 4 then return end -- don't let user spam nicknames
     if requestback and (NSI.LastNickNameSend and NSI.LastNickNameSend > now-2) or NSRT.Settings["ShareNickNames"] == 4 then return end -- don't overspam on forming raid
@@ -438,8 +439,8 @@ function NSI:NewNickName(unit, nickname, name, realm, channel)
     end
     if not nickname or not name or not realm then return end   
     local oldnick = NSRT.NickNames[name.."-"..realm]      
-    if oldnick and oldnick == nickname then NSI:Print("nickname already exists:", "nickname:", nickname, "name:", name, "realm:", realm) return end -- stop early if we already have this exact nickname  
-    NSI:Print("new nickname:", nickname, "name:", name, "realm:", realm)
+    if oldnick and oldnick == nickname then NSI:Print("nickname already exists", "nickname:", nickname, "name:", name, "realm:", realm) return end -- stop early if we already have this exact nickname  
+    NSI:Print("new nickname", nickname, "name:", name, "realm:", realm)
     if nickname == "" then
         NSI:UpdateNickNameDisplay(false, unit, name, realm, oldnick, nickname)
         return
