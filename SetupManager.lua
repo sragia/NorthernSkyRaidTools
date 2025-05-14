@@ -250,7 +250,7 @@ function NSI:ArrangeGroups(firstcall)
     if not firstcall and not NSI.Groups.Processing then return end
     local now = GetTime()
     if firstcall then 
-        DevTool:AddData(NSI.Groups.units, "Split Table Data:") 
+        NSI:Print("Split Table Data:", NSI.Groups.units)
         NSI.Groups.Processing = true 
         NSI.Groups.Processed = 0 
         NSI.Groups.ProcessStart = now 
