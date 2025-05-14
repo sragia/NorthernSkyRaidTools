@@ -250,8 +250,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "ENCOUNTER_END" and ((wowevent and NSI:Difficultycheck()) or NSRT.Settings["Debug"]) then
         local _, encounterName = ...
         if NSRT.Settings["DebugLogs"] then
-            if NSI.MacroPresses and next(NSI.MacroPresses) then DevTool:AddData(NSI.MacroPresses, "Macro Data, Encounter: "..encounterName) end
-            if NSI.AssignedExternals and next(NSI.AssignedExternals) then DevTool:AddData(NSI.AssignedExternals, "Assigned Externals, Encounter: "..encounterName) end
+            if NSI.MacroPresses and next(NSI.MacroPresses) then NSI:Print("Macro Data for Encounter: "..encounterName, NSI.MacroPresses) end
+            if NSI.AssignedExternals and next(NSI.AssignedExternals) then NSI:Print("Assigned Externals for Encounter: "..encounterName, NSI.AssignedExternals) end
             NSI.AssignedExternals = {}
             NSI.MacroPresses = {}
         end        
@@ -277,7 +277,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         else
             formattedrange = range
         end
-        table.insert(NSI.MacroPresses["Externals"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-NSI.Externals.pull), dead = dead, key = key, num = num, rangetable = formattedrange})
+        table.insert(NSI.MacroPresses["Externals"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-NSI.Externals.pull), dead = dead, key = key, num = num, automated = not req, rangetable = formattedrange})
         if NSI:Difficultycheck(true) and not dead then -- block incoming requests from dead people
             NSI.Externals:Request(unitID, key, num, req, range)
         end
