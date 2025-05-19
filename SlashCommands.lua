@@ -17,6 +17,13 @@ SlashCmdList["NSUI"] = function(msg)
         NSI:NickNamesSyncPopup(GetUnitName("player"), "yayayaya")
     elseif msg == "display" then
         NSAPI:DisplayText("Display text", 8)
+    elseif msg == "debug" then
+        if NSRT.Settings["Debug"] then
+            NSRT.Settings["Debug"] = false
+        else
+            NSRT.Settings["Debug"] = true
+        end
+        print("|cFF00FFFFNSRT|r Debug mode is now "..(NSRT.Settings["Debug"] and "enabled" or "disabled"))
     else
         NSI.NSUI:ToggleOptions()
     end
