@@ -1659,7 +1659,7 @@ Press 'Enter' to hear the TTS]],
 
         {
             type = "button",
-            name = "Anchors Auras",
+            name = "Anchor Auras",
             desc = "Import WeakAura Anchors required for all Northern Sky WeakAuras.",
             func = function(self)
                 ImportWeakAura("anchor_weakaura")
