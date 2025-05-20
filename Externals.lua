@@ -389,7 +389,7 @@ function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellI
             and NSI.Externals:extracheck(unit, unitID, key, spellID) -- special case checks, hardcoded into the addon
             and rangecheck
             and ((not NSI.Externals.requested[k]) or now > NSI.Externals.requested[k]+10) -- spell isn't already requested and the request hasn't timed out
-            and not (spellID == sac and yourself) -- no self sac
+            and not (spellID == Sac and yourself) -- no self sac
             and not (UnitIsDead(unit)) -- only doing normal death check instead of also checking for angel form because angel form can still give the external
             and not (yourself and req) -- don't assign own external if it was specifically requested, only on automation
             and not (NSI:UnitAura(unitID, 25771) and (spellID == Bop or spellID == Spellbop or spellID == LoH)) --Forebearance check
