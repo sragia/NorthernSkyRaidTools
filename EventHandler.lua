@@ -166,7 +166,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 if NSI.Externals.Automated[v.spellId] then
                     local key = NSI.Externals.Automated[v.spellId]
                     local num = (key and NSI.Externals.Amount[key..v.spellId])
-                    NSI:EventHandler("NS_EXTERNAL_REQ", false, true, unit, key, num, false, "skip")
+                    NSI:EventHandler("NS_EXTERNAL_REQ", false, true, unit, key, num, false, "skip", v.expirationTime)
                 end
             end
         end
@@ -265,7 +265,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
         end)
     elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
-        local unitID, key, num, req, range = ...
+        local unitID, key, num, req, range, expirationTime = ...
         local dead = NSAPI:DeathCheck(unitID)        
         NSI.MacroPresses = NSI.MacroPresses or {}
         NSI.MacroPresses["Externals"] = NSI.MacroPresses["Externals"] or {}
@@ -279,10 +279,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         table.insert(NSI.MacroPresses["Externals"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-NSI.Externals.pull), dead = dead, key = key, num = num, automated = not req, rangetable = formattedrange})
         if NSI:Difficultycheck(true) and not dead then -- block incoming requests from dead people
-            NSI.Externals:Request(unitID, key, num, req, range)
+            NSI.Externals:Request(unitID, key, num, req, range, false, expirationTime)
         end
     elseif e == "NS_INNERVATE_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
-        local unitID, key, num, req, range = ...
+        local unitID, key, num, req, range, expirationTime = ...
         local dead = NSAPI:DeathCheck(unitID)      
         NSI.MacroPresses = NSI.MacroPresses or {}
         NSI.MacroPresses["Innervate"] = NSI.MacroPresses["Innervate"] or {}
@@ -296,7 +296,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         table.insert(NSI.MacroPresses["Innervate"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-NSI.Externals.pull), dead = dead, key = key, num = num, rangetable = formattedrange})
         if NSI:Difficultycheck(true) and not dead then -- block incoming requests from dead people
-            NSI.Externals:Request(unitID, "", 1, true, range, true)
+            NSI.Externals:Request(unitID, "", 1, true, range, true, expirationTime)
         end
     elseif e == "NS_EXTERNAL_YES" and ... then
         local _, unit, spellID = ...
