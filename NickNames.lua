@@ -140,7 +140,7 @@ function NSI:BlizzardNickNameUpdated()
 end
 
 function NSI:MRTUpdateNoteDisplay(noteFrame)
-    local note = noteFrame.text and noteFrame.text:GetText()
+    local note = noteFrame and noteFrame.text and noteFrame.text:GetText()
     if not note then return end
     local namelist = {}
     local colorlist = {}
@@ -164,23 +164,25 @@ function NSI:MRTUpdateNoteDisplay(noteFrame)
 end
 
 function NSI:MRTNickNameUpdated()
-    NSI:MRTUpdateNoteDisplay(MRTNote)
-    if NSRT.Settings["MRT"] and C_AddOns.IsAddOnLoaded("MRT") and GMRT and GMRT.F and not NSI.MRTNickNamesHook then        
-        NSI.MRTNickNamesHook = true
-        GMRT.F:RegisterCallback(
-            "RaidCooldowns_Bar_TextName",
-            function(event, bar, data)
-                if data and data.name then
-                    data.name = NSAPI:GetName(data.name, "MRT")
+    if C_AddOns.IsAddOnLoaded("MRT") then
+        NSI:MRTUpdateNoteDisplay(MRTNote)
+        if NSRT.Settings["MRT"] and GMRT and GMRT.F and not NSI.MRTNickNamesHook then        
+            NSI.MRTNickNamesHook = true
+            GMRT.F:RegisterCallback(
+                "RaidCooldowns_Bar_TextName",
+                function(event, bar, data)
+                    if data and data.name then
+                        data.name = NSAPI:GetName(data.name, "MRT")
+                    end
                 end
-            end
-        )
-        GMRT.F:RegisterCallback(
-            "Note_UpdateText", 
-            function(event, noteFrame)
-                NSI:MRTUpdateNoteDisplay(noteFrame)
-            end    
-        )
+            )
+            GMRT.F:RegisterCallback(
+                "Note_UpdateText", 
+                function(event, noteFrame)
+                    NSI:MRTUpdateNoteDisplay(noteFrame)
+                end    
+            )
+        end
     end
 end
 
