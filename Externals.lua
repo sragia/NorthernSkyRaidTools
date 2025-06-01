@@ -78,13 +78,6 @@ lib.RegisterCallback(callbacks, "CooldownUpdate", "CooldownUpdate")
 lib.RegisterCallback(callbacks, "CooldownAdded", "CooldownAdded")
 
 
-
-
-NSI.Externals.ignorecd = { -- spells in this list ignore their cooldown. This was added on Mug'Zee because an ability happens every 59.5 seconds while sac has a 1minute cd. You still use sac every time but the aura would think it's on CD
-
-}
-
-
 NSI.Externals.check = { -- check if ready before assigning external
     -- ["Condemnation"] = {31224, 196555, 186265, 45438, 642}, -- spell immunities
 
@@ -383,7 +376,7 @@ function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellI
     local ready = NSI.Externals.ready[k] or (allowCD > 0 and NSI.Externals.Cooldown[k] and now+allowCD > NSI.Externals.Cooldown[k]) -- allow precalling spells that are still on CD
     if
     UnitIsVisible(unit) -- in same instance
-            and (ready or (NSI.Externals.ignorecd[key] and NSI.Externals.ignorecd[key][spellID])) -- spell is ready or we are ignoring its cd
+            and ready -- spell is ready
             and NSI.Externals:extracheck(unit, unitID, key, spellID) -- special case checks, hardcoded into the addon
             and rangecheck
             and ((not NSI.Externals.requested[k]) or now > NSI.Externals.requested[k]+10) -- spell isn't already requested and the request hasn't timed out
@@ -427,7 +420,6 @@ function NSI.Externals:Init()
         NSI.Externals.customspellprio = {}
         NSI.Externals.Automated = {}
         NSI.Externals.Amount = {}
-        NSI.Externals.ignorecd = {}
         NSI.AssignedExternals = {}
         NSI.Externals.block = {}
         NSI.Externals.SkipDefault = {}
@@ -448,7 +440,6 @@ function NSI.Externals:Init()
                     NSI.Externals.customprio[k] = NSI.Externals.customprio[k] or {}
                     NSI.Externals.customspellprio[k] = NSI.Externals.customspellprio[k] or {}
                     key = k
-                    NSI.Externals.ignorecd[key] = {}
                     NSI.Externals.block[key] = {}
                 end
                 if key ~= "" then
@@ -461,9 +452,6 @@ function NSI.Externals:Init()
                         for num in line:gmatch("amount:(%d+)") do -- amount of externals for this spell
                             NSI.Externals.Amount[key..spell] = tonumber(num)
                         end
-                    end
-                    for spellID in line:gmatch("ignorecd:(%d+)") do -- let this spellid be ignored for cd tracking (example: mugzee ability happening every ~59.5sec but 1min sac should still be assigned)
-                        NSI.Externals.ignorecd[key][tonumber(spellID)] = true
                     end
                     for name, spellID in line:gmatch("block:(%S+):(%d+)") do -- block certain spells from someone to be assigned
                         if UnitInRaid(name) and spellID then
