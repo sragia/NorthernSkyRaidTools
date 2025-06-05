@@ -1,7 +1,9 @@
 local _, NSI = ... -- Internal namespace
 local Grid2Status
 local fullCharList = {}
+local fullNameList = {}
 local sortedCharList = {}
+local CharList = {}
 local LibTranslit = LibStub("LibTranslit-1.0")
 
 function NSAPI:GetCharacters(str) -- Returns table of all Characters from Nickname or Character Name
@@ -9,7 +11,11 @@ function NSAPI:GetCharacters(str) -- Returns table of all Characters from Nickna
         error("NSAPI:GetCharacters(str), str is nil")
         return
     end
-    return sortedCharList[str] and CopyTable(sortedCharList[str])
+    if not sortedCharList[str] then
+        return CharList[str] and CopyTable(CharList[str])
+    else
+        return sortedCharList[str] and CopyTable(sortedCharList[str])
+    end
 end
 
 function NSAPI:GetAllCharacters()
@@ -46,6 +52,9 @@ function NSAPI:GetName(str, AddonName) -- Returns Nickname
         return nickname or name
     else
         local nickname = fullCharList[str]
+        if not nickname then
+            nickname = fullNameList[str]
+        end
         if nickname and NSRT.Settings["Translit"] then
             nickname = LibTranslit:Transliterate(nickname)
         end
@@ -109,7 +118,9 @@ function NSI:WipeNickNames()
     NSI:WipeCellDB()
     NSRT.NickNames = {}
     fullCharList = {}
+    fullNameList = {}
     sortedCharList = {}
+    CharList = {}
     -- all addons that need a display update, which is basically all but WA
     NSI:UpdateNickNameDisplay(true)
 end
@@ -145,14 +156,16 @@ function NSI:MRTUpdateNoteDisplay(noteFrame)
     local namelist = {}
     local colorlist = {}
     for name in note:gmatch("%S+") do -- finding all strings
-        local charname = NSAPI:Shorten(NSAPI:GetChar(name), false, false, "MRT") -- getting color coded nickname for this character
+        local charname = NSAPI:Shorten(NSAPI:GetChar(name, true), false, false, "MRT") -- getting color coded nickname for this character
         if charname ~= name then         
             namelist[name] = {name = charname, color = false}
         end
     end                
     for colorcode, name in note:gmatch(("|c(%x%x%x%x%x%x%x%x)(.-)|r")) do -- do the same for color coded strings again
-        local charname =  NSAPI:Shorten(NSAPI:GetChar(name), false, false, "MRT") -- getting color coded nickname for this character
-        namelist[name] = {name = charname, color = true}
+        local charname =  NSAPI:Shorten(NSAPI:GetChar(name, true), false, false, "MRT") -- getting color coded nickname for this character
+        if charname ~= name then
+            namelist[name] = {name = charname, color = true}
+        end
     end
     for notename, v in pairs(namelist) do
         note = note:gsub("(%f[%w])"..notename.."(%f[%W])", "%1"..v.name.."%2")
@@ -163,9 +176,11 @@ function NSI:MRTUpdateNoteDisplay(noteFrame)
     noteFrame.text:SetText(note)
 end
 
-function NSI:MRTNickNameUpdated()
+function NSI:MRTNickNameUpdated(skipcheck)
     if C_AddOns.IsAddOnLoaded("MRT") then
-        NSI:MRTUpdateNoteDisplay(MRTNote)
+        if skipcheck or NSRT.Settings["MRT"] then -- on init we only do this if the player has MRT Nicknames enabled, also whenever the setting changes we skip the setting check
+            NSI:MRTUpdateNoteDisplay(MRTNote)
+        end
         if NSRT.Settings["MRT"] and GMRT and GMRT.F and not NSI.MRTNickNamesHook then        
             NSI.MRTNickNamesHook = true
             GMRT.F:RegisterCallback(
@@ -279,14 +294,22 @@ end
 -- Global NickName Option Change
 function NSI:GlobalNickNameUpdate()
     fullCharList = {}
+    fullNameList = {}
     sortedCharList = {}
+    CharList = {}
     if NSRT.Settings["GlobalNickNames"] then
-        for name, nickname in pairs(NSRT.NickNames) do
-            fullCharList[name] = nickname
+        for fullname, nickname in pairs(NSRT.NickNames) do
+            local name, realm = strsplit("-", fullname)
+            fullCharList[fullname] = nickname
+            fullNameList[name] = nickname
             if not sortedCharList[nickname] then
                 sortedCharList[nickname] = {}
             end
-            sortedCharList[nickname][name] = true
+            sortedCharList[nickname][fullname] = true
+            if not CharList[nickname] then
+                CharList[nickname] = {}
+            end
+            CharList[nickname][name] = true
         end
     end
     
@@ -301,13 +324,15 @@ function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)
     if nickname == ""  and NSRT.NickNames[name.."-"..realm] then
         NSRT.NickNames[name.."-"..realm] = nil
         fullCharList[name.."-"..realm] = nil
+        fullNameList[name] = nil
         sortedCharList[nickname] = nil
+        CharList[nickname] = nil
     end     
     NSI:Grid2NickNameUpdated(unit)
     NSI:ElvUINickNameUpdated()
     NSI:UnhaltedNickNameUpdated()
     NSI:BlizzardNickNameUpdated()
-    NSI:MRTNickNameUpdated()
+    NSI:MRTNickNameUpdated(true)
     NSI:OmniCDNickNameUpdated()
 end
 
@@ -340,17 +365,23 @@ function NSI:InitNickNames()
         end
     end
 
-    NSI:BlizzardNickNameUpdated()
-    NSI:MRTNickNameUpdated()
-    NSI:OmniCDNickNameUpdated()
 
     if NSRT.Settings["GlobalNickNames"] then
-        for name, nickname in pairs(NSRT.NickNames) do
-            fullCharList[name] = nickname
+    	NSI:MRTNickNameUpdated(false)
+    	NSI:BlizzardNickNameUpdated()
+    	NSI:OmniCDNickNameUpdated()
+        for fullname, nickname in pairs(NSRT.NickNames) do
+            local name, realm = strsplit("-", fullname)
+            fullCharList[fullname] = nickname
+            fullNameList[name] = nickname
             if not sortedCharList[nickname] then
                 sortedCharList[nickname] = {}
             end
-            sortedCharList[nickname][name] = true
+            sortedCharList[nickname][fullname] = true
+            if not CharList[nickname] then
+                CharList[nickname] = {}
+            end
+            CharList[nickname][name] = true
         end
     end
 
@@ -384,7 +415,7 @@ function NSI:InitNickNames()
         Grid2.setupFunc["NSNickName"] = Create
 
         Grid2:DbSetStatusDefaultValue( "NSNickName", {type = "NSNickName"})        
-        end
+    end
 
     if ElvUF and ElvUF.Tags then
         ElvUF.Tags.Events['NSNickName'] = 'UNIT_NAME_UPDATE'
@@ -452,10 +483,15 @@ function NSI:NewNickName(unit, nickname, name, realm, channel)
     NSRT.NickNames[name.."-"..realm] = nickname
     if NSRT.Settings["GlobalNickNames"] then
         fullCharList[name.."-"..realm] = nickname
+        fullNameList[name] = nickname
         if not sortedCharList[nickname] then
             sortedCharList[nickname] = {}
         end
         sortedCharList[nickname][name.."-"..realm] = true
+        if not CharList[nickname] then
+            CharList[nickname] = {}
+        end
+        CharList[nickname][name] = true
         NSI:UpdateNickNameDisplay(false, unit, name, realm, oldnick, nickname)
     end
 end

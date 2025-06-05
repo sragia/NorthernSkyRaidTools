@@ -1154,7 +1154,7 @@ function NSUI:Init()
         end
 
         if NSUI.OptionsChanged.nicknames["MRT_NICKNAMES"] then
-            NSI:MRTNickNameUpdated()
+            NSI:MRTNickNameUpdated(true)
         end
 
         wipe(NSUI.OptionsChanged["nicknames"])
