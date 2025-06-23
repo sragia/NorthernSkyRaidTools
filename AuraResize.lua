@@ -81,6 +81,7 @@ function NSAPI:AuraResize(type, positions, regions)
     local auraData = NSI.auraData[auraname] or WeakAuras.GetData(auraname)
     NSI.groupData[groupname] = groupData
     NSI.auraData[auraname] = auraData
+    if not auraData then return end
     for _, regionData in ipairs(regions) do   
         local region = regionData.region
         if region.regionType == "icon"  then     
