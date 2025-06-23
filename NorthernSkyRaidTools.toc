@@ -24,6 +24,7 @@ Externals.lua
 VersionCheck.lua
 SetupManager.lua
 WeakAuras/Imports.lua
+WeakAuras/Links.lua
 
 # UI
 NSUI.lua

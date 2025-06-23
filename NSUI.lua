@@ -1654,6 +1654,36 @@ Press 'Enter' to hear the TTS]],
                 ImportWeakAura("raid_weakaura")
             end,
             nocombat = true,
+        },
+        {
+            type = "button",
+            name = "Manaforge Raid WA",
+            desc = "Import Manaforge Omega WeakAuras",
+            func = function(self)
+                local popup = DF:CreateSimplePanel(UIParent, 300, 60, "Manaforge Omega WA", "ManaforgeWAPopup")
+                popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+                popup:SetFrameLevel(100)
+
+                popup.text_entry = DF:CreateTextEntry(popup, function() end, 280, 20)
+                popup.text_entry:SetTemplate(options_button_template)
+                popup.text_entry:SetPoint("TOP", popup, "TOP", 0, -30)
+                popup.text_entry:SetText(NSI:GetWeakAuraLink("Manaforge"))
+                popup.text_entry.editbox:SetJustifyH("CENTER")
+
+                -- Disable editing the text technically
+                popup.text_entry:SetScript("OnTextChanged", function(self)
+                    popup.text_entry:SetText(NSI:GetWeakAuraLink("Manaforge"))
+                    popup.text_entry.editbox:HighlightText()
+                end)
+
+                popup.text_entry:SetScript("OnEditFocusGained", function(self)
+                    popup.text_entry.editbox:HighlightText()
+                end)
+                popup:Show()
+                popup.text_entry:SetFocus()
+
+            end,
+            nocombat = true,
             spacement = true
         },
 
